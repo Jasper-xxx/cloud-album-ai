@@ -1,0 +1,526 @@
+openapi: 3.0.0
+info:
+  title: Cloud-Album Agent Tools
+  version: 1.1.0
+  description: Cloud-Album 为 Dify 提供的照片、相册和标签工具。
+servers:
+  - url: http://host.docker.internal:8088
+paths:
+  /agent/capabilities:
+    get:
+      operationId: getAgentCapabilities
+      summary: 查询智能体能力边界
+      description: 查询当前开放、需要确认和禁用的智能体能力。
+      responses:
+        "200":
+          description: 查询成功
+
+  /agent/searchFiles:
+    post:
+      operationId: searchFiles
+      summary: 检索照片
+      description: 按标签、地点、设备或其他条件检索当前用户照片。
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                current:
+                  type: integer
+                  default: 1
+                size:
+                  type: integer
+                  default: 20
+                orderType:
+                  type: string
+                  enum:
+                    - asc
+                    - desc
+                  default: desc
+                orderKeyword:
+                  type: string
+                  enum:
+                    - date_time_original
+                    - upload_time
+                  default: date_time_original
+                imageTypeText:
+                  type: string
+                  enum:
+                    - all
+                    - picture
+                    - gif
+                    - video
+                  default: all
+                locationLevel:
+                  type: string
+                  enum:
+                    - country
+                    - province
+                    - city
+                    - district
+                locationValue:
+                  type: string
+                albumId:
+                  type: integer
+                tagFilter:
+                  type: string
+                  enum:
+                    - all
+                    - untagged
+                  default: all
+                tagName:
+                  type: string
+                  description: 精确标签名称。
+                searchType:
+                  type: string
+                  enum:
+                    - tag
+                    - model
+                    - location
+                searchKeyword:
+                  type: string
+      responses:
+        "200":
+          description: 查询成功
+
+  /agent/listAlbums:
+    post:
+      operationId: listAlbums
+      summary: 查询普通相册
+      description: 分页查询当前用户的普通相册。
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                current:
+                  type: integer
+                  default: 1
+                size:
+                  type: integer
+                  default: 20
+                orderKeyword:
+                  type: string
+                  enum:
+                    - create_time
+                    - update_time
+                  default: create_time
+                orderType:
+                  type: string
+                  enum:
+                    - asc
+                    - desc
+                  default: desc
+                locationLevel:
+                  type: string
+                  enum:
+                    - country
+                    - province
+                    - city
+                    - district
+                  default: city
+      responses:
+        "200":
+          description: 查询成功
+
+  /agent/listLocationAlbums:
+    post:
+      operationId: listLocationAlbums
+      summary: 查询地点相册
+      description: 分页查询当前用户的地点相册。
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                current:
+                  type: integer
+                  default: 1
+                size:
+                  type: integer
+                  default: 20
+                orderKeyword:
+                  type: string
+                  enum:
+                    - create_time
+                    - update_time
+                  default: create_time
+                orderType:
+                  type: string
+                  enum:
+                    - asc
+                    - desc
+                  default: desc
+                locationLevel:
+                  type: string
+                  enum:
+                    - country
+                    - province
+                    - city
+                    - district
+                  default: city
+      responses:
+        "200":
+          description: 查询成功
+
+  /agent/listModelAlbums:
+    post:
+      operationId: listModelAlbums
+      summary: 查询设备相册
+      description: 分页查询当前用户的设备或型号相册。
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                current:
+                  type: integer
+                  default: 1
+                size:
+                  type: integer
+                  default: 20
+                orderKeyword:
+                  type: string
+                  enum:
+                    - create_time
+                    - update_time
+                  default: create_time
+                orderType:
+                  type: string
+                  enum:
+                    - asc
+                    - desc
+                  default: desc
+                locationLevel:
+                  type: string
+                  enum:
+                    - country
+                    - province
+                    - city
+                    - district
+                  default: city
+      responses:
+        "200":
+          description: 查询成功
+
+  /agent/listTags:
+    get:
+      operationId: listTags
+      summary: 查询标签
+      description: 查询当前用户已有的标签及照片数量。
+      responses:
+        "200":
+          description: 查询成功
+
+  /agent/listPeople:
+    post:
+      operationId: listPeople
+      summary: 查询人物相册
+      description: 分页查询当前用户的人物相册。
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                current:
+                  type: integer
+                  default: 1
+                size:
+                  type: integer
+                  default: 20
+                display:
+                  type: boolean
+                  default: true
+      responses:
+        "200":
+          description: 查询成功
+
+  /agent/previewAlbumAction:
+    post:
+      operationId: previewAlbumAction
+      summary: 预览相册写操作
+      description: 预览创建相册、加入照片或移出照片，不写入数据。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - action
+              properties:
+                action:
+                  type: string
+                  enum:
+                    - create_album
+                    - add_files_to_album
+                    - remove_files_from_album
+                    - create_album_and_add_files
+                albumId:
+                  type: integer
+                albumName:
+                  type: string
+                fileIds:
+                  type: array
+                  items:
+                    type: string
+                searchType:
+                  type: string
+                  enum:
+                    - tag
+                    - location
+                    - model
+                    - latest
+                    - all
+                  description: 刚上传或最新上传的一张照片使用 latest。
+                searchKeyword:
+                  type: string
+                mediaType:
+                  type: string
+                tagName:
+                  type: string
+                imageTypeText:
+                  type: string
+                  enum:
+                    - all
+                    - picture
+                    - gif
+                    - video
+                  default: all
+                locationLevel:
+                  type: string
+                  enum:
+                    - country
+                    - province
+                    - city
+                    - district
+                locationValue:
+                  type: string
+                sourceAlbumId:
+                  type: integer
+                confirmed:
+                  type: boolean
+                  default: false
+      responses:
+        "200":
+          description: 预览成功
+
+  /agent/executeAlbumAction:
+    post:
+      operationId: executeAlbumAction
+      summary: 执行相册写操作
+      description: 用户明确确认后执行相册写操作。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - action
+                - confirmed
+              properties:
+                action:
+                  type: string
+                  enum:
+                    - create_album
+                    - add_files_to_album
+                    - remove_files_from_album
+                    - create_album_and_add_files
+                albumId:
+                  type: integer
+                albumName:
+                  type: string
+                fileIds:
+                  type: array
+                  items:
+                    type: string
+                searchType:
+                  type: string
+                  enum:
+                    - tag
+                    - location
+                    - model
+                    - latest
+                    - all
+                searchKeyword:
+                  type: string
+                mediaType:
+                  type: string
+                tagName:
+                  type: string
+                imageTypeText:
+                  type: string
+                  enum:
+                    - all
+                    - picture
+                    - gif
+                    - video
+                  default: all
+                locationLevel:
+                  type: string
+                  enum:
+                    - country
+                    - province
+                    - city
+                    - district
+                locationValue:
+                  type: string
+                sourceAlbumId:
+                  type: integer
+                confirmed:
+                  type: boolean
+                  default: true
+      responses:
+        "200":
+          description: 执行成功
+
+  /agent/previewTagAction:
+    post:
+      operationId: previewTagAction
+      summary: 预览标签写操作
+      description: 预览添加或移除照片标签，不写入数据。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - action
+                - tagName
+              properties:
+                action:
+                  type: string
+                  enum:
+                    - add_tags
+                    - remove_tags
+                fileIds:
+                  type: array
+                  items:
+                    type: string
+                imageType:
+                  type: string
+                  default: 其他
+                tagName:
+                  type: string
+                searchType:
+                  type: string
+                  enum:
+                    - tag
+                    - location
+                    - model
+                    - latest
+                    - all
+                  description: 刚上传或最新上传的一张照片使用 latest。
+                searchKeyword:
+                  type: string
+                mediaType:
+                  type: string
+                sourceTagName:
+                  type: string
+                imageTypeText:
+                  type: string
+                  enum:
+                    - all
+                    - picture
+                    - gif
+                    - video
+                  default: all
+                locationLevel:
+                  type: string
+                  enum:
+                    - country
+                    - province
+                    - city
+                    - district
+                locationValue:
+                  type: string
+                sourceAlbumId:
+                  type: integer
+                confirmed:
+                  type: boolean
+                  default: false
+      responses:
+        "200":
+          description: 预览成功
+
+  /agent/executeTagAction:
+    post:
+      operationId: executeTagAction
+      summary: 执行标签写操作
+      description: 用户明确确认后添加或移除照片标签。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - action
+                - tagName
+                - confirmed
+              properties:
+                action:
+                  type: string
+                  enum:
+                    - add_tags
+                    - remove_tags
+                fileIds:
+                  type: array
+                  items:
+                    type: string
+                imageType:
+                  type: string
+                  default: 其他
+                tagName:
+                  type: string
+                searchType:
+                  type: string
+                  enum:
+                    - tag
+                    - location
+                    - model
+                    - latest
+                    - all
+                searchKeyword:
+                  type: string
+                mediaType:
+                  type: string
+                sourceTagName:
+                  type: string
+                imageTypeText:
+                  type: string
+                  enum:
+                    - all
+                    - picture
+                    - gif
+                    - video
+                  default: all
+                locationLevel:
+                  type: string
+                  enum:
+                    - country
+                    - province
+                    - city
+                    - district
+                locationValue:
+                  type: string
+                sourceAlbumId:
+                  type: integer
+                confirmed:
+                  type: boolean
+                  default: true
+      responses:
+        "200":
+          description: 执行成功

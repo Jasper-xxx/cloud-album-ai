@@ -1,0 +1,161 @@
+name: Quality Gate
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - develop
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: quality-gate-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  JAVA_VERSION: '17'
+  NODE_VERSION: '22'
+  PYTHON_VERSION: '3.12'
+
+jobs:
+  format-check:
+    name: Format And Conflict Marker Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check diff whitespace
+        shell: bash
+        run: |
+          BASE_SHA="${{ github.event.pull_request.base.sha || github.event.before || '' }}"
+          ZERO_SHA="0000000000000000000000000000000000000000"
+
+          if [ -n "$BASE_SHA" ] && [ "$BASE_SHA" != "$ZERO_SHA" ]; then
+            git diff --check "$BASE_SHA" "$GITHUB_SHA"
+          else
+            git diff --check
+          fi
+
+      - name: Check conflict markers
+        shell: bash
+        run: |
+          ! git grep -nE '^(<<<<<<<|=======|>>>>>>>)'
+
+  backend:
+    name: Backend Unit And Integration Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: memory-backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: maven
+
+      - name: Maven verify
+        run: mvn -B -ntp verify
+
+  frontend:
+    name: Frontend Build, Unit, And E2E Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: memory-frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: memory-frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npm run type-check
+
+      - name: Vitest component tests
+        run: npm run test:unit
+
+      - name: Production build
+        run: npm run build
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Playwright E2E
+        run: npm run test:e2e:ci
+
+      - name: Stress script dry run
+        working-directory: ${{ github.workspace }}
+        run: node scripts/stress/async-task-concurrency.mjs --dry-run
+
+  python:
+    name: Python Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ai-service
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt -r requirements-dev.txt
+
+      - name: Pytest
+        run: python -m pytest -q
+
+      - name: Ruff format check
+        run: python -m ruff format --check app tests
+
+  dependency-scan:
+    name: Dependency Vulnerability Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Trivy filesystem scan
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: vuln
+          vuln-type: library
+          skip-dirs: minio,mysql,redis,memory-frontend/node_modules,memory-frontend/dist
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: '1'
+
+  docker-build:
+    name: Docker Multi-stage Builds
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build backend image
+        run: docker build -f memory-backend/Dockerfile -t cloud-album-backend:ci memory-backend
+
+      - name: Build frontend image
+        run: docker build -f memory-frontend/Dockerfile -t cloud-album-frontend:ci memory-frontend
+
+      - name: Build AI service image
+        run: docker build -f ai-service/Dockerfile -t cloud-album-ai-service:ci ai-service

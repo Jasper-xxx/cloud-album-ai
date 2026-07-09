@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.memory.xzp.mapper.FaceMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.memory.xzp.model.entity.Face">
+        <id column="face_id" property="faceId" />
+        <result column="user_id" property="userId" />
+        <result column="file_id" property="fileId" />
+        <result column="is_processed" property="isProcessed" />
+        <result column="feature_vector" property="featureVector" jdbcType="BLOB" />
+        <result column="person_cover_url" property="personCoverUrl" />
+        <result column="person_object_name" property="personObjectName" />
+        <result column="create_time" property="createTime" />
+        <result column="is_face" property="isFace" />
+    </resultMap>
+
+
+    <!-- 根据文件 ID 列表查询人脸记录 ID -->
+    <select id="selectFaceIdByFileIds" resultType="java.lang.Long">
+        SELECT face.face_id
+        FROM face
+        INNER JOIN person_face pf ON face.face_id = pf.face_id
+        WHERE face.user_id = #{userId}
+          AND pf.user_id = #{userId}
+          AND pf.person_id = #{personId}
+          AND face.file_id IN
+        <foreach item="id" collection="fileIds" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <!-- 相似图片检测专用结果映射，保留给旧查询路径使用。 -->
+    <resultMap id="FaceFileDTOResultMap" type="com.memory.xzp.model.dto.FaceFileDTO">
+        <result column="file_id"               property="fileId"/>
+        <result column="origin_file_name"      property="originFileName"/>
+        <result column="size"                  property="size"/>
+        <result column="content_type"          property="contentType"/>
+        <result column="category"              property="category"/>
+        <result column="width"                 property="width"/>
+        <result column="height"                property="height"/>
+        <result column="file_url"              property="fileUrl"/>
+        <result column="thumbnail_url"         property="thumbnailUrl"/>
+        <result column="thumbnail_object_name" property="thumbnailObjectName"/>
+        <result column="feature_vector"        property="featureVector" jdbcType="BLOB"/>
+    </resultMap>
+
+    <!-- 查询用户所有未删除图片的人脸特征向量及文件展示信息。 -->
+    <select id="selectFaceFileByUserId" resultMap="FaceFileDTOResultMap">
+        SELECT
+            f.file_id,
+            f.origin_file_name,
+            f.size,
+            f.content_type,
+            f.category,
+            f.width,
+            f.height,
+            f.file_url,
+            f.thumbnail_url,
+            f.thumbnail_object_name,
+            fc.feature_vector
+        FROM face fc
+        INNER JOIN user_file uf
+            ON fc.file_id = uf.file_id
+           AND fc.user_id = uf.user_id
+        INNER JOIN file f
+            ON uf.file_id = f.file_id
+        WHERE fc.user_id              = #{userId}
+          AND uf.is_deleted           = 0
+          AND fc.feature_vector       IS NOT NULL
+          AND LENGTH(fc.feature_vector) > 0
+    </select>
+
+    <select id="selectPendingWithoutTask" resultMap="BaseResultMap">
+        SELECT
+            fc.face_id,
+            fc.user_id,
+            fc.file_id,
+            fc.is_processed
+        FROM face fc
+        LEFT JOIN async_task task
+            ON task.task_key = CONCAT(#{taskType}, ':', fc.face_id, ':', #{taskVersion})
+        WHERE fc.is_processed = 0
+          AND task.id IS NULL
+        ORDER BY fc.face_id ASC
+        LIMIT #{limit}
+    </select>
+
+</mapper>

@@ -1,0 +1,594 @@
+/* ============================================================
+ * 全局移动端适配样式
+ * 文件：src/styles/mobile.css
+ * 在 main.ts 中全局引入
+ *
+ * 设计原则（≤992px，与 layoutBreakpoint 一致）：
+ *   - 单列流式：主内容占满视口宽，侧栏为抽屉不占 flex 宽度（见 GlobalSider.vue）
+ *   - 顶栏双行：搜索独占一行，避免 PC 横版顶栏在窄屏横向溢出（见 GlobalHeader.vue）
+ *   - 禁止横向滚动：媒体与表格在视口内折行/裁列，冗余副标题等隐藏
+ *   - 纵向仍可滚动：由 GlobalContent / #picture-list 等承担
+ * ============================================================ */
+
+/* ── 1. CSS 自定义属性与字体基准 ────────────────────────────── */
+:root {
+  /* 安全区域（刘海 / Home Bar / 圆角屏边距） */
+  --safe-top:    env(safe-area-inset-top,    0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left:   env(safe-area-inset-left,   0px);
+  --safe-right:  env(safe-area-inset-right,  0px);
+
+  /* 全局间距基准（用 rem 引用，随 html font-size 缩放） */
+  --spacing-xs: 0.25rem;  /* 4px */
+  --spacing-sm: 0.5rem;   /* 8px */
+  --spacing-md: 1rem;     /* 16px */
+  --spacing-lg: 1.5rem;   /* 24px */
+  --spacing-xl: 2rem;     /* 32px */
+
+  /* 圆角基准 */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+
+  /* 触摸目标最小高度（WCAG AA：44px） */
+  --touch-target: 44px;
+
+  /*
+   * 固定顶栏 + 安全区总占位（与 BasicLayout / GlobalSider 的 top、height 计算一致）
+   * PC：单行 60px；手机由下方 @media 覆盖为双行堆叠高度（须与 GlobalHeader 实际行高大致一致）
+   */
+  --mobile-header-total: calc(60px + env(safe-area-inset-top, 0px));
+}
+
+/* 平板 / 大屏手机等（992px 以下）：根字体降为 14px → 1rem = 14px */
+@media (max-width: 992px) {
+  html { font-size: 14px; }
+}
+
+/* 手机（480px 以下）：根字体降为 13px → 1rem = 13px */
+@media (max-width: 480px) {
+  html { font-size: 13px; }
+}
+
+/* ── 2. 基础滚动与溢出处理 ─────────────────────────────────── */
+html,
+body {
+  /* 防止整体页面横向溢出滚动 */
+  overflow-x: hidden;
+  /* 移动端弹性滚动（iOS 惯性滚动） */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 所有元素默认 box-sizing，防止 padding 撑破宽度 */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* 禁用长按文本选择（仅非输入元素） */
+img,
+button,
+.el-button,
+.el-menu-item {
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+/* ── 2b. 移动单列流式、资源自适应、隐藏冗余、禁止横向溢出 ───────── */
+@media (max-width: 992px) {
+  #app,
+  #basicLayout {
+    min-width: 0 !important;
+    max-width: 100vw !important;
+    overflow-x: hidden;
+  }
+
+  img,
+  video,
+  canvas,
+  svg {
+    max-width: 100% !important;
+    height: auto;
+  }
+
+  table {
+    max-width: 100%;
+  }
+
+  /* 各页 content-header 副标题（说明小字） */
+  .content-header-title-abs {
+    display: none !important;
+  }
+
+  #globalSider .collapse-text {
+    display: none !important;
+  }
+
+  #picture-list {
+    margin-left: 8px !important;
+    margin-right: 8px !important;
+    width: calc(100% - 16px) !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    /* 默认：中图模式（2列） */
+    --thumb-cols: 2;
+    --thumb-gap: 10px;
+  }
+
+  /* 小/中/大模式：3/2/1列（数据来自各 List 组件的 data-thumb-mode） */
+  #picture-list[data-thumb-mode="120"] { --thumb-cols: 3; }
+  #picture-list[data-thumb-mode="150"] { --thumb-cols: 2; }
+  #picture-list[data-thumb-mode="200"] { --thumb-cols: 1; }
+
+  .picture-group-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    display: grid !important;
+    grid-template-columns: repeat(var(--thumb-cols), minmax(0, 1fr));
+    gap: var(--thumb-gap);
+  }
+
+  .picture-group-content .picture-group-item {
+    /* Grid 子项：宽度由网格决定，高度用 aspect-ratio 固定为方形 */
+    margin: 0 !important;
+    width: 100% !important;
+    aspect-ratio: 1 / 1;
+    height: auto !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    /* 给复选框扩展点击区域的伪元素用 */
+    --imageSize: 100%;
+  }
+
+  .picture-group-content .picture-group-item[style] {
+    /* 覆盖 List 组件的内联宽高（original 比例会写入 px） */
+    width: 100% !important;
+    height: auto !important;
+    max-width: 100% !important;
+    flex-grow: 0 !important;
+  }
+
+  /* 关闭 flex 瀑布流伪元素（grid 下会制造多余空白） */
+  .picture-group-content::after {
+    content: none !important;
+  }
+
+  .el-pagination {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    row-gap: 6px;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding-left: 4px !important;
+    padding-right: 4px !important;
+    box-sizing: border-box !important;
+  }
+
+  .el-breadcrumb {
+    max-width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .GlobalContent .el-table {
+    width: 100% !important;
+    table-layout: fixed !important;
+    font-size: 12px !important;
+  }
+
+  .GlobalContent .el-table .cell {
+    white-space: normal !important;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+
+  .GlobalContent .el-table__body-wrapper,
+  .GlobalContent .el-table__header-wrapper {
+    overflow-x: hidden !important;
+  }
+
+  .ai-page .picture-table-data .el-table__header-wrapper th:nth-child(2),
+  .ai-page .picture-table-data .el-table__header-wrapper th:nth-child(3),
+  .ai-page .picture-table-data .el-table__header-wrapper th:nth-child(4),
+  .ai-page .picture-table-data .el-table__body-wrapper td:nth-child(2),
+  .ai-page .picture-table-data .el-table__body-wrapper td:nth-child(3),
+  .ai-page .picture-table-data .el-table__body-wrapper td:nth-child(4) {
+    display: none !important;
+    width: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+  }
+
+  .ai-page .pagination-container {
+    position: relative !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    display: flex !important;
+    justify-content: center !important;
+    flex-wrap: wrap !important;
+    width: 100% !important;
+    padding: 10px 8px !important;
+    box-sizing: border-box !important;
+  }
+
+  .ai-page .tag-container {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    column-gap: 0 !important;
+    row-gap: 4px;
+  }
+
+  .ai-page .content-header-left,
+  .ai-page .content-header-right {
+    width: 100% !important;
+    height: auto !important;
+    flex-wrap: wrap !important;
+    justify-content: flex-start !important;
+  }
+
+  .ai-page .content-header-right {
+    margin-right: 0 !important;
+  }
+
+  .ai-page h3 {
+    margin-left: 0 !important;
+    width: 100%;
+    font-size: 1rem;
+  }
+
+  /* 悬浮上传按钮避开圆角屏安全区 */
+  .GlobalUpload {
+    right: max(12px, env(safe-area-inset-right, 0px)) !important;
+    bottom: max(16px, env(safe-area-inset-bottom, 0px)) !important;
+  }
+}
+
+/* ── 3. 安全区域 + 顶栏高度（与 GlobalBody / 抽屉 top 对齐） ─────── */
+#globalHeader {
+  padding-top: var(--safe-top);
+  height: calc(60px + var(--safe-top)) !important;
+  box-sizing: border-box;
+}
+
+@media (max-width: 992px) {
+  :root {
+    /* 双行顶栏：首行 ~52px + 搜索行 ~44px + 上下内边距（与 GlobalHeader .header-inner 一致，可微调） */
+    --mobile-header-total: calc(104px + env(safe-area-inset-top, 0px));
+  }
+
+  #globalHeader {
+    height: auto !important;
+    min-height: calc(48px + var(--safe-top)) !important;
+    padding-bottom: 10px;
+    box-sizing: border-box;
+    /* 高于抽屉/遮罩，保证汉堡键始终可点（遮罩 z-index ~10040） */
+    z-index: 10100 !important;
+    position: fixed !important;
+  }
+
+  .GlobalBody {
+    top: var(--mobile-header-total) !important;
+    height: calc(100% - var(--mobile-header-total)) !important;
+    padding-bottom: var(--safe-bottom);
+  }
+}
+
+/* ── 4. Element Plus 全局移动端修正 ─────────────────────────── */
+
+/* 4-1. 按钮：手机端高度不低于 44px，字体不低于 14px */
+@media (max-width: 992px) {
+  .el-button {
+    min-height: var(--touch-target) !important;
+    font-size: 0.875rem !important; /* 14px / 16px = 0.875rem */
+    padding: 0 1rem !important;
+  }
+  /* 小号按钮特殊处理：最小高度 36px */
+  .el-button--small {
+    min-height: 36px !important;
+    font-size: 0.8125rem !important;
+    padding: 0 0.625rem !important;
+  }
+}
+
+/* 4-2. 输入框：手机端高度不低于 44px，禁止 iOS 自动放大（font-size ≥ 16px 可防止） */
+@media (max-width: 992px) {
+  .el-input__inner,
+  .el-textarea__inner {
+    font-size: 1rem !important; /* 等于 html font-size，≥ 16px 原始尺寸防缩放 */
+    min-height: var(--touch-target) !important;
+  }
+  .el-input__wrapper {
+    min-height: var(--touch-target) !important;
+  }
+}
+
+/* 4-3. 标签 / Tag：手机端适当放大 */
+@media (max-width: 480px) {
+  .el-tag {
+    height: auto !important;
+    line-height: 1.4 !important;
+    padding: 2px 8px !important;
+    font-size: 0.75rem !important;
+  }
+}
+
+/* ── 5. 弹窗（el-dialog）手机端自适应 ──────────────────────── */
+@media (max-width: 992px) {
+  /* 弹窗宽度撑满屏幕，留少量边距 */
+  .el-dialog {
+    width: 94vw !important;
+    margin: 5vh auto !important;
+    max-height: 90vh;
+    overflow-y: auto;
+    border-radius: var(--radius-lg) !important;
+  }
+  /* 弹窗内容区域限制高度并允许滚动 */
+  .el-dialog__body {
+    padding: 12px 16px !important;
+    max-height: 65vh;
+    overflow-y: auto;
+  }
+  .el-dialog__header {
+    padding: 14px 16px 10px !important;
+  }
+  .el-dialog__footer {
+    padding: 10px 16px 14px !important;
+  }
+}
+
+/* ── 6. 消息提示（el-message）手机端居中 ───────────────────── */
+@media (max-width: 480px) {
+  .el-message {
+    width: 88vw !important;
+    min-width: unset !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    top: 16px !important;
+  }
+}
+
+/* ── 7. 进度条手机端加粗 ────────────────────────────────────── */
+@media (max-width: 480px) {
+  .el-progress-bar__outer {
+    border-radius: 4px !important;
+  }
+}
+
+/* ── 8. 空状态图片手机端缩小 ────────────────────────────────── */
+@media (max-width: 480px) {
+  .el-empty__image {
+    width: 80px !important;
+    height: 80px !important;
+  }
+  .el-empty__description {
+    font-size: 0.875rem !important;
+    margin-top: 12px !important;
+  }
+}
+
+/* ── 9. 内容页头部工具栏（AllPicture / Album / Person / Brush 共用）── */
+/*
+ * 各图片页的 .content-header 固定 height:60px 且无 flex-wrap，
+ * 多个按钮在窄屏下溢出屏幕。将 .content 改为 flex 列布局，
+ * 工具栏自适应高度，#picture-list 用 flex:1 填充剩余空间。
+ */
+@media (max-width: 992px) {
+  /*
+   * 图片网格页：根节点可能是 .content（#picture）或 #album（人物/相册/地点等），
+   * 统一为纵向 flex，保证 #picture-list 在视口内滚动。
+   */
+  .content,
+  #album {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  /* 工具栏：允许换行，高度跟随内容 */
+  .content-header {
+    flex-shrink: 0 !important;
+    height: auto !important;
+    min-height: 48px !important;
+    flex-wrap: wrap !important;
+    padding: 6px 8px !important;
+    gap: 4px !important;
+    align-items: center !important;
+  }
+
+  .content-header-left {
+    height: auto !important;
+  }
+
+  .content-header-right {
+    height: auto !important;
+    margin-right: 4px !important;
+    flex-wrap: wrap !important;
+    gap: 4px !important;
+  }
+
+  /* 按钮宽度由文字内容决定，不再硬定宽 */
+  .content-header-left-button {
+    width: auto !important;
+    min-width: 70px !important;
+    margin-left: 0 !important;
+    padding: 0 10px !important;
+    font-size: 13px !important;
+    z-index: 100 !important;
+  }
+
+  .content-header-right-button {
+    width: auto !important;
+    min-width: 60px !important;
+    padding: 0 8px !important;
+    font-size: 12px !important;
+    z-index: 100 !important;
+  }
+
+  /* 确保下拉菜单在手机端可以正常显示 */
+  .content-header .el-dropdown {
+    position: relative !important;
+    z-index: 1000 !important;
+  }
+
+  .content-header .el-dropdown-menu {
+    position: fixed !important;
+    top: var(--mobile-header-total) !important;
+    right: 10px !important;
+    left: auto !important;
+    transform: none !important;
+    z-index: 10000 !important;
+    max-width: 90vw !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  }
+
+  /* 图片列表：flex:1 填满工具栏以下空间，替代原 calc(100% - 60px) */
+  #picture-list {
+    flex: 1 1 auto !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  /* 多选操作栏允许换行 */
+  #checked-menu {
+    height: auto !important;
+    min-height: 50px !important;
+    flex-wrap: wrap !important;
+    padding: 6px 8px !important;
+    gap: 6px !important;
+  }
+}
+
+/* ── 10. 搜索页（Search.vue）移动端 ─────────────────────────── */
+/* .search-container-main 硬编码 width:600px，在窄屏直接溢出视口 */
+@media (max-width: 992px) {
+  .search-container-main {
+    width: 100% !important;
+    min-width: 0 !important;
+    padding: 0 !important;
+  }
+
+  .search-container-item {
+    padding: 12px !important;
+    margin-bottom: 8px !important;
+    border-radius: 0 !important;
+  }
+
+  /* 搜索框与内容对齐 */
+  .search-input-item {
+    margin-bottom: 12px !important;
+    padding-top: 12px !important;
+  }
+
+  /* 确保搜索框高度适应手机端 */
+  .search-input {
+    height: 44px !important;
+  }
+
+  /* 搜索框容器 */
+  .search-input-item {
+    height: auto !important;
+  }
+}
+
+/* ── 11. 以图搜图页（ImageSearch.vue）移动端 ─────────────────── */
+@media (max-width: 992px) {
+  /* 操作按钮在手机端对齐 */
+  .action-buttons {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+
+  /* 按钮宽度一致 */
+  .search-btn,
+  .reset-btn {
+    width: 100% !important;
+    min-width: unset !important;
+    min-height: 44px !important;
+  }
+}
+
+
+/* ── 11. 主内容区（GlobalContent）移动端纵向滚动 ────────── */
+/*
+ * 问题：flex 子项默认 min-height:auto，在 fixed 高度的 GlobalBody 内，
+ *       GlobalContent 无法正确收缩，overflow-y:auto 不生效；再叠加子页面
+ *       height:100% + overflow:hidden，内容超出后既划不动也看不到。
+ *
+ * 策略：
+ *   1. GlobalBody：min-height:0 + overflow:hidden，把滚动约束在 GlobalContent。
+ *   2. GlobalContent：flex:1 1 0% + min-height:0 + overflow-y:auto + iOS 惯性滚动。
+ *   3. 默认路由根节点：height:auto + min-height:100%，超长页面由 GlobalContent 滚动。
+ *   4. 例外：#picture.content / #album 仍占满视口高度，由内部 #picture-list 滚动。
+ */
+@media (max-width: 992px) {
+  #basicLayout {
+    min-height: 0;
+  }
+
+  .GlobalBody {
+    min-height: 0 !important;
+    /* 横向允许 fixed 抽屉画出（避免 overflow:hidden 裁掉侧栏） */
+    overflow-x: visible !important;
+    overflow-y: hidden !important;
+  }
+
+  .GlobalContent {
+    flex: 1 1 0% !important;
+    min-height: 0 !important;
+    min-width: 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior-y: contain;
+    /* 勿用 touch-action: pan-y — 部分 Android WebView 会误伤子元素点击 */
+  }
+
+  /* 大多数页面：根节点随内容增高，滚动发生在 GlobalContent */
+  .GlobalContent > * {
+    max-width: 100% !important;
+    min-height: 100% !important;
+    height: auto !important;
+    overflow-x: hidden !important;
+    overflow-y: visible !important;
+  }
+
+  /*
+   * 仅当页内存在 #picture-list 时锁高度并由列表区滚动；
+   * 无列表的页面仍走上面的「整页随 GlobalContent 滚动」。
+   */
+  .GlobalContent > #picture.content:has(#picture-list),
+  .GlobalContent > #album:has(#picture-list) {
+    height: 100% !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+}
+
+/* ── 12. 登录 / 注册全屏页：允许整页纵向滚动 ─────────────────────── */
+@media (max-width: 992px) {
+  .auth-wrapper {
+    min-height: 100dvh !important;
+    min-height: 100vh !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    flex-direction: column !important;
+  }
+
+  .auth-wrapper .form-panel {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow-y: visible !important;
+  }
+}

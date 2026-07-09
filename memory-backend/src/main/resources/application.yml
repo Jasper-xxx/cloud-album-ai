@@ -1,0 +1,346 @@
+server:
+  port: ${BACKEND_PORT:8088}
+#  tomcat:
+#    basedir: F:\Desktop\Memory\memory-backend\src\main\resources\tmp\
+
+spring:
+  servlet:
+    multipart:
+      max-file-size: ${LEGACY_UPLOAD_MAX_SIZE:100MB}
+      max-request-size: ${LEGACY_UPLOAD_MAX_SIZE:100MB}
+      enabled: true
+  application:
+    name: memory-backend
+  # MySQL 配置
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${DB_URL:jdbc:mysql://localhost:3306/memory_space}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD}
+  flyway:
+    enabled: ${FLYWAY_ENABLED:true}
+    locations: classpath:db/migration
+    baseline-on-migrate: ${FLYWAY_BASELINE_ON_MIGRATE:true}
+    baseline-version: 0
+    validate-on-migrate: true
+  # Redis 配置
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: ${REDIS_DATABASE:0}
+  rabbitmq:
+    host: ${SPRING_RABBITMQ_HOST:${RABBITMQ_HOST:localhost}}
+    port: ${SPRING_RABBITMQ_PORT:${RABBITMQ_PORT:5672}}
+    username: ${SPRING_RABBITMQ_USERNAME:${RABBITMQ_USERNAME:guest}}
+    password: ${SPRING_RABBITMQ_PASSWORD:${RABBITMQ_PASSWORD:guest}}
+    virtual-host: ${SPRING_RABBITMQ_VIRTUAL_HOST:${RABBITMQ_VIRTUAL_HOST:/}}
+    publisher-confirm-type: correlated
+    publisher-returns: true
+    template:
+      mandatory: ${RABBITMQ_TEMPLATE_MANDATORY:true}
+    listener:
+      simple:
+        acknowledge-mode: auto
+        concurrency: ${RABBITMQ_LISTENER_CONCURRENCY:2}
+        max-concurrency: ${RABBITMQ_LISTENER_MAX_CONCURRENCY:8}
+        prefetch: ${RABBITMQ_LISTENER_PREFETCH:10}
+  # 邮件验证码配置
+  mail:
+    host: ${MAIL_HOST:smtp.qq.com}
+    port: ${MAIL_PORT:465}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    default-encoding: utf-8
+    protocol: smtps
+    code:
+      time: ${MAIL_CODE_TTL_SECONDS:300}
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    # 控制台打印 SQL，便于开发调试
+    log-impl: org.apache.ibatis.logging.nologging.NoLoggingImpl
+  global-config:
+    db-config:
+      id-type: ASSIGN_ID
+      logic-delete-field: deleted
+      logic-not-delete-value: 0
+      logic-delete-value: 1
+    banner: false
+  mapper-locations: classpath:/mapper/*.xml
+
+sa-token:
+  # 认证请求头名称
+  token-name: Authorization
+  # token 有效期，单位秒
+  timeout: 2592000
+  # token 最低活跃频率，-1 表示不限制
+  active-timeout: -1
+  # 是否允许同一账号并发登录
+  is-concurrent: false
+  # 是否共用同一个 token
+  is-share: true
+  token-style: uuid
+  is-log: true
+  is-read-cookie: false
+  jwt-secret-key: ${SA_TOKEN_JWT_SECRET}
+
+# MinIO 对象存储配置
+minio:
+  access-key: ${MINIO_ACCESS_KEY}
+  secret-key: ${MINIO_SECRET_KEY}
+  url: ${MINIO_URL:http://127.0.0.1:9000}
+  bucket-name: ${MINIO_BUCKET:pictures}
+  connect-timeout-seconds: ${MINIO_CONNECT_TIMEOUT_SECONDS:5}
+  read-timeout-seconds: ${MINIO_READ_TIMEOUT_SECONDS:30}
+  write-timeout-seconds: ${MINIO_WRITE_TIMEOUT_SECONDS:30}
+  call-timeout-seconds: ${MINIO_CALL_TIMEOUT_SECONDS:60}
+
+upload:
+  image-max-size: ${UPLOAD_IMAGE_MAX_SIZE:52428800}
+  video-max-size: ${UPLOAD_VIDEO_MAX_SIZE:2147483648}
+  avatar-max-size: ${UPLOAD_AVATAR_MAX_SIZE:5242880}
+  multipart:
+    part-size: ${UPLOAD_PART_SIZE:16777216}
+    session-ttl-seconds: ${UPLOAD_SESSION_TTL_SECONDS:7200}
+    presigned-url-ttl-seconds: ${UPLOAD_URL_TTL_SECONDS:1800}
+  security:
+    max-image-pixels: ${UPLOAD_MAX_IMAGE_PIXELS:50000000}
+    max-image-ratio: ${UPLOAD_MAX_IMAGE_RATIO:100}
+    video-temp-dir: ${UPLOAD_VIDEO_VALIDATE_TEMP_DIR:${java.io.tmpdir}}
+
+app:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:8080,http://127.0.0.1:8080,http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174}
+  rate-limit:
+    distributed-enabled: ${RATE_LIMIT_DISTRIBUTED_ENABLED:true}
+    redis-key-prefix: ${RATE_LIMIT_REDIS_KEY_PREFIX:rate_limit}
+    burst-seconds: ${RATE_LIMIT_BURST_SECONDS:1}
+    fallback-open: ${RATE_LIMIT_FALLBACK_OPEN:true}
+  file:
+    reconcile:
+      enabled: ${FILE_RECONCILE_ENABLED:true}
+      batch-size: ${FILE_RECONCILE_BATCH_SIZE:200}
+      object-scan-limit: ${FILE_RECONCILE_OBJECT_SCAN_LIMIT:500}
+      abnormal-minutes: ${FILE_RECONCILE_ABNORMAL_MINUTES:120}
+      initial-delay-ms: ${FILE_RECONCILE_INITIAL_DELAY_MS:60000}
+      delay-ms: ${FILE_RECONCILE_DELAY_MS:300000}
+  scheduler-lock:
+    enabled: ${SCHEDULER_LOCK_ENABLED:true}
+    key-prefix: ${SCHEDULER_LOCK_KEY_PREFIX:scheduler_lock}
+    default-ttl-seconds: ${SCHEDULER_LOCK_DEFAULT_TTL_SECONDS:300}
+    fallback-open: ${SCHEDULER_LOCK_FALLBACK_OPEN:false}
+    async-dispatch-ttl-seconds: ${SCHEDULER_LOCK_ASYNC_DISPATCH_TTL_SECONDS:120}
+    recovery-ttl-seconds: ${SCHEDULER_LOCK_RECOVERY_TTL_SECONDS:300}
+    recycle-cleanup-ttl-seconds: ${SCHEDULER_LOCK_RECYCLE_CLEANUP_TTL_SECONDS:14400}
+    file-url-refresh-ttl-seconds: ${SCHEDULER_LOCK_FILE_URL_REFRESH_TTL_SECONDS:7200}
+    file-cleanup-ttl-seconds: ${SCHEDULER_LOCK_FILE_CLEANUP_TTL_SECONDS:14400}
+    multipart-cleanup-ttl-seconds: ${SCHEDULER_LOCK_MULTIPART_CLEANUP_TTL_SECONDS:600}
+    file-reconcile-ttl-seconds: ${SCHEDULER_LOCK_FILE_RECONCILE_TTL_SECONDS:900}
+  async:
+    shutdown-await-seconds: ${ASYNC_SHUTDOWN_AWAIT_SECONDS:30}
+    file:
+      core-pool-size: ${FILE_TASK_CORE_POOL_SIZE:4}
+      max-pool-size: ${FILE_TASK_MAX_POOL_SIZE:8}
+      queue-capacity: ${FILE_TASK_QUEUE_CAPACITY:100}
+    ai-batch:
+      core-pool-size: ${AI_BATCH_CORE_POOL_SIZE:4}
+      max-pool-size: ${AI_BATCH_MAX_POOL_SIZE:4}
+      queue-capacity: ${AI_BATCH_QUEUE_CAPACITY:50}
+    task:
+      max-retries: ${ASYNC_TASK_MAX_RETRIES:5}
+      scan-batch-size: ${ASYNC_TASK_SCAN_BATCH_SIZE:50}
+      scan-delay-ms: ${ASYNC_TASK_SCAN_DELAY_MS:30000}
+      scan-initial-delay-ms: ${ASYNC_TASK_SCAN_INITIAL_DELAY_MS:30000}
+      initial-retry-delay-seconds: ${ASYNC_TASK_INITIAL_RETRY_DELAY_SECONDS:30}
+      max-retry-delay-seconds: ${ASYNC_TASK_MAX_RETRY_DELAY_SECONDS:300}
+      running-timeout-minutes: ${ASYNC_TASK_RUNNING_TIMEOUT_MINUTES:30}
+      admin-user-ids: ${ASYNC_TASK_ADMIN_USER_IDS:}
+      face-recovery-enabled: ${ASYNC_TASK_FACE_RECOVERY_ENABLED:true}
+      face-recovery-batch-size: ${ASYNC_TASK_FACE_RECOVERY_BATCH_SIZE:100}
+      face-recovery-cron: ${ASYNC_TASK_FACE_RECOVERY_CRON:0 0/50 * * * ?}
+      video-version: ${ASYNC_TASK_VIDEO_VERSION:v1}
+      video-recovery-enabled: ${ASYNC_TASK_VIDEO_RECOVERY_ENABLED:true}
+      video-recovery-batch-size: ${ASYNC_TASK_VIDEO_RECOVERY_BATCH_SIZE:50}
+      video-recovery-cron: ${ASYNC_TASK_VIDEO_RECOVERY_CRON:0 10/50 * * * ?}
+      video-temp-dir: ${ASYNC_TASK_VIDEO_TEMP_DIR:${java.io.tmpdir}}
+      geo-version: ${ASYNC_TASK_GEO_VERSION:v1}
+      geo-recovery-enabled: ${ASYNC_TASK_GEO_RECOVERY_ENABLED:true}
+      geo-recovery-batch-size: ${ASYNC_TASK_GEO_RECOVERY_BATCH_SIZE:50}
+      geo-recovery-cron: ${ASYNC_TASK_GEO_RECOVERY_CRON:0 20/50 * * * ?}
+      tag-recovery-enabled: ${ASYNC_TASK_TAG_RECOVERY_ENABLED:false}
+      tag-recovery-batch-size: ${ASYNC_TASK_TAG_RECOVERY_BATCH_SIZE:25}
+      tag-recovery-cron: ${ASYNC_TASK_TAG_RECOVERY_CRON:0 0/30 * * * ?}
+      metrics-refresh-ms: ${ASYNC_TASK_METRICS_REFRESH_MS:30000}
+      metrics-initial-delay-ms: ${ASYNC_TASK_METRICS_INITIAL_DELAY_MS:5000}
+      mq:
+        enabled: ${ASYNC_TASK_MQ_ENABLED:false}
+        exchange: ${ASYNC_TASK_MQ_EXCHANGE:memory.async-task.exchange}
+        queue: ${ASYNC_TASK_MQ_QUEUE:memory.async-task.dispatch}
+        routing-key: ${ASYNC_TASK_MQ_ROUTING_KEY:async-task.dispatch}
+        outbox-batch-size: ${ASYNC_TASK_OUTBOX_BATCH_SIZE:100}
+        outbox-max-retries: ${ASYNC_TASK_OUTBOX_MAX_RETRIES:10}
+        outbox-retry-delay-seconds: ${ASYNC_TASK_OUTBOX_RETRY_DELAY_SECONDS:30}
+        outbox-publish-delay-ms: ${ASYNC_TASK_OUTBOX_PUBLISH_DELAY_MS:2000}
+        outbox-initial-delay-ms: ${ASYNC_TASK_OUTBOX_INITIAL_DELAY_MS:5000}
+        outbox-lock-ttl-seconds: ${ASYNC_TASK_OUTBOX_LOCK_TTL_SECONDS:120}
+        publish-confirm-timeout-ms: ${ASYNC_TASK_MQ_PUBLISH_CONFIRM_TIMEOUT_MS:5000}
+  resilience:
+    executor:
+      core-pool-size: ${EXTERNAL_CALL_CORE_POOL_SIZE:8}
+      max-pool-size: ${EXTERNAL_CALL_MAX_POOL_SIZE:32}
+      queue-capacity: ${EXTERNAL_CALL_QUEUE_CAPACITY:200}
+
+logging:
+  structured:
+    format:
+      console: ${LOGGING_STRUCTURED_FORMAT:ecs}
+
+management:
+  server:
+    address: ${MANAGEMENT_ADDRESS:127.0.0.1}
+    port: ${MANAGEMENT_PORT:8089}
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus
+  endpoint:
+    health:
+      show-details: never
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 20
+        minimum-number-of-calls: 8
+        failure-rate-threshold: 50
+        slow-call-rate-threshold: 60
+        slow-call-duration-threshold: 5s
+        wait-duration-in-open-state: 30s
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
+    instances:
+      ai:
+        base-config: default
+        slow-call-duration-threshold: ${AI_CIRCUIT_BREAKER_SLOW_CALL_DURATION:30s}
+      minio:
+        base-config: default
+        slow-call-duration-threshold: ${MINIO_CIRCUIT_BREAKER_SLOW_CALL_DURATION:10s}
+      minioUpload:
+        base-config: default
+        slow-call-duration-threshold: ${MINIO_UPLOAD_CIRCUIT_BREAKER_SLOW_CALL_DURATION:60s}
+      map:
+        base-config: default
+        slow-call-duration-threshold: ${AMAP_CIRCUIT_BREAKER_SLOW_CALL_DURATION:3s}
+      mail:
+        base-config: default
+        slow-call-duration-threshold: ${MAIL_CIRCUIT_BREAKER_SLOW_CALL_DURATION:5s}
+  retry:
+    configs:
+      default:
+        max-attempts: 3
+        wait-duration: 500ms
+        enable-exponential-backoff: true
+        exponential-backoff-multiplier: 2
+    instances:
+      ai:
+        base-config: default
+        max-attempts: ${AI_RETRY_MAX_ATTEMPTS:3}
+      minio:
+        base-config: default
+        max-attempts: ${MINIO_RETRY_MAX_ATTEMPTS:3}
+      minioUpload:
+        base-config: default
+        max-attempts: ${MINIO_UPLOAD_RETRY_MAX_ATTEMPTS:1}
+      map:
+        base-config: default
+        max-attempts: ${AMAP_RETRY_MAX_ATTEMPTS:3}
+      mail:
+        base-config: default
+        max-attempts: ${MAIL_RETRY_MAX_ATTEMPTS:2}
+  bulkhead:
+    configs:
+      default:
+        max-concurrent-calls: 20
+        max-wait-duration: 0
+    instances:
+      ai:
+        max-concurrent-calls: ${AI_BULKHEAD_MAX_CONCURRENT_CALLS:8}
+        max-wait-duration: ${AI_BULKHEAD_MAX_WAIT_DURATION:1s}
+      minio:
+        max-concurrent-calls: ${MINIO_BULKHEAD_MAX_CONCURRENT_CALLS:32}
+        max-wait-duration: ${MINIO_BULKHEAD_MAX_WAIT_DURATION:500ms}
+      minioUpload:
+        max-concurrent-calls: ${MINIO_UPLOAD_BULKHEAD_MAX_CONCURRENT_CALLS:8}
+        max-wait-duration: ${MINIO_UPLOAD_BULKHEAD_MAX_WAIT_DURATION:1s}
+      map:
+        max-concurrent-calls: ${AMAP_BULKHEAD_MAX_CONCURRENT_CALLS:8}
+        max-wait-duration: ${AMAP_BULKHEAD_MAX_WAIT_DURATION:500ms}
+      mail:
+        max-concurrent-calls: ${MAIL_BULKHEAD_MAX_CONCURRENT_CALLS:4}
+        max-wait-duration: ${MAIL_BULKHEAD_MAX_WAIT_DURATION:1s}
+  timelimiter:
+    configs:
+      default:
+        timeout-duration: 10s
+        cancel-running-future: true
+    instances:
+      ai:
+        timeout-duration: ${AI_TIME_LIMITER_TIMEOUT:70s}
+      minio:
+        timeout-duration: ${MINIO_TIME_LIMITER_TIMEOUT:20s}
+      minioUpload:
+        timeout-duration: ${MINIO_UPLOAD_TIME_LIMITER_TIMEOUT:120s}
+      map:
+        timeout-duration: ${AMAP_TIME_LIMITER_TIMEOUT:5s}
+      mail:
+        timeout-duration: ${MAIL_TIME_LIMITER_TIMEOUT:10s}
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+
+# 高德地图 API 配置
+amp:
+  api:
+    key: ${AMAP_API_KEY}
+  geo:
+    url: ${AMAP_GEO_URL:https://restapi.amap.com/v3/geocode/regeo}
+
+# AI 服务配置
+ai:
+  service:
+    url: ${AI_SERVICE_URL:http://localhost:5000}
+  feature:
+    provider: ${AI_FEATURE_PROVIDER:aliyun}
+    model: ${AI_FEATURE_MODEL:qwen3-vl-embedding}
+    version: ${AI_FEATURE_VERSION:v1}
+    running-timeout-seconds: ${AI_FEATURE_RUNNING_TIMEOUT_SECONDS:120}
+  face:
+    detect-provider: ${AI_FACE_DETECT_PROVIDER:aliyun-qwen-vl-face-detect}
+    task-version: ${AI_FACE_TASK_VERSION:v1}
+    running-timeout-seconds: ${AI_FACE_RUNNING_TIMEOUT_SECONDS:120}
+  tag:
+    task-version: ${AI_TAG_TASK_VERSION:v1}
+    running-timeout-seconds: ${AI_TAG_RUNNING_TIMEOUT_SECONDS:180}
+
+face:
+  cluster:
+    cosine-threshold: ${FACE_CLUSTER_COSINE_THRESHOLD:0.46}
+
+# Dify 智能体本地调试配置
+agent:
+  # 本地调试可关闭 /agent/* 登录校验；生产环境请改回 true
+  auth-enabled: ${AGENT_AUTH_ENABLED:true}
+  # auth-enabled=false 时，智能体查询这个用户的数据
+  dev-user-id: ${AGENT_DEV_USER_ID:1000000012}

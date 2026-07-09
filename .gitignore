@@ -1,0 +1,80 @@
+# 编辑器配置
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# 后端编译产物
+target/
+build/
+*.jar
+*.war
+*.ear
+
+# 前端依赖与构建
+memory-frontend/node_modules/
+memory-frontend/dist/
+memory-frontend/.env
+memory-frontend/.env.*
+!memory-frontend/.env.example
+
+# 本地环境变量
+.env
+.env.*
+!.env.example
+
+# 中间件数据目录（核心！这些是大文件，绝对不要上传）
+minio/
+mysql/
+redis/
+
+# 图片、视频、压缩包等大文件
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.bmp
+*.webp
+*.mp4
+*.avi
+*.mov
+*.zip
+*.rar
+*.tar.gz
+*.7z
+
+# AI 模块专属忽略
+ai-service/__pycache__/
+**/__pycache__/
+*.py[cod]
+ai-service/.idea/
+# 数据集（核心！这两个文件夹占了大部分空间，绝对不要上传）
+ai-service/data/
+ai-service/data_origin/
+# 训练生成的模型文件
+*.pth
+*.onnx
+*.h5
+*.bin
+*.pt
+*.ckpt
+
+# 日志与临时文件
+*.log
+logs/
+tmp/
+*.tmp
+
+# 本地项目优化计划
+/项目优化计划/
+
+# 数据库文件
+*.sql
+!memory-backend/src/main/resources/sql/
+!memory-backend/src/main/resources/sql/*.sql
+!memory-backend/src/main/resources/db/
+!memory-backend/src/main/resources/db/migration/
+!memory-backend/src/main/resources/db/migration/*.sql
+*.db
+*.sqlite
+*.sqlite3

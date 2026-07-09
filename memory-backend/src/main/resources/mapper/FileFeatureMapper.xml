@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.memory.xzp.mapper.FileFeatureMapper">
+
+    <resultMap id="featureQueryDTOResultMap" type="com.memory.xzp.model.dto.FileFeatureQueryDTO">
+        <id column="id" property="id"/>
+        <result column="file_id" property="fileId"/>
+        <result column="feature_vector" property="featureVector" jdbcType="BLOB" javaType="[B"/>
+        <result column="feature_dim" property="featureDim"/>
+        <result column="feature_model" property="featureModel"/>
+        <result column="feature_provider" property="featureProvider"/>
+        <result column="feature_version" property="featureVersion"/>
+
+        <result column="origin_file_name" property="originFileName"/>
+        <result column="size" property="size"/>
+        <result column="content_type" property="contentType"/>
+        <result column="category" property="category"/>
+        <result column="file_url" property="fileUrl"/>
+        <result column="thumbnail_url" property="thumbnailUrl"/>
+        <result column="thumbnail_object_name" property="thumbnailObjectName"/>
+        <result column="width" property="width"/>
+        <result column="height" property="height"/>
+    </resultMap>
+
+    <sql id="CurrentFeatureFilter">
+        AND ff.feature_vector IS NOT NULL
+        AND ff.feature_provider = #{featureProvider}
+        AND ff.feature_model = #{featureModel}
+        <if test="featureDim != null">
+            AND ff.feature_dim = #{featureDim}
+        </if>
+        <if test="expectedBytes != null">
+            AND LENGTH(ff.feature_vector) = #{expectedBytes}
+        </if>
+    </sql>
+
+    <select id="selectFeatureListByUserId" resultMap="featureQueryDTOResultMap">
+        SELECT
+            ff.id,
+            ff.file_id,
+            ff.feature_vector,
+            ff.feature_dim,
+            ff.feature_model,
+            ff.feature_provider,
+            ff.feature_version,
+            f.origin_file_name,
+            f.size,
+            f.content_type,
+            f.category,
+            f.file_url,
+            f.thumbnail_url,
+            f.thumbnail_object_name,
+            f.width,
+            f.height
+        FROM file_feature ff
+        INNER JOIN user_file uf
+            ON ff.file_id = uf.file_id
+           AND ff.user_id = uf.user_id
+        INNER JOIN file f
+            ON ff.file_id = f.file_id
+        WHERE ff.user_id = #{userId}
+          AND uf.is_deleted = 0
+          AND f.category = 'image'
+        <include refid="CurrentFeatureFilter"/>
+        ORDER BY ff.id ASC
+    </select>
+
+    <select id="selectFeatureListByCondition" resultMap="featureQueryDTOResultMap">
+        SELECT
+            ff.id,
+            ff.file_id,
+            ff.feature_vector,
+            ff.feature_dim,
+            ff.feature_model,
+            ff.feature_provider,
+            ff.feature_version,
+            f.origin_file_name,
+            f.size,
+            f.content_type,
+            f.category,
+            f.file_url,
+            f.thumbnail_url,
+            f.thumbnail_object_name,
+            f.width,
+            f.height
+        FROM file_feature ff
+        INNER JOIN user_file uf
+            ON ff.file_id = uf.file_id
+           AND ff.user_id = uf.user_id
+        INNER JOIN file f
+            ON ff.file_id = f.file_id
+        WHERE ff.user_id = #{userId}
+          AND uf.is_deleted = 0
+          AND f.category = 'image'
+        <include refid="CurrentFeatureFilter"/>
+        <if test="albumIds != null and albumIds.size > 0">
+            AND EXISTS (
+                SELECT 1
+                FROM album_picture ap
+                WHERE ap.file_id = f.file_id
+                  AND ap.user_id = #{userId}
+                  AND ap.album_id IN
+                <foreach collection="albumIds" item="albumId" open="(" separator="," close=")">
+                    #{albumId}
+                </foreach>
+            )
+        </if>
+        <if test="tagNames != null and tagNames.size > 0">
+            AND EXISTS (
+                SELECT 1
+                FROM picture_tag pt
+                WHERE pt.file_id = f.file_id
+                  AND pt.tag_name IN
+                <foreach collection="tagNames" item="tagName" open="(" separator="," close=")">
+                    #{tagName}
+                </foreach>
+            )
+        </if>
+        <if test="sizeMinPixels != null or sizeMaxPixels != null">
+            AND f.width IS NOT NULL
+            AND f.height IS NOT NULL
+        </if>
+        <if test="sizeMinPixels != null">
+            AND (f.width * f.height) &gt;= #{sizeMinPixels}
+        </if>
+        <if test="sizeMaxPixels != null">
+            AND (f.width * f.height) &lt; #{sizeMaxPixels}
+        </if>
+        ORDER BY ff.id ASC
+    </select>
+
+</mapper>

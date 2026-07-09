@@ -1,0 +1,160 @@
+groups:
+  - name: memory-backend-availability
+    rules:
+      - alert: MemoryBackendMetricsTargetDown
+        expr: up{job="memory-backend"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: memory-backend
+        annotations:
+          summary: Cloud Album backend metrics target is unavailable
+          description: Prometheus has been unable to scrape {{ $labels.instance }} for more than 2 minutes.
+
+      - alert: MemoryBackendHighServerErrorRate
+        expr: |
+          (
+            sum(rate(http_server_requests_seconds_count{job="memory-backend",status=~"5.."}[5m]))
+            /
+            clamp_min(sum(rate(http_server_requests_seconds_count{job="memory-backend"}[5m])), 0.001)
+          ) > 0.05
+          and
+          sum(rate(http_server_requests_seconds_count{job="memory-backend"}[5m])) >= 0.1
+        for: 10m
+        labels:
+          severity: warning
+          service: memory-backend
+        annotations:
+          summary: Cloud Album backend server error rate is high
+          description: More than 5% of backend requests have returned 5xx responses for 10 minutes.
+
+      - alert: MemoryMinioErrorRateHigh
+        expr: |
+          (
+            sum(rate(memory_minio_operation_duration_seconds_count{job="memory-backend",outcome="ERROR"}[5m]))
+            /
+            clamp_min(sum(rate(memory_minio_operation_duration_seconds_count{job="memory-backend"}[5m])), 0.001)
+          ) > 0.05
+          and
+          sum(rate(memory_minio_operation_duration_seconds_count{job="memory-backend"}[5m])) >= 0.1
+        for: 10m
+        labels:
+          severity: warning
+          service: memory-backend
+          component: minio
+        annotations:
+          summary: MinIO business operation error rate is high
+          description: More than 5% of observed MinIO operations have failed for 10 minutes.
+
+      - alert: MemoryUploadFailuresDetected
+        expr: sum(increase(memory_upload_lifecycle_events_total{job="memory-backend",outcome="FAILED"}[10m])) > 5
+        for: 5m
+        labels:
+          severity: warning
+          service: memory-backend
+          component: upload
+        annotations:
+          summary: Upload failures are increasing
+          description: More than 5 upload lifecycle failures were recorded in the last 10 minutes.
+
+      - alert: MemoryStorageQuotaRejected
+        expr: sum(increase(memory_storage_quota_reservations_total{job="memory-backend",action="RESERVE",outcome="REJECTED"}[10m])) > 0
+        for: 2m
+        labels:
+          severity: warning
+          service: memory-backend
+          component: storage-quota
+        annotations:
+          summary: Storage quota reservations are being rejected
+          description: One or more uploads were rejected because reserved plus used storage exceeded the account quota.
+
+      - alert: MemoryExternalCircuitBreakerOpen
+        expr: resilience4j_circuitbreaker_state{job="memory-backend",state="open"} == 1
+        for: 2m
+        labels:
+          severity: critical
+          service: memory-backend
+          component: external-service
+        annotations:
+          summary: External service circuit breaker is open
+          description: Circuit breaker {{ $labels.name }} has remained open for more than 2 minutes.
+
+  - name: memory-async-task-reliability
+    rules:
+      - alert: MemoryAsyncTaskDeadLetters
+        expr: sum(memory_async_task_backlog{job="memory-backend",status="DEAD"}) > 0
+        for: 5m
+        labels:
+          severity: critical
+          service: memory-backend
+          component: async-task
+        annotations:
+          summary: Persistent async tasks require manual intervention
+          description: There are {{ $value | printf "%.0f" }} dead tasks. Inspect the task center before retrying them.
+
+      - alert: MemoryAsyncTaskBacklogHigh
+        expr: sum(memory_async_task_backlog{job="memory-backend",status=~"PENDING|FAILED"}) > 100
+        for: 15m
+        labels:
+          severity: warning
+          service: memory-backend
+          component: async-task
+        annotations:
+          summary: Persistent async task backlog is high
+          description: Pending and retryable failed tasks have stayed above 100 for 15 minutes.
+
+      - alert: MemoryAsyncTaskFailureRateHigh
+        expr: |
+          (
+            sum(rate(memory_async_task_executions_total{job="memory-backend",outcome=~"FAILED|DEAD"}[10m]))
+            /
+            clamp_min(sum(rate(memory_async_task_executions_total{job="memory-backend"}[10m])), 0.001)
+          ) > 0.25
+          and
+          sum(increase(memory_async_task_executions_total{job="memory-backend"}[10m])) >= 10
+        for: 10m
+        labels:
+          severity: warning
+          service: memory-backend
+          component: async-task
+        annotations:
+          summary: Persistent async task failure rate is high
+          description: More than 25% of at least 10 recent task executions failed during the last 10 minutes.
+
+      - alert: MemoryAsyncTaskDispatchRejected
+        expr: sum(increase(memory_async_task_dispatch_rejected_total{job="memory-backend"}[5m])) > 0
+        for: 1m
+        labels:
+          severity: warning
+          service: memory-backend
+          component: async-task
+        annotations:
+          summary: Persistent async task dispatch was rejected
+          description: A local bounded executor rejected one or more task dispatches in the last 5 minutes.
+
+      - alert: MemoryAsyncTaskP95DurationHigh
+        expr: |
+          histogram_quantile(
+            0.95,
+            sum by (le, task_type) (
+              rate(memory_async_task_duration_seconds_bucket{job="memory-backend"}[10m])
+            )
+          ) > 300
+        for: 15m
+        labels:
+          severity: warning
+          service: memory-backend
+          component: async-task
+        annotations:
+          summary: Persistent async task P95 duration is high
+          description: P95 duration for task type {{ $labels.task_type }} has exceeded 5 minutes for 15 minutes.
+
+      - alert: MemoryAsyncTaskStaleRunningRecovered
+        expr: sum(increase(memory_async_task_stale_recovered_total{job="memory-backend"}[15m])) > 0
+        labels:
+          severity: warning
+          service: memory-backend
+          component: async-task
+        annotations:
+          summary: Stale running tasks were recovered
+          description: One or more tasks exceeded the running timeout and were returned to the retry flow.

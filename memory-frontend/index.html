@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="">
+  <head>
+    <meta charset="UTF-8">
+    <link rel="icon" href="/logo.ico">
+    <!--
+      移动端适配：
+      - width=device-width      : 使用设备物理宽度，禁止 PC 布局缩放到手机
+      - initial-scale=1.0       : 初始缩放比 1:1
+      - maximum-scale=1.0       : 禁止手动放大（防止双击 / 双指缩放导致布局错乱）
+      - minimum-scale=1.0       : 禁止手动缩小
+      - user-scalable=no        : 兼容旧版安卓浏览器禁止缩放
+      - viewport-fit=cover      : 刘海屏 / 圆角屏全屏覆盖（配合 safe-area-inset 使用）
+    -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>智能云相册</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

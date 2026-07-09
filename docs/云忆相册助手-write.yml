@@ -1,0 +1,4580 @@
+app:
+  description: Cloud-Album assistant for photo, album, tag and people album 
+    search. It can execute low-risk organizing actions after explicit user 
+    confirmation.
+  icon: 🤖
+  icon_background: '#FFEAD5'
+  icon_type: emoji
+  mode: advanced-chat
+  name: 云忆相册助手
+  use_icon_as_answer_icon: false
+dependencies:
+- current_identifier:
+  type: marketplace
+  value:
+    marketplace_plugin_unique_identifier: 
+      langgenius/tongyi:0.1.48@966d88dc40611f067311c1c9839139ebc4b55bff471bc5e736dc3e828bc67b46
+    version:
+kind: app
+version: 0.6.0
+workflow:
+  conversation_variables: []
+  environment_variables: []
+  features:
+    file_upload:
+      allowed_file_extensions:
+      - .JPG
+      - .JPEG
+      - .PNG
+      - .GIF
+      - .WEBP
+      - .SVG
+      allowed_file_types:
+      - image
+      allowed_file_upload_methods:
+      - local_file
+      - remote_url
+      enabled: false
+      fileUploadConfig:
+        attachment_image_file_size_limit: 2
+        audio_file_size_limit: 50
+        batch_count_limit: 5
+        file_size_limit: 15
+        file_upload_limit: 20
+        image_file_batch_limit: 10
+        image_file_size_limit: 10
+        single_chunk_attachment_limit: 10
+        video_file_size_limit: 100
+        workflow_file_upload_limit: 10
+      image:
+        enabled: false
+        number_limits: 3
+        transfer_methods:
+        - local_file
+        - remote_url
+      number_limits: 3
+    opening_statement: ''
+    retriever_resource:
+      enabled: true
+    sensitive_word_avoidance:
+      enabled: false
+    speech_to_text:
+      enabled: false
+    suggested_questions: []
+    suggested_questions_after_answer:
+      enabled: false
+    text_to_speech:
+      enabled: false
+      language: ''
+      voice: ''
+  graph:
+    edges:
+    - data:
+        sourceType: llm
+        targetType: tool
+      id: extract_keyword-tool_capabilities
+      selected: false
+      source: extract_keyword
+      sourceHandle: source
+      target: tool_capabilities
+      targetHandle: target
+      type: custom
+    - data:
+        sourceType: llm
+        targetType: tool
+      id: extract_keyword-tool_search_tag
+      selected: false
+      source: extract_keyword
+      sourceHandle: source
+      target: tool_search_tag
+      targetHandle: target
+      type: custom
+    - data:
+        sourceType: llm
+        targetType: tool
+      id: extract_keyword-tool_search_location
+      selected: false
+      source: extract_keyword
+      sourceHandle: source
+      target: tool_search_location
+      targetHandle: target
+      type: custom
+    - data:
+        sourceType: llm
+        targetType: tool
+      id: extract_keyword-tool_search_model
+      selected: false
+      source: extract_keyword
+      sourceHandle: source
+      target: tool_search_model
+      targetHandle: target
+      type: custom
+    - data:
+        sourceType: llm
+        targetType: tool
+      id: extract_keyword-tool_list_albums
+      selected: false
+      source: extract_keyword
+      sourceHandle: source
+      target: tool_list_albums
+      targetHandle: target
+      type: custom
+    - data:
+        sourceType: llm
+        targetType: tool
+      id: extract_keyword-tool_list_location_albums
+      selected: false
+      source: extract_keyword
+      sourceHandle: source
+      target: tool_list_location_albums
+      targetHandle: target
+      type: custom
+    - data:
+        sourceType: llm
+        targetType: tool
+      id: extract_keyword-tool_list_model_albums
+      selected: false
+      source: extract_keyword
+      sourceHandle: source
+      target: tool_list_model_albums
+      targetHandle: target
+      type: custom
+    - data:
+        sourceType: llm
+        targetType: tool
+      id: extract_keyword-tool_list_tags
+      selected: false
+      source: extract_keyword
+      sourceHandle: source
+      target: tool_list_tags
+      targetHandle: target
+      type: custom
+    - data:
+        sourceType: llm
+        targetType: tool
+      id: extract_keyword-tool_list_people
+      selected: false
+      source: extract_keyword
+      sourceHandle: source
+      target: tool_list_people
+      targetHandle: target
+      type: custom
+    - data:
+        sourceType: tool
+        targetType: llm
+      id: tool_capabilities-summarize
+      selected: false
+      source: tool_capabilities
+      sourceHandle: source
+      target: summarize
+      targetHandle: target
+      type: custom
+    - data:
+        sourceType: tool
+        targetType: llm
+      id: tool_search_tag-summarize
+      selected: false
+      source: tool_search_tag
+      sourceHandle: source
+      target: summarize
+      targetHandle: target
+      type: custom
+    - data:
+        sourceType: tool
+        targetType: llm
+      id: tool_search_location-summarize
+      selected: false
+      source: tool_search_location
+      sourceHandle: source
+      target: summarize
+      targetHandle: target
+      type: custom
+    - data:
+        sourceType: tool
+        targetType: llm
+      id: tool_search_model-summarize
+      selected: false
+      source: tool_search_model
+      sourceHandle: source
+      target: summarize
+      targetHandle: target
+      type: custom
+    - data:
+        sourceType: tool
+        targetType: llm
+      id: tool_list_albums-summarize
+      selected: false
+      source: tool_list_albums
+      sourceHandle: source
+      target: summarize
+      targetHandle: target
+      type: custom
+    - data:
+        sourceType: tool
+        targetType: llm
+      id: tool_list_location_albums-summarize
+      selected: false
+      source: tool_list_location_albums
+      sourceHandle: source
+      target: summarize
+      targetHandle: target
+      type: custom
+    - data:
+        sourceType: tool
+        targetType: llm
+      id: tool_list_model_albums-summarize
+      selected: false
+      source: tool_list_model_albums
+      sourceHandle: source
+      target: summarize
+      targetHandle: target
+      type: custom
+    - data:
+        sourceType: tool
+        targetType: llm
+      id: tool_list_tags-summarize
+      selected: false
+      source: tool_list_tags
+      sourceHandle: source
+      target: summarize
+      targetHandle: target
+      type: custom
+    - data:
+        sourceType: tool
+        targetType: llm
+      id: tool_list_people-summarize
+      selected: false
+      source: tool_list_people
+      sourceHandle: source
+      target: summarize
+      targetHandle: target
+      type: custom
+    - data:
+        sourceType: llm
+        targetType: answer
+      id: summarize-answer
+      selected: false
+      source: summarize
+      sourceHandle: source
+      target: answer
+      targetHandle: target
+      type: custom
+    - data:
+        isInLoop: false
+        sourceType: start
+        targetType: llm
+      id: start-source-extract_write_action-target
+      source: start
+      sourceHandle: source
+      target: extract_write_action
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: llm
+        targetType: code
+      id: extract_write_action-source-parse_write_action-target
+      source: extract_write_action
+      sourceHandle: source
+      target: parse_write_action
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: code
+        targetType: if-else
+      id: parse_write_action-source-route_preview-target
+      source: parse_write_action
+      sourceHandle: source
+      target: route_preview
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: if-else
+        targetType: if-else
+      id: route_preview-true-route_preview_album-target
+      source: route_preview
+      sourceHandle: 'true'
+      target: route_preview_album
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: if-else
+        targetType: if-else
+      id: route_preview-false-route_execute-target
+      source: route_preview
+      sourceHandle: 'false'
+      target: route_execute
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: if-else
+        targetType: if-else
+      id: route_execute-true-route_execute_album-target
+      source: route_execute
+      sourceHandle: 'true'
+      target: route_execute_album
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: if-else
+        targetType: llm
+      id: route_execute-false-extract_keyword-target
+      source: route_execute
+      sourceHandle: 'false'
+      target: extract_keyword
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: if-else
+        targetType: tool
+      id: route_preview_album-true-tool_preview_album_action-target
+      source: route_preview_album
+      sourceHandle: 'true'
+      target: tool_preview_album_action
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: if-else
+        targetType: tool
+      id: route_preview_album-false-tool_preview_tag_action-target
+      source: route_preview_album
+      sourceHandle: 'false'
+      target: tool_preview_tag_action
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: if-else
+        targetType: tool
+      id: route_execute_album-true-tool_execute_album_action-target
+      source: route_execute_album
+      sourceHandle: 'true'
+      target: tool_execute_album_action
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: if-else
+        targetType: tool
+      id: route_execute_album-false-tool_execute_tag_action-target
+      source: route_execute_album
+      sourceHandle: 'false'
+      target: tool_execute_tag_action
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: tool
+        targetType: llm
+      id: tool_preview_album_action-source-summarize_preview_album_action-target
+      source: tool_preview_album_action
+      sourceHandle: source
+      target: summarize_preview_album_action
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: tool
+        targetType: llm
+      id: tool_preview_tag_action-source-summarize_preview_tag_action-target
+      source: tool_preview_tag_action
+      sourceHandle: source
+      target: summarize_preview_tag_action
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: tool
+        targetType: llm
+      id: tool_execute_album_action-source-summarize_execute_album_action-target
+      source: tool_execute_album_action
+      sourceHandle: source
+      target: summarize_execute_album_action
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: tool
+        targetType: llm
+      id: tool_execute_tag_action-source-summarize_execute_tag_action-target
+      source: tool_execute_tag_action
+      sourceHandle: source
+      target: summarize_execute_tag_action
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: llm
+        targetType: answer
+      id: 
+        summarize_preview_album_action-source-answer_preview_album_action-target
+      source: summarize_preview_album_action
+      sourceHandle: source
+      target: answer_preview_album_action
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: llm
+        targetType: answer
+      id: summarize_preview_tag_action-source-answer_preview_tag_action-target
+      source: summarize_preview_tag_action
+      sourceHandle: source
+      target: answer_preview_tag_action
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: llm
+        targetType: answer
+      id: 
+        summarize_execute_album_action-source-answer_execute_album_action-target
+      source: summarize_execute_album_action
+      sourceHandle: source
+      target: answer_execute_album_action
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: llm
+        targetType: answer
+      id: summarize_execute_tag_action-source-answer_execute_tag_action-target
+      source: summarize_execute_tag_action
+      sourceHandle: source
+      target: answer_execute_tag_action
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    nodes:
+    - data:
+        selected: false
+        title: 用户输入
+        type: start
+        variables: []
+      height: 72
+      id: start
+      position:
+        x: -359.5578042880153
+        y: 339
+      positionAbsolute:
+        x: -359.5578042880153
+        y: 339
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        context:
+          enabled: true
+          variable_selector:
+          - sys
+          - query
+        memory:
+          query_prompt_template: '{{#sys.query#}}'
+          role_prefix:
+            assistant: ''
+            user: ''
+          window:
+            enabled: false
+            size: 10
+        model:
+          completion_params:
+            temperature: 0.1
+          mode: chat
+          name: qwen-flash
+          provider: langgenius/tongyi/tongyi
+        prompt_template:
+        - id: extract-system
+          role: system
+          text: 你负责把用户问题转成 Cloud-Album 
+            只读检索关键词。只输出一个短关键词，不要解释。优先输出地点、标签、设备型号、人物/相册名称；如果用户只是问功能或删除/分享/账号等高风险操作，输出
+            NONE。
+        - id: extract-user
+          role: user
+          text: 用户问题：{{#sys.query#}}
+        selected: false
+        title: 检索关键词抽取
+        type: llm
+        vision:
+          enabled: false
+      height: 87
+      id: extract_keyword
+      position:
+        x: 82.26996014974338
+        y: 341.5948702638023
+      positionAbsolute:
+        x: 82.26996014974338
+        y: 341.5948702638023
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 241
+    - data:
+        is_team_authorization: true
+        meta:
+        paramSchemas: []
+        params: {}
+        plugin_id:
+        plugin_unique_identifier:
+        provider_icon:
+          background: '#FEF7C3'
+          content: 🕵️
+        provider_icon_dark: ''
+        provider_id: a4efae9f-e26b-4095-9ac1-d753303f1ffc
+        provider_name: Cloud-Album Agent Tools
+        provider_type: api
+        selected: false
+        title: 能力边界
+        tool_configurations: {}
+        tool_description: 返回当前开放、需要确认、禁用的智能体工具列表和风险规则。
+        tool_label: getAgentCapabilities
+        tool_name: getAgentCapabilities
+        tool_node_version: '2'
+        tool_parameters: {}
+        type: tool
+        version: '2'
+      height: 51
+      id: tool_capabilities
+      position:
+        x: 680
+        y: 80
+      positionAbsolute:
+        x: 680
+        y: 80
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 241
+    - data:
+        is_team_authorization: true
+        meta:
+        paramSchemas:
+        - auto_generate:
+          default: 1
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: current
+            ja_JP: current
+            pt_BR: current
+            zh_Hans: current
+          llm_description: ''
+          max:
+          min:
+          name: current
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: number
+        - auto_generate:
+          default: 20
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: size
+            ja_JP: size
+            pt_BR: size
+            zh_Hans: size
+          llm_description: ''
+          max:
+          min:
+          name: size
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: number
+        - auto_generate:
+          default: desc
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: orderType
+            ja_JP: orderType
+            pt_BR: orderType
+            zh_Hans: orderType
+          llm_description: ''
+          max:
+          min:
+          name: orderType
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: string
+        - auto_generate:
+          default: date_time_original
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: orderKeyword
+            ja_JP: orderKeyword
+            pt_BR: orderKeyword
+            zh_Hans: orderKeyword
+          llm_description: ''
+          max:
+          min:
+          name: orderKeyword
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: string
+        - auto_generate:
+          default: all
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: imageTypeText
+            ja_JP: imageTypeText
+            pt_BR: imageTypeText
+            zh_Hans: imageTypeText
+          llm_description: ''
+          max:
+          min:
+          name: imageTypeText
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: string
+        - auto_generate:
+          default:
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: locationLevel
+            ja_JP: locationLevel
+            pt_BR: locationLevel
+            zh_Hans: locationLevel
+          llm_description: ''
+          max:
+          min:
+          name: locationLevel
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: string
+        - auto_generate:
+          default:
+          form: llm
+          human_description:
+            en_US: 地点值，如上海、北京市、浦东新区。
+            ja_JP: 地点值，如上海、北京市、浦东新区。
+            pt_BR: 地点值，如上海、北京市、浦东新区。
+            zh_Hans: 地点值，如上海、北京市、浦东新区。
+          input_schema:
+          label:
+            en_US: locationValue
+            ja_JP: locationValue
+            pt_BR: locationValue
+            zh_Hans: locationValue
+          llm_description: 地点值，如上海、北京市、浦东新区。
+          max:
+          min:
+          name: locationValue
+          options: []
+          placeholder:
+            en_US: 地点值，如上海、北京市、浦东新区。
+            ja_JP: 地点值，如上海、北京市、浦东新区。
+            pt_BR: 地点值，如上海、北京市、浦东新区。
+            zh_Hans: 地点值，如上海、北京市、浦东新区。
+          precision:
+          required: false
+          scope:
+          template:
+          type: string
+        - auto_generate:
+          default:
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: albumId
+            ja_JP: albumId
+            pt_BR: albumId
+            zh_Hans: albumId
+          llm_description: ''
+          max:
+          min:
+          name: albumId
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: number
+        - auto_generate:
+          default: all
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: tagFilter
+            ja_JP: tagFilter
+            pt_BR: tagFilter
+            zh_Hans: tagFilter
+          llm_description: ''
+          max:
+          min:
+          name: tagFilter
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: string
+        - auto_generate:
+          default:
+          form: llm
+          human_description:
+            en_US: 精确标签检索；填写后优先按标签查找。
+            ja_JP: 精确标签检索；填写后优先按标签查找。
+            pt_BR: 精确标签检索；填写后优先按标签查找。
+            zh_Hans: 精确标签检索；填写后优先按标签查找。
+          input_schema:
+          label:
+            en_US: tagName
+            ja_JP: tagName
+            pt_BR: tagName
+            zh_Hans: tagName
+          llm_description: 精确标签检索；填写后优先按标签查找。
+          max:
+          min:
+          name: tagName
+          options: []
+          placeholder:
+            en_US: 精确标签检索；填写后优先按标签查找。
+            ja_JP: 精确标签检索；填写后优先按标签查找。
+            pt_BR: 精确标签检索；填写后优先按标签查找。
+            zh_Hans: 精确标签检索；填写后优先按标签查找。
+          precision:
+          required: false
+          scope:
+          template:
+          type: string
+        - auto_generate:
+          default:
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: searchType
+            ja_JP: searchType
+            pt_BR: searchType
+            zh_Hans: searchType
+          llm_description: ''
+          max:
+          min:
+          name: searchType
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: string
+        - auto_generate:
+          default:
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: searchKeyword
+            ja_JP: searchKeyword
+            pt_BR: searchKeyword
+            zh_Hans: searchKeyword
+          llm_description: ''
+          max:
+          min:
+          name: searchKeyword
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: string
+        params:
+          albumId: -1
+          current: 1
+          imageTypeText: all
+          locationLevel: ''
+          locationValue: ''
+          orderKeyword: date_time_original
+          orderType: desc
+          searchKeyword: '{{#extract_keyword.text#}}'
+          searchType: tag
+          size: 10
+          tagFilter: all
+          tagName: '{{#extract_keyword.text#}}'
+        plugin_id:
+        plugin_unique_identifier:
+        provider_icon:
+          background: '#FEF7C3'
+          content: 🕵️
+        provider_icon_dark: ''
+        provider_id: a4efae9f-e26b-4095-9ac1-d753303f1ffc
+        provider_name: Cloud-Album Agent Tools
+        provider_type: api
+        selected: false
+        title: 按标签检索照片
+        tool_configurations: {}
+        tool_description: 按类型、地点、相册、标签或关键词检索当前用户照片。
+        tool_label: searchFiles
+        tool_name: searchFiles
+        tool_node_version: '2'
+        tool_parameters:
+          albumId:
+            type: constant
+            value: -1
+          current:
+            type: constant
+            value: 1
+          imageTypeText:
+            type: constant
+            value: all
+          locationLevel:
+            type: constant
+            value: ''
+          locationValue:
+            type: constant
+            value: ''
+          orderKeyword:
+            type: constant
+            value: date_time_original
+          orderType:
+            type: constant
+            value: desc
+          searchKeyword:
+            type: mixed
+            value: '{{#extract_keyword.text#}}'
+          searchType:
+            type: constant
+            value: tag
+          size:
+            type: constant
+            value: 10
+          tagFilter:
+            type: constant
+            value: all
+          tagName:
+            type: mixed
+            value: '{{#extract_keyword.text#}}'
+        type: tool
+        version: '2'
+      height: 51
+      id: tool_search_tag
+      position:
+        x: 680
+        y: 220
+      positionAbsolute:
+        x: 680
+        y: 220
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 241
+    - data:
+        is_team_authorization: true
+        meta:
+        paramSchemas:
+        - auto_generate:
+          default: 1
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: current
+            ja_JP: current
+            pt_BR: current
+            zh_Hans: current
+          llm_description: ''
+          max:
+          min:
+          name: current
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: number
+        - auto_generate:
+          default: 20
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: size
+            ja_JP: size
+            pt_BR: size
+            zh_Hans: size
+          llm_description: ''
+          max:
+          min:
+          name: size
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: number
+        - auto_generate:
+          default: desc
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: orderType
+            ja_JP: orderType
+            pt_BR: orderType
+            zh_Hans: orderType
+          llm_description: ''
+          max:
+          min:
+          name: orderType
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: string
+        - auto_generate:
+          default: date_time_original
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: orderKeyword
+            ja_JP: orderKeyword
+            pt_BR: orderKeyword
+            zh_Hans: orderKeyword
+          llm_description: ''
+          max:
+          min:
+          name: orderKeyword
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: string
+        - auto_generate:
+          default: all
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: imageTypeText
+            ja_JP: imageTypeText
+            pt_BR: imageTypeText
+            zh_Hans: imageTypeText
+          llm_description: ''
+          max:
+          min:
+          name: imageTypeText
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: string
+        - auto_generate:
+          default:
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: locationLevel
+            ja_JP: locationLevel
+            pt_BR: locationLevel
+            zh_Hans: locationLevel
+          llm_description: ''
+          max:
+          min:
+          name: locationLevel
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: string
+        - auto_generate:
+          default:
+          form: llm
+          human_description:
+            en_US: 地点值，如上海、北京市、浦东新区。
+            ja_JP: 地点值，如上海、北京市、浦东新区。
+            pt_BR: 地点值，如上海、北京市、浦东新区。
+            zh_Hans: 地点值，如上海、北京市、浦东新区。
+          input_schema:
+          label:
+            en_US: locationValue
+            ja_JP: locationValue
+            pt_BR: locationValue
+            zh_Hans: locationValue
+          llm_description: 地点值，如上海、北京市、浦东新区。
+          max:
+          min:
+          name: locationValue
+          options: []
+          placeholder:
+            en_US: 地点值，如上海、北京市、浦东新区。
+            ja_JP: 地点值，如上海、北京市、浦东新区。
+            pt_BR: 地点值，如上海、北京市、浦东新区。
+            zh_Hans: 地点值，如上海、北京市、浦东新区。
+          precision:
+          required: false
+          scope:
+          template:
+          type: string
+        - auto_generate:
+          default:
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: albumId
+            ja_JP: albumId
+            pt_BR: albumId
+            zh_Hans: albumId
+          llm_description: ''
+          max:
+          min:
+          name: albumId
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: number
+        - auto_generate:
+          default: all
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: tagFilter
+            ja_JP: tagFilter
+            pt_BR: tagFilter
+            zh_Hans: tagFilter
+          llm_description: ''
+          max:
+          min:
+          name: tagFilter
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: string
+        - auto_generate:
+          default:
+          form: llm
+          human_description:
+            en_US: 精确标签检索；填写后优先按标签查找。
+            ja_JP: 精确标签检索；填写后优先按标签查找。
+            pt_BR: 精确标签检索；填写后优先按标签查找。
+            zh_Hans: 精确标签检索；填写后优先按标签查找。
+          input_schema:
+          label:
+            en_US: tagName
+            ja_JP: tagName
+            pt_BR: tagName
+            zh_Hans: tagName
+          llm_description: 精确标签检索；填写后优先按标签查找。
+          max:
+          min:
+          name: tagName
+          options: []
+          placeholder:
+            en_US: 精确标签检索；填写后优先按标签查找。
+            ja_JP: 精确标签检索；填写后优先按标签查找。
+            pt_BR: 精确标签检索；填写后优先按标签查找。
+            zh_Hans: 精确标签检索；填写后优先按标签查找。
+          precision:
+          required: false
+          scope:
+          template:
+          type: string
+        - auto_generate:
+          default:
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: searchType
+            ja_JP: searchType
+            pt_BR: searchType
+            zh_Hans: searchType
+          llm_description: ''
+          max:
+          min:
+          name: searchType
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: string
+        - auto_generate:
+          default:
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: searchKeyword
+            ja_JP: searchKeyword
+            pt_BR: searchKeyword
+            zh_Hans: searchKeyword
+          llm_description: ''
+          max:
+          min:
+          name: searchKeyword
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: string
+        params:
+          albumId: -1
+          current: 1
+          imageTypeText: all
+          locationLevel: city
+          locationValue: '{{#extract_keyword.text#}}'
+          orderKeyword: date_time_original
+          orderType: desc
+          searchKeyword: '{{#extract_keyword.text#}}'
+          searchType: location
+          size: 10
+          tagFilter: all
+          tagName: ''
+        plugin_id:
+        plugin_unique_identifier:
+        provider_icon:
+          background: '#FEF7C3'
+          content: 🕵️
+        provider_icon_dark: ''
+        provider_id: a4efae9f-e26b-4095-9ac1-d753303f1ffc
+        provider_name: Cloud-Album Agent Tools
+        provider_type: api
+        selected: false
+        title: 按地点检索照片
+        tool_configurations: {}
+        tool_description: 按类型、地点、相册、标签或关键词检索当前用户照片。
+        tool_label: searchFiles
+        tool_name: searchFiles
+        tool_node_version: '2'
+        tool_parameters:
+          albumId:
+            type: constant
+            value: -1
+          current:
+            type: constant
+            value: 1
+          imageTypeText:
+            type: constant
+            value: all
+          locationLevel:
+            type: constant
+            value: city
+          locationValue:
+            type: mixed
+            value: '{{#extract_keyword.text#}}'
+          orderKeyword:
+            type: constant
+            value: date_time_original
+          orderType:
+            type: constant
+            value: desc
+          searchKeyword:
+            type: mixed
+            value: '{{#extract_keyword.text#}}'
+          searchType:
+            type: constant
+            value: location
+          size:
+            type: constant
+            value: 10
+          tagFilter:
+            type: constant
+            value: all
+          tagName:
+            type: constant
+            value: ''
+        type: tool
+        version: '2'
+      height: 51
+      id: tool_search_location
+      position:
+        x: 680
+        y: 360
+      positionAbsolute:
+        x: 680
+        y: 360
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 241
+    - data:
+        is_team_authorization: true
+        meta:
+        paramSchemas:
+        - auto_generate:
+          default: 1
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: current
+            ja_JP: current
+            pt_BR: current
+            zh_Hans: current
+          llm_description: ''
+          max:
+          min:
+          name: current
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: number
+        - auto_generate:
+          default: 20
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: size
+            ja_JP: size
+            pt_BR: size
+            zh_Hans: size
+          llm_description: ''
+          max:
+          min:
+          name: size
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: number
+        - auto_generate:
+          default: desc
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: orderType
+            ja_JP: orderType
+            pt_BR: orderType
+            zh_Hans: orderType
+          llm_description: ''
+          max:
+          min:
+          name: orderType
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: string
+        - auto_generate:
+          default: date_time_original
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: orderKeyword
+            ja_JP: orderKeyword
+            pt_BR: orderKeyword
+            zh_Hans: orderKeyword
+          llm_description: ''
+          max:
+          min:
+          name: orderKeyword
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: string
+        - auto_generate:
+          default: all
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: imageTypeText
+            ja_JP: imageTypeText
+            pt_BR: imageTypeText
+            zh_Hans: imageTypeText
+          llm_description: ''
+          max:
+          min:
+          name: imageTypeText
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: string
+        - auto_generate:
+          default:
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: locationLevel
+            ja_JP: locationLevel
+            pt_BR: locationLevel
+            zh_Hans: locationLevel
+          llm_description: ''
+          max:
+          min:
+          name: locationLevel
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: string
+        - auto_generate:
+          default:
+          form: llm
+          human_description:
+            en_US: 地点值，如上海、北京市、浦东新区。
+            ja_JP: 地点值，如上海、北京市、浦东新区。
+            pt_BR: 地点值，如上海、北京市、浦东新区。
+            zh_Hans: 地点值，如上海、北京市、浦东新区。
+          input_schema:
+          label:
+            en_US: locationValue
+            ja_JP: locationValue
+            pt_BR: locationValue
+            zh_Hans: locationValue
+          llm_description: 地点值，如上海、北京市、浦东新区。
+          max:
+          min:
+          name: locationValue
+          options: []
+          placeholder:
+            en_US: 地点值，如上海、北京市、浦东新区。
+            ja_JP: 地点值，如上海、北京市、浦东新区。
+            pt_BR: 地点值，如上海、北京市、浦东新区。
+            zh_Hans: 地点值，如上海、北京市、浦东新区。
+          precision:
+          required: false
+          scope:
+          template:
+          type: string
+        - auto_generate:
+          default:
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: albumId
+            ja_JP: albumId
+            pt_BR: albumId
+            zh_Hans: albumId
+          llm_description: ''
+          max:
+          min:
+          name: albumId
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: number
+        - auto_generate:
+          default: all
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: tagFilter
+            ja_JP: tagFilter
+            pt_BR: tagFilter
+            zh_Hans: tagFilter
+          llm_description: ''
+          max:
+          min:
+          name: tagFilter
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: string
+        - auto_generate:
+          default:
+          form: llm
+          human_description:
+            en_US: 精确标签检索；填写后优先按标签查找。
+            ja_JP: 精确标签检索；填写后优先按标签查找。
+            pt_BR: 精确标签检索；填写后优先按标签查找。
+            zh_Hans: 精确标签检索；填写后优先按标签查找。
+          input_schema:
+          label:
+            en_US: tagName
+            ja_JP: tagName
+            pt_BR: tagName
+            zh_Hans: tagName
+          llm_description: 精确标签检索；填写后优先按标签查找。
+          max:
+          min:
+          name: tagName
+          options: []
+          placeholder:
+            en_US: 精确标签检索；填写后优先按标签查找。
+            ja_JP: 精确标签检索；填写后优先按标签查找。
+            pt_BR: 精确标签检索；填写后优先按标签查找。
+            zh_Hans: 精确标签检索；填写后优先按标签查找。
+          precision:
+          required: false
+          scope:
+          template:
+          type: string
+        - auto_generate:
+          default:
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: searchType
+            ja_JP: searchType
+            pt_BR: searchType
+            zh_Hans: searchType
+          llm_description: ''
+          max:
+          min:
+          name: searchType
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: string
+        - auto_generate:
+          default:
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: searchKeyword
+            ja_JP: searchKeyword
+            pt_BR: searchKeyword
+            zh_Hans: searchKeyword
+          llm_description: ''
+          max:
+          min:
+          name: searchKeyword
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: string
+        params:
+          albumId: -1
+          current: 1
+          imageTypeText: all
+          locationLevel: ''
+          locationValue: ''
+          orderKeyword: date_time_original
+          orderType: desc
+          searchKeyword: '{{#extract_keyword.text#}}'
+          searchType: model
+          size: 10
+          tagFilter: all
+          tagName: ''
+        plugin_id:
+        plugin_unique_identifier:
+        provider_icon:
+          background: '#FEF7C3'
+          content: 🕵️
+        provider_icon_dark: ''
+        provider_id: a4efae9f-e26b-4095-9ac1-d753303f1ffc
+        provider_name: Cloud-Album Agent Tools
+        provider_type: api
+        selected: false
+        title: 按设备检索照片
+        tool_configurations: {}
+        tool_description: 按类型、地点、相册、标签或关键词检索当前用户照片。
+        tool_label: searchFiles
+        tool_name: searchFiles
+        tool_node_version: '2'
+        tool_parameters:
+          albumId:
+            type: constant
+            value: -1
+          current:
+            type: constant
+            value: 1
+          imageTypeText:
+            type: constant
+            value: all
+          locationLevel:
+            type: constant
+            value: ''
+          locationValue:
+            type: constant
+            value: ''
+          orderKeyword:
+            type: constant
+            value: date_time_original
+          orderType:
+            type: constant
+            value: desc
+          searchKeyword:
+            type: mixed
+            value: '{{#extract_keyword.text#}}'
+          searchType:
+            type: constant
+            value: model
+          size:
+            type: constant
+            value: 10
+          tagFilter:
+            type: constant
+            value: all
+          tagName:
+            type: constant
+            value: ''
+        type: tool
+        version: '2'
+      height: 51
+      id: tool_search_model
+      position:
+        x: 680
+        y: 500
+      positionAbsolute:
+        x: 680
+        y: 500
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 241
+    - data:
+        is_team_authorization: true
+        meta:
+        paramSchemas:
+        - auto_generate:
+          default: 1
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: current
+            ja_JP: current
+            pt_BR: current
+            zh_Hans: current
+          llm_description: ''
+          max:
+          min:
+          name: current
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: number
+        - auto_generate:
+          default: 20
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: size
+            ja_JP: size
+            pt_BR: size
+            zh_Hans: size
+          llm_description: ''
+          max:
+          min:
+          name: size
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: number
+        - auto_generate:
+          default: create_time
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: orderKeyword
+            ja_JP: orderKeyword
+            pt_BR: orderKeyword
+            zh_Hans: orderKeyword
+          llm_description: ''
+          max:
+          min:
+          name: orderKeyword
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: string
+        - auto_generate:
+          default: desc
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: orderType
+            ja_JP: orderType
+            pt_BR: orderType
+            zh_Hans: orderType
+          llm_description: ''
+          max:
+          min:
+          name: orderType
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: string
+        - auto_generate:
+          default: city
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: locationLevel
+            ja_JP: locationLevel
+            pt_BR: locationLevel
+            zh_Hans: locationLevel
+          llm_description: ''
+          max:
+          min:
+          name: locationLevel
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: string
+        params:
+          current: 1
+          locationLevel: city
+          orderKeyword: create_time
+          orderType: desc
+          size: 20
+        plugin_id:
+        plugin_unique_identifier:
+        provider_icon:
+          background: '#FEF7C3'
+          content: 🕵️
+        provider_icon_dark: ''
+        provider_id: a4efae9f-e26b-4095-9ac1-d753303f1ffc
+        provider_name: Cloud-Album Agent Tools
+        provider_type: api
+        selected: false
+        title: 查询普通相册
+        tool_configurations: {}
+        tool_description: 分页查询当前用户普通相册。
+        tool_label: listAlbums
+        tool_name: listAlbums
+        tool_node_version: '2'
+        tool_parameters:
+          current:
+            type: constant
+            value: 1
+          locationLevel:
+            type: constant
+            value: city
+          orderKeyword:
+            type: constant
+            value: create_time
+          orderType:
+            type: constant
+            value: desc
+          size:
+            type: constant
+            value: 20
+        type: tool
+        version: '2'
+      height: 51
+      id: tool_list_albums
+      position:
+        x: 980
+        y: 80
+      positionAbsolute:
+        x: 980
+        y: 80
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 241
+    - data:
+        is_team_authorization: true
+        meta:
+        paramSchemas:
+        - auto_generate:
+          default: 1
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: current
+            ja_JP: current
+            pt_BR: current
+            zh_Hans: current
+          llm_description: ''
+          max:
+          min:
+          name: current
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: number
+        - auto_generate:
+          default: 20
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: size
+            ja_JP: size
+            pt_BR: size
+            zh_Hans: size
+          llm_description: ''
+          max:
+          min:
+          name: size
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: number
+        - auto_generate:
+          default: create_time
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: orderKeyword
+            ja_JP: orderKeyword
+            pt_BR: orderKeyword
+            zh_Hans: orderKeyword
+          llm_description: ''
+          max:
+          min:
+          name: orderKeyword
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: string
+        - auto_generate:
+          default: desc
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: orderType
+            ja_JP: orderType
+            pt_BR: orderType
+            zh_Hans: orderType
+          llm_description: ''
+          max:
+          min:
+          name: orderType
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: string
+        - auto_generate:
+          default: city
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: locationLevel
+            ja_JP: locationLevel
+            pt_BR: locationLevel
+            zh_Hans: locationLevel
+          llm_description: ''
+          max:
+          min:
+          name: locationLevel
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: string
+        params:
+          current: 1
+          locationLevel: city
+          orderKeyword: create_time
+          orderType: desc
+          size: 20
+        plugin_id:
+        plugin_unique_identifier:
+        provider_icon:
+          background: '#FEF7C3'
+          content: 🕵️
+        provider_icon_dark: ''
+        provider_id: a4efae9f-e26b-4095-9ac1-d753303f1ffc
+        provider_name: Cloud-Album Agent Tools
+        provider_type: api
+        selected: false
+        title: 查询地点相册
+        tool_configurations: {}
+        tool_description: 分页查询当前用户地点相册。
+        tool_label: listLocationAlbums
+        tool_name: listLocationAlbums
+        tool_node_version: '2'
+        tool_parameters:
+          current:
+            type: constant
+            value: 1
+          locationLevel:
+            type: constant
+            value: city
+          orderKeyword:
+            type: constant
+            value: create_time
+          orderType:
+            type: constant
+            value: desc
+          size:
+            type: constant
+            value: 20
+        type: tool
+        version: '2'
+      height: 51
+      id: tool_list_location_albums
+      position:
+        x: 980
+        y: 220
+      positionAbsolute:
+        x: 980
+        y: 220
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 241
+    - data:
+        is_team_authorization: true
+        meta:
+        paramSchemas:
+        - auto_generate:
+          default: 1
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: current
+            ja_JP: current
+            pt_BR: current
+            zh_Hans: current
+          llm_description: ''
+          max:
+          min:
+          name: current
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: number
+        - auto_generate:
+          default: 20
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: size
+            ja_JP: size
+            pt_BR: size
+            zh_Hans: size
+          llm_description: ''
+          max:
+          min:
+          name: size
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: number
+        - auto_generate:
+          default: create_time
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: orderKeyword
+            ja_JP: orderKeyword
+            pt_BR: orderKeyword
+            zh_Hans: orderKeyword
+          llm_description: ''
+          max:
+          min:
+          name: orderKeyword
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: string
+        - auto_generate:
+          default: desc
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: orderType
+            ja_JP: orderType
+            pt_BR: orderType
+            zh_Hans: orderType
+          llm_description: ''
+          max:
+          min:
+          name: orderType
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: string
+        - auto_generate:
+          default: city
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: locationLevel
+            ja_JP: locationLevel
+            pt_BR: locationLevel
+            zh_Hans: locationLevel
+          llm_description: ''
+          max:
+          min:
+          name: locationLevel
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: string
+        params:
+          current: 1
+          locationLevel: city
+          orderKeyword: create_time
+          orderType: desc
+          size: 20
+        plugin_id:
+        plugin_unique_identifier:
+        provider_icon:
+          background: '#FEF7C3'
+          content: 🕵️
+        provider_icon_dark: ''
+        provider_id: a4efae9f-e26b-4095-9ac1-d753303f1ffc
+        provider_name: Cloud-Album Agent Tools
+        provider_type: api
+        selected: false
+        title: 查询设备相册
+        tool_configurations: {}
+        tool_description: 分页查询当前用户设备或型号相册。
+        tool_label: listModelAlbums
+        tool_name: listModelAlbums
+        tool_node_version: '2'
+        tool_parameters:
+          current:
+            type: constant
+            value: 1
+          locationLevel:
+            type: constant
+            value: city
+          orderKeyword:
+            type: constant
+            value: create_time
+          orderType:
+            type: constant
+            value: desc
+          size:
+            type: constant
+            value: 20
+        type: tool
+        version: '2'
+      height: 51
+      id: tool_list_model_albums
+      position:
+        x: 980
+        y: 360
+      positionAbsolute:
+        x: 980
+        y: 360
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 241
+    - data:
+        is_team_authorization: true
+        meta:
+        paramSchemas: []
+        params: {}
+        plugin_id:
+        plugin_unique_identifier:
+        provider_icon:
+          background: '#FEF7C3'
+          content: 🕵️
+        provider_icon_dark: ''
+        provider_id: a4efae9f-e26b-4095-9ac1-d753303f1ffc
+        provider_name: Cloud-Album Agent Tools
+        provider_type: api
+        selected: false
+        title: 查询标签
+        tool_configurations: {}
+        tool_description: 查询当前用户已有标签及数量。
+        tool_label: listTags
+        tool_name: listTags
+        tool_node_version: '2'
+        tool_parameters: {}
+        type: tool
+        version: '2'
+      height: 51
+      id: tool_list_tags
+      position:
+        x: 980
+        y: 500
+      positionAbsolute:
+        x: 980
+        y: 500
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 241
+    - data:
+        is_team_authorization: true
+        meta:
+        paramSchemas:
+        - auto_generate:
+          default: 1
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: current
+            ja_JP: current
+            pt_BR: current
+            zh_Hans: current
+          llm_description: ''
+          max:
+          min:
+          name: current
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: number
+        - auto_generate:
+          default: 20
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: size
+            ja_JP: size
+            pt_BR: size
+            zh_Hans: size
+          llm_description: ''
+          max:
+          min:
+          name: size
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: number
+        - auto_generate:
+          default: true
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: display
+            ja_JP: display
+            pt_BR: display
+            zh_Hans: display
+          llm_description: ''
+          max:
+          min:
+          name: display
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: boolean
+        params:
+          current: 1
+          display: true
+          size: 20
+        plugin_id:
+        plugin_unique_identifier:
+        provider_icon:
+          background: '#FEF7C3'
+          content: 🕵️
+        provider_icon_dark: ''
+        provider_id: a4efae9f-e26b-4095-9ac1-d753303f1ffc
+        provider_name: Cloud-Album Agent Tools
+        provider_type: api
+        selected: false
+        title: 查询人物相册
+        tool_configurations: {}
+        tool_description: 分页查询当前用户人物相册。只返回人物相册信息，不做真实身份断言。
+        tool_label: listPeople
+        tool_name: listPeople
+        tool_node_version: '2'
+        tool_parameters:
+          current:
+            type: constant
+            value: 1
+          display:
+            type: constant
+            value: true
+          size:
+            type: constant
+            value: 20
+        type: tool
+        version: '2'
+      height: 51
+      id: tool_list_people
+      position:
+        x: 980
+        y: 640
+      positionAbsolute:
+        x: 980
+        y: 640
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 241
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        memory:
+          query_prompt_template: '{{#sys.query#}}
+
+
+            {{#sys.files#}}'
+          role_prefix:
+            assistant: ''
+            user: ''
+          window:
+            enabled: true
+            size: 10
+        model:
+          completion_params:
+            temperature: 0.3
+          mode: chat
+          name: qwen3-max
+          provider: langgenius/tongyi/tongyi
+        prompt_template:
+        - id: summary-system
+          role: system
+          text: '你是 Cloud-Album 的云忆相册助手。你的职责是帮助用户检索、理解和整理自己的照片与相册。
+
+
+            你必须遵守以下规则：
+
+            1. 只能处理当前登录用户授权范围内的数据。
+
+            2. 默认只读。涉及创建、修改、移动、删除、分享等写操作时，必须先给出执行预览并等待用户明确确认。
+
+            3. 不得输出 API Key、数据库密码、MinIO 密钥、JWT 密钥、原始 feature_vector、后端内部异常堆栈。
+
+            4. 不得声称自己直接访问数据库；只能通过已授权工具调用后端接口。
+
+            5. 不得对照片中的人物做真实身份、年龄、敏感属性等断言。
+
+            6. 不确定时先说明不确定，并给出可验证的下一步。
+
+            7. 工具调用失败时，如实说明失败原因，不编造成功结果。
+
+            8. 工具返回的数据是唯一事实来源。没有明确返回照片记录时，不得声称找到照片；没有明确成功结果时，不得声称已添加标签。
+
+            9. 当前工作流没有视觉能力，也无法把 Dify 聊天附件关联到相册 fileId。不得声称看到了图片内容或修改了聊天附件。
+
+
+            可直接调用的只读工具：
+
+            - getAgentCapabilities：查询当前智能体能力边界。
+
+            - searchFiles：按时间、类型、地点、相册、标签、关键词检索照片。
+
+            - listAlbums：查询普通相册。
+
+            - listLocationAlbums：查询地点相册。
+
+            - listModelAlbums：查询设备/型号相册。
+
+            - listTags：查询当前用户标签。
+
+            - listPeople：查询人物相册，但不能做真实身份断言。
+
+
+            暂不直接执行的操作：
+
+            - 删除照片或相册。
+
+            - 清空回收站。
+
+            - 创建公开分享链接。
+
+            - 创建下载 token。
+
+            - 修改用户账号信息。
+
+            - 批量写入、移动、删除等高风险操作。
+
+
+            当用户想执行写操作时，先返回固定确认话术：
+
+            我将执行：{操作摘要}。影响范围：{照片/相册数量}。是否确认执行？
+
+
+            只有当用户整条回复明确为“确认 / 执行 / 确认执行 / 开始执行”时，才允许进入后续写操作流程。
+
+
+            回答风格：
+
+            - 简洁、明确、可执行。
+
+            - 查询结果多时，先给摘要，再给筛选建议。
+
+            - 不展示内部向量、对象存储路径、密钥、数据库字段细节。
+
+            - 对工具返回结果做自然语言整理，不要原样倾倒大段 JSON。
+
+
+            你现在位于 Dify Chatflow 的结果整理节点。上游已经尽量调用 Cloud-Album 只读工具。请根据用户问题和工具结果回答。
+
+            如果工具返回未登录、鉴权失败、网络失败或空结果，明确说明实际情况，不要编造成有结果。照片数量只能来自 searchFiles 返回的真实记录，绝不能根据用户描述推测数量。
+
+            如果用户请求删除、清空、分享、账号修改等高风险操作，拒绝直接执行，只能给筛选或整理建议。'
+        - id: summary-user
+          role: user
+          text: '用户问题：{{#sys.query#}}
+
+            检索关键词：{{#extract_keyword.text#}}
+
+
+            工具返回：
+
+            1. 能力清单：{{#tool_capabilities.text#}} {{#tool_capabilities.json#}}
+
+            2. 标签检索：{{#tool_search_tag.text#}} {{#tool_search_tag.json#}}
+
+            3. 地点检索：{{#tool_search_location.text#}} {{#tool_search_location.json#}}
+
+            4. 设备检索：{{#tool_search_model.text#}} {{#tool_search_model.json#}}
+
+            5. 普通相册：{{#tool_list_albums.text#}} {{#tool_list_albums.json#}}
+
+            6. 地点相册：{{#tool_list_location_albums.text#}} {{#tool_list_location_albums.json#}}
+
+            7. 设备相册：{{#tool_list_model_albums.text#}} {{#tool_list_model_albums.json#}}
+
+            8. 标签列表：{{#tool_list_tags.text#}} {{#tool_list_tags.json#}}
+
+            9. 人物相册：{{#tool_list_people.text#}} {{#tool_list_people.json#}}'
+        selected: false
+        title: 结果整理
+        type: llm
+        vision:
+          enabled: false
+      height: 87
+      id: summarize
+      position:
+        x: 1280
+        y: 360
+      positionAbsolute:
+        x: 1280
+        y: 360
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 241
+    - data:
+        answer: '{{#summarize.text#}}'
+        selected: false
+        title: 直接回复
+        type: answer
+        variables: []
+      height: 102
+      id: answer
+      position:
+        x: 1580
+        y: 360
+      positionAbsolute:
+        x: 1580
+        y: 360
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 241
+    - data:
+        context:
+          enabled: true
+          variable_selector:
+          - sys
+          - query
+        memory:
+          query_prompt_template: '{{#sys.query#}}'
+          role_prefix:
+            assistant: ''
+            user: ''
+          window:
+            enabled: true
+            size: 10
+        model:
+          completion_params:
+            temperature: 0.1
+          mode: chat
+          name: qwen-flash
+          provider: langgenius/tongyi/tongyi
+        prompt_template:
+        - id: extract_write_action-system
+          role: system
+          text: "You classify whether the Cloud-Album user wants a safe write action
+            and extract tool parameters. Output JSON only. Do not output Markdown.\n\
+            \nAllowed write actions:\n1. Album actions: create_album, create_album_and_add_files,
+            add_files_to_album, remove_files_from_album\n2. Tag actions: add_tags,
+            remove_tags\n\nHigh-risk actions must return mode=none: delete files,
+            delete albums, empty recycle bin, create share links, create download
+            tokens, update account.\n\nmode values:\n- none: no safe write action,
+            high-risk request, or not enough parameters\n- preview: the user asks
+            for a write action and needs a preview first\n- execute: the user explicitly
+            confirms the previous preview and you can recover all required pending
+            params from recent chat history\n\nConfirmation is intentionally strict.
+            Use mode=execute only when the entire current input is a short standalone
+            confirmation such as 确认, 执行, 确认执行, 开始执行, 可以执行, confirm, or execute.
+            Words such as 是, 好, 好的, 可以, ok, yes, sure, start, and good are not
+            sufficient when they appear inside a longer sentence.\nIf the user only
+            confirms but there is no pending action in chat history, return mode=none.\n-
+            If the user adds or corrects an album name, tag, selection scope, destination,
+            or operation type, return mode=preview with revised parameters even if
+            the sentence contains 是, 好, 可以, or 确认. Example: after previewing album
+            宠物相册, the reply “是宠物这个相册” means change albumName to 宠物 and preview
+            again; it never means execute.\n\nIntent rules:\n- Words such as album, 相册, 放到,
+            移入, 加入, 收进, 整理到 mean an album action. Never turn them into
+            add_tags unless the user explicitly says 标签, 打标签, 标记为, or tag.\n-
+            If the user says an album already exists, use add_files_to_album with
+            albumName. If existence is unknown, create_album_and_add_files is allowed;
+            the backend will reuse an existing album with the same name.\n\nPhoto selection rules:\n- Prefer explicit fileIds
+            when the user refers to concrete listed photos.\n- For “刚上传的照片”,
+            “最新上传的一张”, or equivalent wording, use searchType=latest and leave
+            searchKeyword empty. The backend will resolve exactly one latest owned,
+            non-deleted photo. Never use the new target tag as a search condition.\n-
+            This workflow has no visual access to Cloud-Album photos and a Dify chat
+            attachment is not a Cloud-Album fileId. Never claim to see image content.
+            If the user asks for suitable tags without describing the content, return
+            mode=none and ask for a description. Do not invent tags, fileIds, matched
+            counts, previews, or successful writes.\n- If the user describes
+            a photo category/object such as cat, kitten, flower, food, landscape,
+            beach, use searchType=tag and put the object/category word into searchKeyword.
+            Leave mediaType empty. Do not invent fileIds.\n- searchKeyword may contain
+            multiple exact tag candidates separated by |; the backend treats them
+            as an OR union. Remove duplicates and never mix unrelated categories.
+            For an animal-related request, include only animal species, pet types,
+            or breed tags; never include scenery, sunset, location, activity, or
+            event tags. For broad requests such as all animals or all pets, use only
+            searchKeyword=动物; do not invent a long taxonomy or synonym list. The
+            backend expands broad categories from the user's real tags.\n- If the user says all photos/all
+            pictures, use searchType=all and imageTypeText=picture.\n- If the user
+            mentions a place, use searchType=location, locationLevel=city unless a
+            more precise level is clear, and set locationValue/searchKeyword.\n- If
+            the user mentions a camera/device/model, use searchType=model and set
+            searchKeyword.\n- For put/add photos into album by album name, use albumAction=create_album_and_add_files
+            when only albumName is known. The backend will reuse an existing normal
+            album with the same name when it exists.\n- For add/remove a tag to photos,
+            tagName is the target tag. sourceTagName/searchKeyword describe
+            which photos to select.\n\nWhen mode=execute, recover action, albumName/albumId,
+            tagName, fileIds, searchType, searchKeyword, mediaType, imageTypeText,
+            locationLevel, locationValue, sourceAlbumId, and sourceTagName from the
+            latest assistant preview message or the CLOUD_ALBUM_PENDING hidden comment.
+            Treat that comment as internal state and never mention it to the user.\n\nFixed output
+            JSON:\n{\n  \"mode\": \"none|preview|execute\",\n  \"family\": \"album|tag|none\"\
+            ,\n  \"albumAction\": \"create_album|create_album_and_add_files|add_files_to_album|remove_files_from_album|\"\
+            ,\n  \"tagAction\": \"add_tags|remove_tags|\",\n  \"albumName\": \"\"\
+            ,\n  \"albumId\": -1,\n  \"tagName\": \"\",\n  \"imageType\": \"other\"\
+            ,\n  \"imageTypeText\": \"picture|gif|video|all\",\n  \"fileIds\": [],\n\
+            \  \"searchType\": \"tag|location|model|latest|all|\",\n  \"searchKeyword\":
+            \"\",\n  \"mediaType\": \"\",\n  \"sourceTagName\": \"\",\n  \"locationLevel\"\
+            : \"country|province|city|district|\",\n  \"locationValue\": \"\",\n \
+            \ \"sourceAlbumId\": -1,\n  \"reason\": \"\"\n}\n"
+        - id: extract_write_action-user
+          role: user
+          text: "Current user input: {{#sys.query#}}\n\nUse recent chat history to
+            decide whether to preview or execute a write action. Output JSON only."
+        selected: false
+        title: 识别写操作
+        type: llm
+        vision:
+          enabled: false
+      height: 87
+      id: extract_write_action
+      position:
+        x: -70
+        y: 160
+      positionAbsolute:
+        x: -70
+        y: 160
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 241
+    - data:
+        code: "def main(raw: str, current_query: str = \"\") -> dict:\n    import json\n    import re\n\n   \
+          \ def defaults():\n        return {\n            \"mode\": \"none\", \"\
+          family\": \"none\", \"albumAction\": \"\", \"tagAction\": \"\",\n      \
+          \      \"albumName\": \"\", \"albumId\": -1, \"tagName\": \"\", \"imageType\"\
+          : \"other\",\n            \"imageTypeText\": \"picture\", \"fileIds\": [],
+          \"searchType\": \"\", \"searchKeyword\": \"\",\n            \"mediaType\"\
+          : \"\", \"sourceTagName\": \"\", \"locationLevel\": \"\", \"locationValue\"\
+          : \"\",\n            \"sourceAlbumId\": -1, \"confirmed\": False, \"reason\"\
+          : \"\"\n        }\n\n    def clean_text(value):\n        value = str(value
+          or \"\").strip()\n        if value.lower() in {\"none\", \"null\", \"undefined\"\
+          , \"n/a\", \"na\"}:\n            return \"\"\n        return value\n\n \
+          \   data = defaults()\n    text = raw or \"\"\n    try:\n        m = re.search(r\"\
+          \\{[\\s\\S]*\\}\", text)\n        obj = json.loads(m.group(0) if m else
+          text)\n        if isinstance(obj, dict):\n            data.update(obj)\n\
+          \    except Exception as exc:\n        data[\"reason\"] = \"write action
+          JSON parse failed: \" + str(exc)\n\n    if data[\"mode\"] not in {\"none\"\
+          , \"preview\", \"execute\"}: data[\"mode\"] = \"none\"\n    if data[\"family\"\
+          ] not in {\"none\", \"album\", \"tag\"}: data[\"family\"] = \"none\"\n \
+          \   if data[\"albumAction\"] not in {\"create_album\", \"create_album_and_add_files\"\
+          , \"add_files_to_album\", \"remove_files_from_album\"}: data[\"albumAction\"\
+          ] = \"\"\n    if data[\"tagAction\"] not in {\"add_tags\", \"remove_tags\"\
+          }: data[\"tagAction\"] = \"\"\n\n    file_ids = data.get(\"fileIds\") or
+          []\n    if isinstance(file_ids, str): file_ids = re.findall(r\"[0-9a-fA-F]{32}\"\
+          , file_ids)\n    if not isinstance(file_ids, list): file_ids = []\n    clean_ids,
+          seen = [], set()\n    for item in file_ids:\n        value = clean_text(item)\n\
+          \        if value and value not in seen:\n            seen.add(value); clean_ids.append(value)\n\
+          \        if len(clean_ids) >= 100: break\n    data[\"fileIds\"] = clean_ids\n\
+          \n    for key in [\"albumId\", \"sourceAlbumId\"]:\n        try: data[key]
+          = int(data.get(key) or -1)\n        except Exception: data[key] = -1\n\n\
+          \    for key in [\"albumName\", \"tagName\", \"imageType\", \"imageTypeText\"\
+          , \"searchType\", \"searchKeyword\", \"mediaType\", \"sourceTagName\", \"\
+          locationLevel\", \"locationValue\", \"reason\"]:\n        data[key] = clean_text(data.get(key))\n\
+          \n    query = re.sub(r\"[\\s，,。.!！?？;；:：]+\", \"\", clean_text(current_query)).lower()\n\
+          \    exact_confirmations = {\"确认\", \"执行\", \"确认执行\", \"开始执行\", \"可以执行\", \"同意执行\", \"confirm\", \"execute\"}\n\
+          \    if data[\"mode\"] == \"execute\" and query not in exact_confirmations:\n\
+          \        data[\"mode\"] = \"preview\"\n\n    if not data[\"imageType\"]: data[\"imageType\"] = \"other\"\n    if
+          data[\"imageTypeText\"] not in {\"picture\", \"gif\", \"video\", \"all\"\
+          }: data[\"imageTypeText\"] = \"picture\"\n    if data[\"searchType\"] not
+          in {\"\", \"tag\", \"location\", \"model\", \"latest\", \"all\"}: data[\"searchType\"\
+          ] = \"\"\n    if data[\"locationLevel\"] not in {\"\", \"country\", \"province\"\
+          , \"city\", \"district\"}: data[\"locationLevel\"] = \"\"\n    if not data[\"\
+          searchKeyword\"] and data[\"mediaType\"]: data[\"searchKeyword\"] = data[\"\
+          mediaType\"]\n    if data[\"searchType\"] in {\"\", \"tag\"}: data[\"mediaType\"\
+          ] = \"\"\n    if data[\"searchKeyword\"] and not data[\"searchType\"\
+          ]: data[\"searchType\"] = \"tag\"\n\n    data[\"confirmed\"] = data[\"mode\"\
+          ] == \"execute\"\n    if data[\"family\"] == \"album\" and not data[\"albumAction\"\
+          ]: data[\"mode\"] = \"none\"\n    if data[\"family\"] == \"tag\" and not
+          data[\"tagAction\"]: data[\"mode\"] = \"none\"\n    if data[\"family\"]
+          == \"none\": data[\"mode\"] = \"none\"\n    return data\n"
+        code_language: python3
+        outputs:
+          mode:
+            children:
+            type: string
+          family:
+            children:
+            type: string
+          albumAction:
+            children:
+            type: string
+          tagAction:
+            children:
+            type: string
+          albumName:
+            children:
+            type: string
+          albumId:
+            children:
+            type: number
+          tagName:
+            children:
+            type: string
+          imageType:
+            children:
+            type: string
+          imageTypeText:
+            children:
+            type: string
+          fileIds:
+            children:
+            type: array[string]
+          searchType:
+            children:
+            type: string
+          searchKeyword:
+            children:
+            type: string
+          mediaType:
+            children:
+            type: string
+          sourceTagName:
+            children:
+            type: string
+          locationLevel:
+            children:
+            type: string
+          locationValue:
+            children:
+            type: string
+          sourceAlbumId:
+            children:
+            type: number
+          confirmed:
+            children:
+            type: boolean
+          reason:
+            children:
+            type: string
+        selected: false
+        title: 校验写操作
+        type: code
+        variables:
+        - value_selector:
+          - extract_write_action
+          - text
+          variable: raw
+        - value_selector:
+          - sys
+          - query
+          variable: current_query
+      height: 54
+      id: parse_write_action
+      position:
+        x: 220
+        y: 160
+      positionAbsolute:
+        x: 220
+        y: 160
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 241
+    - data:
+        cases:
+        - case_id: 'true'
+          conditions:
+          - comparison_operator: is
+            id: route_preview-condition
+            value: preview
+            varType: string
+            variable_selector:
+            - parse_write_action
+            - mode
+          id: 'true'
+          logical_operator: and
+        desc: ''
+        selected: false
+        title: Preview?
+        type: if-else
+      height: 126
+      id: route_preview
+      position:
+        x: 510
+        y: 110
+      positionAbsolute:
+        x: 510
+        y: 110
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 241
+    - data:
+        cases:
+        - case_id: 'true'
+          conditions:
+          - comparison_operator: is
+            id: route_execute-condition
+            value: execute
+            varType: string
+            variable_selector:
+            - parse_write_action
+            - mode
+          id: 'true'
+          logical_operator: and
+        desc: ''
+        selected: false
+        title: Execute?
+        type: if-else
+      height: 126
+      id: route_execute
+      position:
+        x: 510
+        y: 300
+      positionAbsolute:
+        x: 510
+        y: 300
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 241
+    - data:
+        cases:
+        - case_id: 'true'
+          conditions:
+          - comparison_operator: is
+            id: route_preview_album-condition
+            value: album
+            varType: string
+            variable_selector:
+            - parse_write_action
+            - family
+          id: 'true'
+          logical_operator: and
+        desc: ''
+        selected: false
+        title: Preview Album or Tag
+        type: if-else
+      height: 126
+      id: route_preview_album
+      position:
+        x: 800
+        y: 30
+      positionAbsolute:
+        x: 800
+        y: 30
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 241
+    - data:
+        cases:
+        - case_id: 'true'
+          conditions:
+          - comparison_operator: is
+            id: route_execute_album-condition
+            value: album
+            varType: string
+            variable_selector:
+            - parse_write_action
+            - family
+          id: 'true'
+          logical_operator: and
+        desc: ''
+        selected: false
+        title: Execute Album or Tag
+        type: if-else
+      height: 126
+      id: route_execute_album
+      position:
+        x: 800
+        y: 300
+      positionAbsolute:
+        x: 800
+        y: 300
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 241
+    - data:
+        is_team_authorization: true
+        meta:
+        paramSchemas: &id001
+        - auto_generate:
+          default:
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: action
+            ja_JP: action
+            pt_BR: action
+            zh_Hans: action
+          llm_description: ''
+          max:
+          min:
+          name: action
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: true
+          scope:
+          template:
+          type: string
+        - auto_generate:
+          default: -1
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: albumId
+            ja_JP: albumId
+            pt_BR: albumId
+            zh_Hans: albumId
+          llm_description: ''
+          max:
+          min:
+          name: albumId
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: number
+        - auto_generate:
+          default:
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: albumName
+            ja_JP: albumName
+            pt_BR: albumName
+            zh_Hans: albumName
+          llm_description: ''
+          max:
+          min:
+          name: albumName
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: string
+        - auto_generate:
+          default:
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: fileIds
+            ja_JP: fileIds
+            pt_BR: fileIds
+            zh_Hans: fileIds
+          llm_description: ''
+          max:
+          min:
+          name: fileIds
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: array
+        - auto_generate:
+          default:
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: searchType
+            ja_JP: searchType
+            pt_BR: searchType
+            zh_Hans: searchType
+          llm_description: ''
+          max:
+          min:
+          name: searchType
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: string
+        - auto_generate:
+          default:
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: searchKeyword
+            ja_JP: searchKeyword
+            pt_BR: searchKeyword
+            zh_Hans: searchKeyword
+          llm_description: ''
+          max:
+          min:
+          name: searchKeyword
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: string
+        - auto_generate:
+          default:
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: mediaType
+            ja_JP: mediaType
+            pt_BR: mediaType
+            zh_Hans: mediaType
+          llm_description: ''
+          max:
+          min:
+          name: mediaType
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: string
+        - auto_generate:
+          default:
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: tagName
+            ja_JP: tagName
+            pt_BR: tagName
+            zh_Hans: tagName
+          llm_description: ''
+          max:
+          min:
+          name: tagName
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: string
+        - auto_generate:
+          default: picture
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: imageTypeText
+            ja_JP: imageTypeText
+            pt_BR: imageTypeText
+            zh_Hans: imageTypeText
+          llm_description: ''
+          max:
+          min:
+          name: imageTypeText
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: string
+        - auto_generate:
+          default:
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: locationLevel
+            ja_JP: locationLevel
+            pt_BR: locationLevel
+            zh_Hans: locationLevel
+          llm_description: ''
+          max:
+          min:
+          name: locationLevel
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: string
+        - auto_generate:
+          default:
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: locationValue
+            ja_JP: locationValue
+            pt_BR: locationValue
+            zh_Hans: locationValue
+          llm_description: ''
+          max:
+          min:
+          name: locationValue
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: string
+        - auto_generate:
+          default: -1
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: sourceAlbumId
+            ja_JP: sourceAlbumId
+            pt_BR: sourceAlbumId
+            zh_Hans: sourceAlbumId
+          llm_description: ''
+          max:
+          min:
+          name: sourceAlbumId
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: number
+        - auto_generate:
+          default: false
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: confirmed
+            ja_JP: confirmed
+            pt_BR: confirmed
+            zh_Hans: confirmed
+          llm_description: ''
+          max:
+          min:
+          name: confirmed
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: boolean
+        params: {}
+        plugin_id:
+        plugin_unique_identifier:
+        provider_icon:
+          background: '#FEF7C3'
+          content: 🕵️
+        provider_icon_dark: ''
+        provider_id: a4efae9f-e26b-4095-9ac1-d753303f1ffc
+        provider_name: Cloud-Album Agent Tools
+        provider_type: api
+        selected: false
+        title: Preview Album Action
+        tool_configurations: {}
+        tool_description: Preview a confirmed album organizing action without 
+          writing data.
+        tool_label: previewAlbumAction
+        tool_name: previewAlbumAction
+        tool_node_version: '2'
+        tool_parameters:
+          action:
+            type: mixed
+            value: '{{#parse_write_action.albumAction#}}'
+          albumId:
+            type: mixed
+            value: '{{#parse_write_action.albumId#}}'
+          albumName:
+            type: mixed
+            value: '{{#parse_write_action.albumName#}}'
+          fileIds:
+            type: mixed
+            value: '{{#parse_write_action.fileIds#}}'
+          searchType:
+            type: mixed
+            value: '{{#parse_write_action.searchType#}}'
+          searchKeyword:
+            type: mixed
+            value: '{{#parse_write_action.searchKeyword#}}'
+          mediaType:
+            type: mixed
+            value: '{{#parse_write_action.mediaType#}}'
+          tagName:
+            type: mixed
+            value: '{{#parse_write_action.tagName#}}'
+          imageTypeText:
+            type: mixed
+            value: '{{#parse_write_action.imageTypeText#}}'
+          locationLevel:
+            type: mixed
+            value: '{{#parse_write_action.locationLevel#}}'
+          locationValue:
+            type: mixed
+            value: '{{#parse_write_action.locationValue#}}'
+          sourceAlbumId:
+            type: mixed
+            value: '{{#parse_write_action.sourceAlbumId#}}'
+          confirmed:
+            type: constant
+            value: false
+        type: tool
+        version: '2'
+      height: 54
+      id: tool_preview_album_action
+      position:
+        x: 1090
+        y: 20
+      positionAbsolute:
+        x: 1090
+        y: 20
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 241
+    - data:
+        is_team_authorization: true
+        meta:
+        paramSchemas: &id002
+        - auto_generate:
+          default:
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: action
+            ja_JP: action
+            pt_BR: action
+            zh_Hans: action
+          llm_description: ''
+          max:
+          min:
+          name: action
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: true
+          scope:
+          template:
+          type: string
+        - auto_generate:
+          default:
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: fileIds
+            ja_JP: fileIds
+            pt_BR: fileIds
+            zh_Hans: fileIds
+          llm_description: ''
+          max:
+          min:
+          name: fileIds
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: array
+        - auto_generate:
+          default: other
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: imageType
+            ja_JP: imageType
+            pt_BR: imageType
+            zh_Hans: imageType
+          llm_description: ''
+          max:
+          min:
+          name: imageType
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: string
+        - auto_generate:
+          default:
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: tagName
+            ja_JP: tagName
+            pt_BR: tagName
+            zh_Hans: tagName
+          llm_description: ''
+          max:
+          min:
+          name: tagName
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: true
+          scope:
+          template:
+          type: string
+        - auto_generate:
+          default:
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: searchType
+            ja_JP: searchType
+            pt_BR: searchType
+            zh_Hans: searchType
+          llm_description: ''
+          max:
+          min:
+          name: searchType
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: string
+        - auto_generate:
+          default:
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: searchKeyword
+            ja_JP: searchKeyword
+            pt_BR: searchKeyword
+            zh_Hans: searchKeyword
+          llm_description: ''
+          max:
+          min:
+          name: searchKeyword
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: string
+        - auto_generate:
+          default:
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: mediaType
+            ja_JP: mediaType
+            pt_BR: mediaType
+            zh_Hans: mediaType
+          llm_description: ''
+          max:
+          min:
+          name: mediaType
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: string
+        - auto_generate:
+          default:
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: sourceTagName
+            ja_JP: sourceTagName
+            pt_BR: sourceTagName
+            zh_Hans: sourceTagName
+          llm_description: ''
+          max:
+          min:
+          name: sourceTagName
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: string
+        - auto_generate:
+          default: picture
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: imageTypeText
+            ja_JP: imageTypeText
+            pt_BR: imageTypeText
+            zh_Hans: imageTypeText
+          llm_description: ''
+          max:
+          min:
+          name: imageTypeText
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: string
+        - auto_generate:
+          default:
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: locationLevel
+            ja_JP: locationLevel
+            pt_BR: locationLevel
+            zh_Hans: locationLevel
+          llm_description: ''
+          max:
+          min:
+          name: locationLevel
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: string
+        - auto_generate:
+          default:
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: locationValue
+            ja_JP: locationValue
+            pt_BR: locationValue
+            zh_Hans: locationValue
+          llm_description: ''
+          max:
+          min:
+          name: locationValue
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: string
+        - auto_generate:
+          default: -1
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: sourceAlbumId
+            ja_JP: sourceAlbumId
+            pt_BR: sourceAlbumId
+            zh_Hans: sourceAlbumId
+          llm_description: ''
+          max:
+          min:
+          name: sourceAlbumId
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: number
+        - auto_generate:
+          default: false
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema:
+          label:
+            en_US: confirmed
+            ja_JP: confirmed
+            pt_BR: confirmed
+            zh_Hans: confirmed
+          llm_description: ''
+          max:
+          min:
+          name: confirmed
+          options: []
+          placeholder:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          precision:
+          required: false
+          scope:
+          template:
+          type: boolean
+        params: {}
+        plugin_id:
+        plugin_unique_identifier:
+        provider_icon:
+          background: '#FEF7C3'
+          content: 🕵️
+        provider_icon_dark: ''
+        provider_id: a4efae9f-e26b-4095-9ac1-d753303f1ffc
+        provider_name: Cloud-Album Agent Tools
+        provider_type: api
+        selected: false
+        title: Preview Tag Action
+        tool_configurations: {}
+        tool_description: Preview a confirmed tag organizing action without 
+          writing data.
+        tool_label: previewTagAction
+        tool_name: previewTagAction
+        tool_node_version: '2'
+        tool_parameters:
+          action:
+            type: mixed
+            value: '{{#parse_write_action.tagAction#}}'
+          fileIds:
+            type: mixed
+            value: '{{#parse_write_action.fileIds#}}'
+          imageType:
+            type: mixed
+            value: '{{#parse_write_action.imageType#}}'
+          tagName:
+            type: mixed
+            value: '{{#parse_write_action.tagName#}}'
+          searchType:
+            type: mixed
+            value: '{{#parse_write_action.searchType#}}'
+          searchKeyword:
+            type: mixed
+            value: '{{#parse_write_action.searchKeyword#}}'
+          mediaType:
+            type: mixed
+            value: '{{#parse_write_action.mediaType#}}'
+          sourceTagName:
+            type: mixed
+            value: '{{#parse_write_action.sourceTagName#}}'
+          imageTypeText:
+            type: mixed
+            value: '{{#parse_write_action.imageTypeText#}}'
+          locationLevel:
+            type: mixed
+            value: '{{#parse_write_action.locationLevel#}}'
+          locationValue:
+            type: mixed
+            value: '{{#parse_write_action.locationValue#}}'
+          sourceAlbumId:
+            type: mixed
+            value: '{{#parse_write_action.sourceAlbumId#}}'
+          confirmed:
+            type: constant
+            value: false
+        type: tool
+        version: '2'
+      height: 54
+      id: tool_preview_tag_action
+      position:
+        x: 1090
+        y: 150
+      positionAbsolute:
+        x: 1090
+        y: 150
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 241
+    - data:
+        is_team_authorization: true
+        meta:
+        paramSchemas: *id001
+        params: {}
+        plugin_id:
+        plugin_unique_identifier:
+        provider_icon:
+          background: '#FEF7C3'
+          content: 🕵️
+        provider_icon_dark: ''
+        provider_id: a4efae9f-e26b-4095-9ac1-d753303f1ffc
+        provider_name: Cloud-Album Agent Tools
+        provider_type: api
+        selected: false
+        title: Execute Album Action
+        tool_configurations: {}
+        tool_description: Execute an album organizing action after explicit 
+          confirmation.
+        tool_label: executeAlbumAction
+        tool_name: executeAlbumAction
+        tool_node_version: '2'
+        tool_parameters:
+          action:
+            type: mixed
+            value: '{{#parse_write_action.albumAction#}}'
+          albumId:
+            type: mixed
+            value: '{{#parse_write_action.albumId#}}'
+          albumName:
+            type: mixed
+            value: '{{#parse_write_action.albumName#}}'
+          fileIds:
+            type: mixed
+            value: '{{#parse_write_action.fileIds#}}'
+          searchType:
+            type: mixed
+            value: '{{#parse_write_action.searchType#}}'
+          searchKeyword:
+            type: mixed
+            value: '{{#parse_write_action.searchKeyword#}}'
+          mediaType:
+            type: mixed
+            value: '{{#parse_write_action.mediaType#}}'
+          tagName:
+            type: mixed
+            value: '{{#parse_write_action.tagName#}}'
+          imageTypeText:
+            type: mixed
+            value: '{{#parse_write_action.imageTypeText#}}'
+          locationLevel:
+            type: mixed
+            value: '{{#parse_write_action.locationLevel#}}'
+          locationValue:
+            type: mixed
+            value: '{{#parse_write_action.locationValue#}}'
+          sourceAlbumId:
+            type: mixed
+            value: '{{#parse_write_action.sourceAlbumId#}}'
+          confirmed:
+            type: constant
+            value: true
+        type: tool
+        version: '2'
+      height: 54
+      id: tool_execute_album_action
+      position:
+        x: 1090
+        y: 300
+      positionAbsolute:
+        x: 1090
+        y: 300
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 241
+    - data:
+        is_team_authorization: true
+        meta:
+        paramSchemas: *id002
+        params: {}
+        plugin_id:
+        plugin_unique_identifier:
+        provider_icon:
+          background: '#FEF7C3'
+          content: 🕵️
+        provider_icon_dark: ''
+        provider_id: a4efae9f-e26b-4095-9ac1-d753303f1ffc
+        provider_name: Cloud-Album Agent Tools
+        provider_type: api
+        selected: false
+        title: Execute Tag Action
+        tool_configurations: {}
+        tool_description: Execute a tag organizing action after explicit 
+          confirmation.
+        tool_label: executeTagAction
+        tool_name: executeTagAction
+        tool_node_version: '2'
+        tool_parameters:
+          action:
+            type: mixed
+            value: '{{#parse_write_action.tagAction#}}'
+          fileIds:
+            type: mixed
+            value: '{{#parse_write_action.fileIds#}}'
+          imageType:
+            type: mixed
+            value: '{{#parse_write_action.imageType#}}'
+          tagName:
+            type: mixed
+            value: '{{#parse_write_action.tagName#}}'
+          searchType:
+            type: mixed
+            value: '{{#parse_write_action.searchType#}}'
+          searchKeyword:
+            type: mixed
+            value: '{{#parse_write_action.searchKeyword#}}'
+          mediaType:
+            type: mixed
+            value: '{{#parse_write_action.mediaType#}}'
+          sourceTagName:
+            type: mixed
+            value: '{{#parse_write_action.sourceTagName#}}'
+          imageTypeText:
+            type: mixed
+            value: '{{#parse_write_action.imageTypeText#}}'
+          locationLevel:
+            type: mixed
+            value: '{{#parse_write_action.locationLevel#}}'
+          locationValue:
+            type: mixed
+            value: '{{#parse_write_action.locationValue#}}'
+          sourceAlbumId:
+            type: mixed
+            value: '{{#parse_write_action.sourceAlbumId#}}'
+          confirmed:
+            type: constant
+            value: true
+        type: tool
+        version: '2'
+      height: 54
+      id: tool_execute_tag_action
+      position:
+        x: 1090
+        y: 430
+      positionAbsolute:
+        x: 1090
+        y: 430
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 241
+    - data:
+        context:
+          enabled: true
+          variable_selector:
+          - sys
+          - query
+        memory:
+          query_prompt_template: '{{#sys.query#}}'
+          role_prefix:
+            assistant: ''
+            user: ''
+          window:
+            enabled: true
+            size: 10
+        model:
+          completion_params:
+            temperature: 0.3
+          mode: chat
+          name: qwen3-max
+          provider: langgenius/tongyi/tongyi
+        prompt_template:
+        - id: summarize_preview_album_action-system
+          role: system
+          text: "You are Cloud-Album's friendly assistant. Answer in natural, concise
+            Chinese for ordinary users.\n\nNever show JSON, English parameter names,
+            Pending params, fileIds, action codes, searchType, searchKeyword, sourceAlbumId,
+            or other implementation details.\n\nThe tool result is the only source
+            of truth. Never infer a photo count or successful preview from the user
+            message. Read the tool result first. If requiresConfirmation=true
+            and affectedFileCount>0, explain in 2-3 short sentences: how many photos
+            were found, whether they will be added to an existing album or a newly
+            created album, and the album name. End with “回复「确认」后我就开始处理，也可以直接告诉我怎么调整。”
+            Do not claim the operation has already happened.\nIf requiresConfirmation=false
+            or affectedFileCount=0, do not ask for confirmation. Explain that no matching
+            photos were found, include useful warnings in friendly language, and suggest
+            one concrete way to narrow or change the condition.\n\nOnly when confirmation
+            is available, append exactly one HTML comment carrying the parsed state:
+            <!-- CLOUD_ALBUM_PENDING family=album; action=...; albumName=...; albumId=...;
+            fileIds=...; searchType=...; searchKeyword=...; imageTypeText=...; locationLevel=...;
+            locationValue=...; sourceAlbumId=... -->\nThe comment is internal memory:
+            do not introduce it, do not wrap it in a code block, and do not duplicate
+            it as visible text."
+        - id: summarize_preview_album_action-user
+          role: user
+          text: "User query: {{#sys.query#}}\n\nParsed params: family={{#parse_write_action.family#}},
+            action={{#parse_write_action.albumAction#}}, albumName={{#parse_write_action.albumName#}},
+            albumId={{#parse_write_action.albumId#}}, fileIds={{#parse_write_action.fileIds#}},
+            searchType={{#parse_write_action.searchType#}}, searchKeyword={{#parse_write_action.searchKeyword#}},
+            mediaType={{#parse_write_action.mediaType#}}, imageTypeText={{#parse_write_action.imageTypeText#}},
+            locationLevel={{#parse_write_action.locationLevel#}}, locationValue={{#parse_write_action.locationValue#}},
+            sourceAlbumId={{#parse_write_action.sourceAlbumId#}}\n\nWrite action result
+            (album preview): {{#tool_preview_album_action.text#}} {{#tool_preview_album_action.json#}}"
+        selected: false
+        title: 整理相册操作预览
+        type: llm
+        vision:
+          enabled: false
+      height: 87
+      id: summarize_preview_album_action
+      position:
+        x: 1380
+        y: 20
+      positionAbsolute:
+        x: 1380
+        y: 20
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 241
+    - data:
+        answer: '{{#summarize_preview_album_action.text#}}'
+        selected: false
+        title: 相册操作预览
+        type: answer
+        variables: []
+      height: 102
+      id: answer_preview_album_action
+      position:
+        x: 1670
+        y: 20
+      positionAbsolute:
+        x: 1670
+        y: 20
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 241
+    - data:
+        context:
+          enabled: true
+          variable_selector:
+          - sys
+          - query
+        memory:
+          query_prompt_template: '{{#sys.query#}}'
+          role_prefix:
+            assistant: ''
+            user: ''
+          window:
+            enabled: true
+            size: 10
+        model:
+          completion_params:
+            temperature: 0.3
+          mode: chat
+          name: qwen3-max
+          provider: langgenius/tongyi/tongyi
+        prompt_template:
+        - id: summarize_preview_tag_action-system
+          role: system
+          text: "You are Cloud-Album's friendly assistant. Answer in natural, concise
+            Chinese for ordinary users.\n\nNever show JSON, English parameter names,
+            Pending params, fileIds, action codes, searchType, searchKeyword, sourceAlbumId,
+            or other implementation details.\n\nThe tool result is the only source
+            of truth. Never infer a photo count or successful preview from the user
+            message. Read the tool result first. If requiresConfirmation=true
+            and affectedFileCount>0, explain in 2-3 short sentences: how many photos
+            were found, which tag will be added or removed, and that this changes
+            organization only. End with “回复「确认」后我就开始处理，也可以直接告诉我怎么调整。”
+            Do not claim the operation has already happened.\nIf requiresConfirmation=false
+            or affectedFileCount=0, do not ask for confirmation. Explain that no matching
+            photos were found, include useful warnings in friendly language, and suggest
+            one concrete alternative.\n\nOnly when confirmation is available, append
+            exactly one HTML comment carrying the parsed state: <!-- CLOUD_ALBUM_PENDING
+            family=tag; action=...; tagName=...; fileIds=...; searchType=...; searchKeyword=...;
+            sourceTagName=...; imageType=...; imageTypeText=...; locationLevel=...;
+            locationValue=...; sourceAlbumId=... -->\nThe comment is internal memory:
+            do not introduce it, do not wrap it in a code block, and do not duplicate
+            it as visible text."
+        - id: summarize_preview_tag_action-user
+          role: user
+          text: "User query: {{#sys.query#}}\n\nParsed params: family={{#parse_write_action.family#}},
+            action={{#parse_write_action.tagAction#}}, tagName={{#parse_write_action.tagName#}},
+            fileIds={{#parse_write_action.fileIds#}}, searchType={{#parse_write_action.searchType#}},
+            searchKeyword={{#parse_write_action.searchKeyword#}}, mediaType={{#parse_write_action.mediaType#}},
+            sourceTagName={{#parse_write_action.sourceTagName#}}, imageTypeText={{#parse_write_action.imageTypeText#}},
+            locationLevel={{#parse_write_action.locationLevel#}}, locationValue={{#parse_write_action.locationValue#}},
+            sourceAlbumId={{#parse_write_action.sourceAlbumId#}}\n\nWrite action result
+            (tag preview): {{#tool_preview_tag_action.text#}} {{#tool_preview_tag_action.json#}}"
+        selected: false
+        title: 整理标签操作预览
+        type: llm
+        vision:
+          enabled: false
+      height: 87
+      id: summarize_preview_tag_action
+      position:
+        x: 1380
+        y: 150
+      positionAbsolute:
+        x: 1380
+        y: 150
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 241
+    - data:
+        answer: '{{#summarize_preview_tag_action.text#}}'
+        selected: false
+        title: 标签操作预览
+        type: answer
+        variables: []
+      height: 102
+      id: answer_preview_tag_action
+      position:
+        x: 1670
+        y: 150
+      positionAbsolute:
+        x: 1670
+        y: 150
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 241
+    - data:
+        context:
+          enabled: true
+          variable_selector:
+          - sys
+          - query
+        memory:
+          query_prompt_template: '{{#sys.query#}}'
+          role_prefix:
+            assistant: ''
+            user: ''
+          window:
+            enabled: true
+            size: 10
+        model:
+          completion_params:
+            temperature: 0.3
+          mode: chat
+          name: qwen3-max
+          provider: langgenius/tongyi/tongyi
+        prompt_template:
+        - id: summarize_execute_album_action-system
+          role: system
+          text: "You are Cloud-Album's friendly assistant. Answer in natural, concise
+            Chinese. Never show JSON, internal parameter names, action codes, or raw
+            errors.\nThe tool result is the only source of truth. Only report completion
+            when success=true and affectedFileCount>0 in the tool result. If the tool reports success, clearly say the operation is complete,
+            how many photos were handled, and the album name. Use a warm one- or two-sentence
+            reply.\nIf it fails, apologize briefly, explain the user-understandable
+            reason, and give one concrete next step. Never claim success when affectedFileCount
+            is 0. Do not output hidden pending state after execution."
+        - id: summarize_execute_album_action-user
+          role: user
+          text: "User query: {{#sys.query#}}\n\nParsed params: family={{#parse_write_action.family#}},
+            action={{#parse_write_action.albumAction#}}, albumName={{#parse_write_action.albumName#}},
+            albumId={{#parse_write_action.albumId#}}, fileIds={{#parse_write_action.fileIds#}},
+            searchType={{#parse_write_action.searchType#}}, searchKeyword={{#parse_write_action.searchKeyword#}},
+            mediaType={{#parse_write_action.mediaType#}}, imageTypeText={{#parse_write_action.imageTypeText#}},
+            locationLevel={{#parse_write_action.locationLevel#}}, locationValue={{#parse_write_action.locationValue#}},
+            sourceAlbumId={{#parse_write_action.sourceAlbumId#}}\n\nWrite action result
+            (album execute): {{#tool_execute_album_action.text#}} {{#tool_execute_album_action.json#}}"
+        selected: false
+        title: 整理相册执行结果
+        type: llm
+        vision:
+          enabled: false
+      height: 87
+      id: summarize_execute_album_action
+      position:
+        x: 1380
+        y: 280
+      positionAbsolute:
+        x: 1380
+        y: 280
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 241
+    - data:
+        answer: '{{#summarize_execute_album_action.text#}}'
+        selected: false
+        title: 相册执行结果
+        type: answer
+        variables: []
+      height: 102
+      id: answer_execute_album_action
+      position:
+        x: 1670
+        y: 280
+      positionAbsolute:
+        x: 1670
+        y: 280
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 241
+    - data:
+        context:
+          enabled: true
+          variable_selector:
+          - sys
+          - query
+        memory:
+          query_prompt_template: '{{#sys.query#}}'
+          role_prefix:
+            assistant: ''
+            user: ''
+          window:
+            enabled: true
+            size: 10
+        model:
+          completion_params:
+            temperature: 0.3
+          mode: chat
+          name: qwen3-max
+          provider: langgenius/tongyi/tongyi
+        prompt_template:
+        - id: summarize_execute_tag_action-system
+          role: system
+          text: "You are Cloud-Album's friendly assistant. Answer in natural, concise
+            Chinese. Never show JSON, internal parameter names, action codes, or raw
+            errors.\nThe tool result is the only source of truth. Only report completion
+            when success=true and affectedFileCount>0 in the tool result. If the tool reports success, clearly say the operation is complete,
+            how many photos were handled, and which tag was added or removed. Use
+            a warm one- or two-sentence reply.\nIf it fails, apologize briefly, explain
+            the user-understandable reason, and give one concrete next step. Never
+            claim success when affectedFileCount is 0. Do not output hidden pending
+            state after execution."
+        - id: summarize_execute_tag_action-user
+          role: user
+          text: "User query: {{#sys.query#}}\n\nParsed params: family={{#parse_write_action.family#}},
+            action={{#parse_write_action.tagAction#}}, tagName={{#parse_write_action.tagName#}},
+            fileIds={{#parse_write_action.fileIds#}}, searchType={{#parse_write_action.searchType#}},
+            searchKeyword={{#parse_write_action.searchKeyword#}}, mediaType={{#parse_write_action.mediaType#}},
+            sourceTagName={{#parse_write_action.sourceTagName#}}, imageTypeText={{#parse_write_action.imageTypeText#}},
+            locationLevel={{#parse_write_action.locationLevel#}}, locationValue={{#parse_write_action.locationValue#}},
+            sourceAlbumId={{#parse_write_action.sourceAlbumId#}}\n\nWrite action result
+            (tag execute): {{#tool_execute_tag_action.text#}} {{#tool_execute_tag_action.json#}}"
+        selected: false
+        title: 整理标签执行结果
+        type: llm
+        vision:
+          enabled: false
+      height: 87
+      id: summarize_execute_tag_action
+      position:
+        x: 1380
+        y: 410
+      positionAbsolute:
+        x: 1380
+        y: 410
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 241
+    - data:
+        answer: '{{#summarize_execute_tag_action.text#}}'
+        selected: false
+        title: 标签执行结果
+        type: answer
+        variables: []
+      height: 102
+      id: answer_execute_tag_action
+      position:
+        x: 1670
+        y: 410
+      positionAbsolute:
+        x: 1670
+        y: 410
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 241
+    viewport:
+      x: -568.3507601958636
+      y: -0.1500434087363942
+      zoom: 1.2187707886145753
+  rag_pipeline_variables: []
