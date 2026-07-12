@@ -48,8 +48,8 @@ flowchart LR
 ```text
 Cloud-Album/
 ├─ ai-service/          # Python FastAPI AI 推理服务
-├─ memory-backend/      # Spring Boot 后端服务
-├─ memory-frontend/     # Vue 前端应用
+├─ backend/             # Spring Boot 后端服务
+├─ frontend/            # Vue 前端应用
 ├─ docs/                # Dify/智能体相关文档
 ├─ ops/observability/   # Prometheus、Alertmanager、Grafana 本地配置
 ├─ scripts/             # 辅助脚本
@@ -224,7 +224,7 @@ ASYNC_TASK_MQ_ENABLED=true
 进入后端目录：
 
 ```bash
-cd memory-backend
+cd backend
 ```
 
 启动：
@@ -326,7 +326,7 @@ http://localhost:5000/docs
 进入前端目录：
 
 ```bash
-cd memory-frontend
+cd frontend
 ```
 
 安装依赖：
@@ -355,14 +355,14 @@ http://localhost:8080
 ## 构建前端
 
 ```bash
-cd memory-frontend
+cd frontend
 npm run build
 ```
 
 构建产物位于：
 
 ```text
-memory-frontend/dist/
+frontend/dist/
 ```
 
 ## 启动可观测性服务

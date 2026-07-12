@@ -222,7 +222,7 @@ previewTagAction
 
 ## 当前本地调试注意
 
-如果 `memory-backend/src/main/resources/application.yml` 中：
+如果 `backend/src/main/resources/application.yml` 中：
 
 ```yaml
 agent:

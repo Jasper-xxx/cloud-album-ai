@@ -6,11 +6,11 @@ Grafana dashboard.
 
 ## Prerequisites
 
-Start `memory-backend` with its management endpoint reachable from Docker:
+Start the backend with its management endpoint reachable from Docker:
 
 ```powershell
 $env:MANAGEMENT_ADDRESS="0.0.0.0"
-cd memory-backend
+cd backend
 mvn spring-boot:run
 ```
 
