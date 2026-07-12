@@ -208,13 +208,16 @@ MySQL 默认数据库名称为：
 memory_space
 ```
 
+数据库结构由 Flyway 自动管理。首次使用时只需要创建空库 `memory_space`，后端启动后会自动执行 `memory-backend/src/main/resources/db/migration` 下的迁移脚本。
+
+- `V0__init_schema.sql`：完整基础表结构
+- `V1` - `V4`：异步任务、性能索引、文件状态、事件 outbox 等增量迁移
+
 RabbitMQ 用于异步任务分发。默认情况下，后端仍可使用本地扫描方式处理异步任务；如果启用 MQ 分发，请配置 RabbitMQ 连接信息并设置：
 
 ```env
 ASYNC_TASK_MQ_ENABLED=true
 ```
-
-项目没有要求把本地数据库 dump 提交到仓库。生产或公开环境请自行准备初始化 SQL 和迁移方案。
 
 ## 启动后端
 
