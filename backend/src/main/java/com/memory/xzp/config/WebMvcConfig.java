@@ -22,7 +22,7 @@ import java.util.List;
 @Configuration
 public class WebMvcConfig implements WebMvcConfigurer {
 
-    @Value("${agent.auth-enabled:true}")
+    @Value("${agent.auth-enabled:false}")
     private boolean agentAuthEnabled;
 
     /**

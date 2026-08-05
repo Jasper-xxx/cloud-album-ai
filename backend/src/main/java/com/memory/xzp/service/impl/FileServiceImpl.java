@@ -857,6 +857,9 @@ public class FileServiceImpl implements FileService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Boolean setIsDeleted(List<String> fileIds, boolean isDeleted, Long userId) {
+        List<String> exclusivelyOwnedFileIds = isDeleted
+                ? fileMapper.selectExclusivelyOwnedActiveFileIds(fileIds, userId)
+                : List.of();
         int update = fileMapper.setIsDeletedByFileIds(fileIds, isDeleted, userId);
         //从相册里删除
         albumService.removePictureFromAlbum(fileIds, null, userId);
@@ -865,9 +868,11 @@ public class FileServiceImpl implements FileService {
         if (isDeleted) {
             // 软删除时，删除相关的关联记录
             // 1. 删除 picture_tag 记录
-            QueryWrapper<PictureTag> pictureTagQueryWrapper = new QueryWrapper<>();
-            pictureTagQueryWrapper.in("file_id", fileIds);
-            pictureTagMapper.delete(pictureTagQueryWrapper);
+            if (!exclusivelyOwnedFileIds.isEmpty()) {
+                QueryWrapper<PictureTag> pictureTagQueryWrapper = new QueryWrapper<>();
+                pictureTagQueryWrapper.in("file_id", exclusivelyOwnedFileIds);
+                pictureTagMapper.delete(pictureTagQueryWrapper);
+            }
 
             // 2. 删除 similar_picture 记录
             QueryWrapper<SimilarPicture> similarPictureQueryWrapper = new QueryWrapper<>();

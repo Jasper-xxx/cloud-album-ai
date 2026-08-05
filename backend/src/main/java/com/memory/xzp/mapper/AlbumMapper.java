@@ -31,7 +31,7 @@ public interface AlbumMapper extends BaseMapper<Album> {
     /**
      * 删除相册照片关联表
      */
-    void removePictureFromAlbum(
+    int removePictureFromAlbum(
             @Param("albumIds") List<Long> albumIds,
             @Param("fileIds") List<String> fileIds,
             @Param("userId")Long userId
@@ -66,7 +66,7 @@ public interface AlbumMapper extends BaseMapper<Album> {
             @Param("fileIds") List<String> fileIds
     );
 
-    void addPicturesToAlbum(
+    int addPicturesToAlbum(
             @Param("albumId") Long albumId,
             @Param("userId") Long userId,
             @Param("fileIds") List<String> fileIds

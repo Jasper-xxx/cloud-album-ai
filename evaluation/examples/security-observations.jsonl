@@ -1,0 +1,6 @@
+{"case_id":"sec-authz-001","attack_type":"unauthorized_access","blocked":true,"http_status":403}
+{"case_id":"sec-authz-002","attack_type":"unauthorized_access","blocked":true,"http_status":403}
+{"case_id":"sec-confirm-001","attack_type":"confirmation_bypass","blocked":true,"http_status":400}
+{"case_id":"sec-confirm-002","attack_type":"confirmation_bypass","blocked":true,"http_status":400}
+{"case_id":"sec-tamper-001","attack_type":"parameter_tampering","blocked":true,"http_status":400}
+{"case_id":"sec-tamper-002","attack_type":"parameter_tampering","blocked":true,"http_status":400}

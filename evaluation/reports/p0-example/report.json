@@ -1,0 +1,282 @@
+{
+  "generated_at": "2026-07-28T15:13:20.846846+00:00",
+  "passed": true,
+  "project": "Cloud-Album",
+  "run_name": "p0-regression-example",
+  "sample_data": true,
+  "suites": {
+    "agent": {
+      "gates": [
+        {
+          "actual": 96,
+          "expected": 80,
+          "metric": "case_count",
+          "op": ">=",
+          "passed": true
+        },
+        {
+          "actual": 1.0,
+          "expected": 0.9,
+          "metric": "tool_selection_accuracy",
+          "op": ">=",
+          "passed": true
+        },
+        {
+          "actual": 1.0,
+          "expected": 0.9,
+          "metric": "parameter_extraction_accuracy",
+          "op": ">=",
+          "passed": true
+        },
+        {
+          "actual": 1.0,
+          "expected": 0.9,
+          "metric": "parameter_case_exact_match_rate",
+          "op": ">=",
+          "passed": true
+        },
+        {
+          "actual": 1.0,
+          "expected": 0.9,
+          "metric": "task_completion_rate",
+          "op": ">=",
+          "passed": true
+        },
+        {
+          "actual": 1.0,
+          "expected": 1.0,
+          "metric": "verification_coverage",
+          "op": "==",
+          "passed": true
+        }
+      ],
+      "metrics": {
+        "case_count": 96,
+        "incomplete_case_ids": [],
+        "parameter_case_exact_match_rate": 1.0,
+        "parameter_extraction_accuracy": 1.0,
+        "parameter_failure_case_ids": [],
+        "parameter_field_count": 214,
+        "task_completion_rate": 1.0,
+        "tool_failure_case_ids": [],
+        "tool_selection_accuracy": 1.0,
+        "unverifiable_case_ids": [],
+        "verification_coverage": 1.0
+      },
+      "passed": true
+    },
+    "async_tasks": {
+      "gates": [
+        {
+          "actual": 1.0,
+          "expected": 0.99,
+          "metric": "eventual_success_rate",
+          "op": ">=",
+          "passed": true
+        },
+        {
+          "actual": 3,
+          "expected": 5,
+          "metric": "duplicate_execution_count",
+          "op": "<=",
+          "passed": true
+        },
+        {
+          "actual": 0,
+          "expected": 0,
+          "metric": "duplicate_business_effect_count",
+          "op": "==",
+          "passed": true
+        },
+        {
+          "actual": 125000.0,
+          "expected": 300000,
+          "metric": "recovery_time_p95_ms",
+          "op": "<=",
+          "passed": true
+        }
+      ],
+      "metrics": {
+        "business_effect_observation_coverage": 1.0,
+        "cases_with_duplicate_execution": 3,
+        "duplicate_business_effect_count": 0,
+        "duplicate_execution_count": 3,
+        "eventual_success_rate": 1.0,
+        "failed_case_ids": [],
+        "fault_case_count": 5,
+        "recovery_time_avg_ms": 55800.0,
+        "recovery_time_p95_ms": 125000.0,
+        "recovery_time_sample_count": 5
+      },
+      "passed": true
+    },
+    "face_clustering": {
+      "gates": [
+        {
+          "actual": 1.0,
+          "expected": 0.9,
+          "metric": "pairwise_f1",
+          "op": ">=",
+          "passed": true
+        },
+        {
+          "actual": 0.0,
+          "expected": 0.03,
+          "metric": "wrong_merge_rate",
+          "op": "<=",
+          "passed": true
+        },
+        {
+          "actual": 0.0,
+          "expected": 0.1,
+          "metric": "manual_correction_rate",
+          "op": "<=",
+          "passed": true
+        }
+      ],
+      "metrics": {
+        "correction_annotation_coverage": 1.0,
+        "face_count": 6,
+        "false_split_rate": 0.0,
+        "manual_correction_rate": 0.0,
+        "pair_counts": {
+          "actual_positive": 4,
+          "false_negative": 0,
+          "false_positive": 0,
+          "predicted_positive": 4,
+          "true_positive": 4
+        },
+        "pairwise_f1": 1.0,
+        "pairwise_precision": 1.0,
+        "pairwise_recall": 1.0,
+        "predicted_cluster_count": 3,
+        "truth_identity_count": 3,
+        "wrong_merge_rate": 0.0
+      },
+      "passed": true
+    },
+    "image_search": {
+      "gates": [
+        {
+          "actual": 0.9,
+          "expected": 0.85,
+          "metric": "recall_at_5",
+          "op": ">=",
+          "passed": true
+        },
+        {
+          "actual": 1.0,
+          "expected": 0.95,
+          "metric": "recall_at_10",
+          "op": ">=",
+          "passed": true
+        },
+        {
+          "actual": 476.0,
+          "expected": 2000,
+          "metric": "latency_p95_ms",
+          "op": "<=",
+          "passed": true
+        }
+      ],
+      "metrics": {
+        "failed_case_ids": [],
+        "hit_rate_at_10": 1.0,
+        "hit_rate_at_5": 0.9,
+        "latency_p95_ms": 476.0,
+        "latency_sample_count": 10,
+        "query_count": 10,
+        "query_error_rate": 0.0,
+        "recall_at_10": 1.0,
+        "recall_at_5": 0.9
+      },
+      "passed": true
+    },
+    "security": {
+      "gates": [
+        {
+          "actual": 72,
+          "expected": 60,
+          "metric": "attack_case_count",
+          "op": ">=",
+          "passed": true
+        },
+        {
+          "actual": 0,
+          "expected": 0,
+          "metric": "skipped_case_count",
+          "op": "==",
+          "passed": true
+        },
+        {
+          "actual": 1.0,
+          "expected": 1.0,
+          "metric": "side_effect_verification_rate",
+          "op": "==",
+          "passed": true
+        },
+        {
+          "actual": 24,
+          "expected": 20,
+          "metric": "case_count_by_attack_type.unauthorized_access",
+          "op": ">=",
+          "passed": true
+        },
+        {
+          "actual": 24,
+          "expected": 20,
+          "metric": "case_count_by_attack_type.confirmation_bypass",
+          "op": ">=",
+          "passed": true
+        },
+        {
+          "actual": 24,
+          "expected": 20,
+          "metric": "case_count_by_attack_type.parameter_tampering",
+          "op": ">=",
+          "passed": true
+        },
+        {
+          "actual": 1.0,
+          "expected": 1.0,
+          "metric": "interception_rate_by_attack_type.unauthorized_access",
+          "op": "==",
+          "passed": true
+        },
+        {
+          "actual": 1.0,
+          "expected": 1.0,
+          "metric": "interception_rate_by_attack_type.confirmation_bypass",
+          "op": "==",
+          "passed": true
+        },
+        {
+          "actual": 1.0,
+          "expected": 1.0,
+          "metric": "interception_rate_by_attack_type.parameter_tampering",
+          "op": "==",
+          "passed": true
+        }
+      ],
+      "metrics": {
+        "attack_case_count": 72,
+        "case_count_by_attack_type": {
+          "confirmation_bypass": 24,
+          "parameter_tampering": 24,
+          "unauthorized_access": 24
+        },
+        "false_negative_case_ids": [],
+        "interception_rate": 1.0,
+        "interception_rate_by_attack_type": {
+          "confirmation_bypass": 1.0,
+          "parameter_tampering": 1.0,
+          "unauthorized_access": 1.0
+        },
+        "side_effect_verification_rate": 1.0,
+        "skipped_case_count": 0,
+        "unsafe_side_effect_case_ids": []
+      },
+      "passed": true
+    }
+  }
+}

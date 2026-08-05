@@ -26,6 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 
 import javax.imageio.ImageIO;
@@ -56,7 +57,7 @@ public class FaceServiceImpl extends ServiceImpl<FaceMapper, Face> implements Fa
      * AliyunEmbedding uses the model default vector dimension.
      * 不同人脸通常低于该阈值，用于兼顾精度与召回。
      */
-    private static final double DEFAULT_FACE_COSINE_THRESHOLD = 0.46D;
+    private static final double DEFAULT_FACE_COSINE_THRESHOLD = 0.68D;
 
     /**
      * Valid feature bytes are checked against the stored feature_dim value.
@@ -332,39 +333,39 @@ public class FaceServiceImpl extends ServiceImpl<FaceMapper, Face> implements Fa
 
     private double adaptiveClusterMatchThreshold(int sampleCount) {
         if (sampleCount <= 1) {
-            return Math.max(faceCosineThreshold - 0.04D, 0.44D);
+            return Math.max(faceCosineThreshold + 0.06D, 0.74D);
         }
         if (sampleCount == 2) {
-            return Math.max(faceCosineThreshold - 0.03D, 0.44D);
+            return Math.max(faceCosineThreshold + 0.04D, 0.72D);
         }
         if (sampleCount == 3) {
-            return Math.max(faceCosineThreshold - 0.01D, 0.45D);
+            return Math.max(faceCosineThreshold + 0.02D, 0.70D);
         }
-        return faceCosineThreshold;
+        return Math.max(faceCosineThreshold, 0.68D);
     }
 
     private double adaptiveClusterPrototypeThreshold(int sampleCount) {
         if (sampleCount <= 1) {
-            return Math.max(faceCosineThreshold - 0.05D, 0.42D);
+            return Math.max(faceCosineThreshold + 0.06D, 0.74D);
         }
         if (sampleCount == 2) {
-            return Math.max(faceCosineThreshold - 0.04D, 0.43D);
+            return Math.max(faceCosineThreshold + 0.03D, 0.71D);
         }
         if (sampleCount == 3) {
-            return Math.max(faceCosineThreshold - 0.03D, 0.44D);
+            return Math.max(faceCosineThreshold + 0.02D, 0.70D);
         }
-        return Math.max(faceCosineThreshold - 0.02D, 0.45D);
+        return Math.max(faceCosineThreshold, 0.68D);
     }
 
     private double adaptiveClusterMergeThreshold(int leftFaceCount, int rightFaceCount) {
         int smallerClusterFaceCount = Math.min(leftFaceCount, rightFaceCount);
         if (smallerClusterFaceCount <= 1) {
-            return Math.max(faceCosineThreshold, 0.46D);
+            return Math.max(faceCosineThreshold + 0.10D, 0.78D);
         }
         if (smallerClusterFaceCount == 2) {
-            return Math.max(faceCosineThreshold + 0.01D, 0.47D);
+            return Math.max(faceCosineThreshold + 0.08D, 0.76D);
         }
-        return Math.max(faceCosineThreshold + 0.02D, 0.48D);
+        return Math.max(faceCosineThreshold + 0.06D, 0.74D);
     }
 
     private Long reconcileClusterAfterInsert(Long userId, Long personId) {
@@ -387,6 +388,83 @@ public class FaceServiceImpl extends ServiceImpl<FaceMapper, Face> implements Fa
             refreshRepresentativeFaces(userId, person.getPersonId());
         }
         return mergeConnectedClusters(userId, null).getMergedPersonCount();
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public int rebuildUserFaceClusters(Long userId) {
+        QueryWrapper<Face> faceQuery = new QueryWrapper<>();
+        faceQuery.eq("user_id", userId);
+        faceQuery.eq("is_processed", true);
+        faceQuery.eq("is_face", true);
+        faceQuery.isNotNull("feature_vector");
+        faceQuery.orderByAsc("create_time", "face_id");
+        List<Face> faces = faceMapper.selectList(faceQuery);
+        List<Face> validFaces = new ArrayList<>();
+        for (Face face : faces) {
+            if (isValidFeatureBytes(face)) {
+                validFaces.add(face);
+            }
+        }
+        if (validFaces.isEmpty()) {
+            return 0;
+        }
+
+        QueryWrapper<PersonFace> personFaceDelete = new QueryWrapper<>();
+        personFaceDelete.eq("user_id", userId);
+        personFaceMapper.delete(personFaceDelete);
+
+        QueryWrapper<Person> personDelete = new QueryWrapper<>();
+        personDelete.eq("user_id", userId);
+        personMapper.delete(personDelete);
+
+        int createdPersonCount = 0;
+        for (Face face : validFaces) {
+            List<Person> currentPersons = personMapper.selectList(
+                    new QueryWrapper<Person>().eq("user_id", userId)
+            );
+            float[] featureVector = CosineSimilarityUtil.bytesToFloats(face.getFeatureVector());
+            ClusterMatchResult bestMatch = findBestPersonMatch(
+                    userId,
+                    face.getFaceId(),
+                    featureVector,
+                    currentPersons
+            );
+
+            Long targetPersonId;
+            boolean representative;
+            if (bestMatch != null && bestMatch.isMatched()) {
+                targetPersonId = bestMatch.getPersonId();
+                representative = false;
+            } else {
+                Person newPerson = new Person();
+                newPerson.setUserId(userId);
+                newPerson.setDisplay(true);
+                newPerson.setCreateTime(LocalDateTime.now());
+                personMapper.insert(newPerson);
+                targetPersonId = newPerson.getPersonId();
+                representative = true;
+                createdPersonCount++;
+            }
+
+            PersonFace personFace = new PersonFace();
+            personFace.setUserId(userId);
+            personFace.setPersonId(targetPersonId);
+            personFace.setFaceId(face.getFaceId());
+            personFace.setRepresentative(representative);
+            personFace.setUpdateTime(LocalDateTime.now());
+            personFaceMapper.insert(personFace);
+            refreshRepresentativeFaces(userId, targetPersonId);
+        }
+
+        mergeConnectedClusters(userId, null);
+        QueryWrapper<Person> countQuery = new QueryWrapper<>();
+        countQuery.eq("user_id", userId);
+        Long personCount = personMapper.selectCount(countQuery);
+        int finalPersonCount = personCount == null ? 0 : personCount.intValue();
+        log.info("Rebuilt face clusters: userId={}, validFaceCount={}, createdPersonCount={}, finalPersonCount={}",
+                userId, validFaces.size(), createdPersonCount, finalPersonCount);
+        return finalPersonCount;
     }
 
     private ClusterMatchResult findBestPersonMatch(Long userId, Long faceId, float[] featureVector, List<Person> personList) {
@@ -431,15 +509,19 @@ public class FaceServiceImpl extends ServiceImpl<FaceMapper, Face> implements Fa
         float[] prototypeVector = buildClusterPrototypeFromSamples(candidateSamples);
         double prototypeSimilarity = CosineSimilarityUtil.cosine(featureVector, prototypeVector);
         double finalScore = Math.max(bestSampleSimilarity, prototypeSimilarity + Math.min(0.03D, supportCount * 0.01D));
-        boolean matched = bestSampleSimilarity >= matchThreshold
-                || (prototypeSimilarity >= prototypeThreshold
-                && (supportCount >= 2
-                || sampleCount <= 2
-                || bestSampleSimilarity >= matchThreshold - 0.02D));
+        boolean strongSingleSampleMatch = sampleCount <= 1
+                && bestSampleSimilarity >= matchThreshold
+                && prototypeSimilarity >= prototypeThreshold;
+        boolean supportedClusterMatch = sampleCount > 1
+                && bestSampleSimilarity >= matchThreshold
+                && prototypeSimilarity >= prototypeThreshold
+                && (supportCount >= 2 || bestSampleSimilarity >= matchThreshold + 0.03D);
+        boolean matched = strongSingleSampleMatch || supportedClusterMatch;
 
         log.info("Unified face cluster candidate: faceId={}, personId={}, bestSampleFaceId={}, prototypeSimilarity={}, bestSampleSimilarity={}, supportCount={}, finalScore={}, sampleCount={}, threshold={}, prototypeThreshold={}",
                 faceId,
                 personId,
+                bestSampleFaceId,
                 prototypeSimilarity,
                 bestSampleSimilarity,
                 supportCount,
@@ -600,17 +682,19 @@ public class FaceServiceImpl extends ServiceImpl<FaceMapper, Face> implements Fa
     private boolean shouldMergeClusterSummaries(ClusterSummary leftSummary, ClusterSummary rightSummary) {
         int smallerClusterFaceCount = Math.min(leftSummary.getFaceCount(), rightSummary.getFaceCount());
         double mergeThreshold = adaptiveClusterMergeThreshold(leftSummary.getFaceCount(), rightSummary.getFaceCount());
-        double prototypeMergeThreshold = Math.max(mergeThreshold - 0.02D, adaptiveClusterPrototypeThreshold(smallerClusterFaceCount));
+        double prototypeMergeThreshold = Math.max(mergeThreshold - 0.01D, adaptiveClusterPrototypeThreshold(smallerClusterFaceCount));
         double bestCrossSimilarity = computeBestCrossSimilarity(leftSummary.getCandidateSamples(), rightSummary.getCandidateSamples());
         int crossSupportCount = countCrossSupport(leftSummary.getCandidateSamples(), rightSummary.getCandidateSamples(),
-                Math.max(mergeThreshold - 0.03D, 0.47D));
+                Math.max(mergeThreshold - 0.01D, 0.72D));
         double prototypeSimilarity = CosineSimilarityUtil.cosine(leftSummary.getPrototypeVector(), rightSummary.getPrototypeVector());
 
+        if (smallerClusterFaceCount <= 1) {
+            return bestCrossSimilarity >= mergeThreshold
+                    && prototypeSimilarity >= prototypeMergeThreshold;
+        }
         return bestCrossSimilarity >= mergeThreshold
-                || (prototypeSimilarity >= prototypeMergeThreshold && crossSupportCount >= 1)
-                || (smallerClusterFaceCount <= 2
-                && bestCrossSimilarity >= mergeThreshold - 0.02D
-                && prototypeSimilarity >= prototypeMergeThreshold);
+                && prototypeSimilarity >= prototypeMergeThreshold
+                && crossSupportCount >= 2;
     }
 
     private Person chooseSurvivorPerson(List<ClusterSummary> component, Map<Long, Person> personMap, Long preferredPersonId) {
@@ -882,8 +966,13 @@ public class FaceServiceImpl extends ServiceImpl<FaceMapper, Face> implements Fa
     private boolean isValidFeatureBytes(Face face) {
         byte[] featureBytes = face.getFeatureVector();
         Integer storedDim = face.getFeatureDim();
+        if (featureBytes == null || featureBytes.length == 0 || featureBytes.length % Float.BYTES != 0) {
+            return false;
+        }
+        if (storedDim == null) {
+            return true;
+        }
         return featureBytes != null
-                && storedDim != null
                 && storedDim > 0
                 && featureBytes.length == storedDim * Float.BYTES;
     }
@@ -1006,6 +1095,16 @@ public class FaceServiceImpl extends ServiceImpl<FaceMapper, Face> implements Fa
                 }
             }
             return new FaceAnalyzeResult(faces);
+        } catch (HttpStatusCodeException e) {
+            if (e.getStatusCode().isSameCodeAs(HttpStatus.BAD_REQUEST)
+                    || e.getStatusCode().isSameCodeAs(HttpStatus.NOT_FOUND)) {
+                log.warn("AI 服务 /face_analyze 返回可恢复状态，将标记为非人脸: faceId={}, status={}, body={}",
+                        faceId, e.getStatusCode(), e.getResponseBodyAsString());
+                return new FaceAnalyzeResult(Collections.emptyList());
+            }
+            log.error("调用 AI 服务 /face_analyze 失败: faceId={}, status={}, error={}",
+                    faceId, e.getStatusCode(), e.getMessage(), e);
+            throw new IllegalStateException("AI face analysis failed: " + e.getMessage(), e);
         } catch (Exception e) {
             log.error("调用 AI 服务 /face_analyze 失败: faceId={}, error={}", faceId, e.getMessage(), e);
             throw new IllegalStateException("AI face analysis failed: " + e.getMessage(), e);

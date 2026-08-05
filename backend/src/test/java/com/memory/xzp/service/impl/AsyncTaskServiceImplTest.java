@@ -667,6 +667,7 @@ class AsyncTaskServiceImplTest {
     void getUserTaskReturnsParsedResult() {
         AsyncTaskEntity task = imageTagTask(false);
         task.setStatus(AsyncTaskStatus.SUCCESS.name());
+        task.setExecutionCount(2);
         task.setResultJson("[{\"imageType\":\"人物\",\"tagName\":\"人像\",\"confidence\":92.0}]");
         when(asyncTaskMapper.selectOne(any(QueryWrapper.class))).thenReturn(task);
 
@@ -674,6 +675,7 @@ class AsyncTaskServiceImplTest {
 
         assertNotNull(result.getResult());
         assertEquals("人像", result.getResult().get(0).get("tagName").asText());
+        assertEquals(2, result.getExecutionCount());
     }
 
     @Test

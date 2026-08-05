@@ -177,7 +177,7 @@ import type { CheckboxValueType } from 'element-plus'
 import { selectAllAlbum, addAlbum, getDownloadAlbumToken, deleteAlbum } from '@/api/album/album'
 import $bus from '@/utils/bus.ts'
 import requestPublicConfig from "@/api/config";
-import defaultCover from '@/assets/image/album.png'
+import defaultCover from '@/assets/image/album.svg'
 /******************************​ 接口定义 ​******************************/
 interface FilePage {
     records: API.albumInfo;

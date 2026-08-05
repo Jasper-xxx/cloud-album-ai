@@ -68,7 +68,7 @@
     </resultMap>
 
     <insert id="addPicturesToAlbum">
-        INSERT INTO album_picture(album_id, file_id, user_id)
+        INSERT IGNORE INTO album_picture(album_id, file_id, user_id)
         VALUES
         <foreach collection="fileIds" item="fileId" separator=",">
             (#{albumId}, #{fileId}, #{userId})

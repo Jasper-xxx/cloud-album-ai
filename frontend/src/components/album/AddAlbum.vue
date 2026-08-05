@@ -18,7 +18,7 @@
 <script lang="ts" setup>
 import { ref, onMounted, watch } from 'vue'
 import { selectAllAlbum, addPictureToAlbum } from '@/api/album/album'
-import defaultCover from '@/assets/image/album.png';
+import defaultCover from '@/assets/image/album.svg';
 import $bus from '@/utils/bus.ts'
 interface Props {
     show: boolean,

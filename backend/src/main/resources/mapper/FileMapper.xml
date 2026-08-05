@@ -359,6 +359,7 @@
         <foreach item="id" collection="albumIds" open="(" separator="," close=")">
             #{id}
         </foreach>
+        and uf.user_id = #{userId}
         and uf.is_deleted = 0
     </update>
     <update id="setIsDeletedByFileIds">

@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cloud-album.local/evaluation/agent-gold.schema.json",
+  "title": "Cloud-Album Agent P0 gold case",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["case_id", "prompt", "category", "expected"],
+  "properties": {
+    "case_id": {"type": "string", "minLength": 1},
+    "prompt": {"type": "string", "minLength": 1},
+    "category": {"type": "string", "minLength": 1},
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tool_calls"],
+      "properties": {
+        "tool_calls": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/toolCall"}
+        }
+      }
+    }
+  },
+  "$defs": {
+    "toolCall": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "arguments"],
+      "properties": {
+        "name": {
+          "enum": [
+            "getAgentCapabilities",
+            "searchFiles",
+            "listAlbums",
+            "listLocationAlbums",
+            "listModelAlbums",
+            "listTags",
+            "listPeople",
+            "previewAlbumAction",
+            "executeAlbumAction",
+            "previewTagAction",
+            "executeTagAction",
+            "getPendingActionStatus",
+            "cancelPendingAction"
+          ]
+        },
+        "arguments": {"type": "object"}
+      }
+    }
+  }
+}

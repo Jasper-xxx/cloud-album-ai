@@ -1,0 +1,6 @@
+{"face_id":"face-001","truth_person_id":"alice","predicted_cluster_id":"cluster-a","corrected":false}
+{"face_id":"face-002","truth_person_id":"alice","predicted_cluster_id":"cluster-a","corrected":false}
+{"face_id":"face-003","truth_person_id":"alice","predicted_cluster_id":"cluster-a","corrected":false}
+{"face_id":"face-004","truth_person_id":"bob","predicted_cluster_id":"cluster-b","corrected":false}
+{"face_id":"face-005","truth_person_id":"bob","predicted_cluster_id":"cluster-b","corrected":false}
+{"face_id":"face-006","truth_person_id":"carol","predicted_cluster_id":"cluster-c","corrected":false}

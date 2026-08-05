@@ -185,7 +185,7 @@ import { selectPersonAlbumFileInfo, selectPersonById, selectAllPersonCover, upda
 import $bus from '@/utils/bus.ts'
 import router from '@/router';
 import { storage } from '@/utils/storage';
-import defaultCover from '@/assets/image/album.png'
+import defaultCover from '@/assets/image/album.svg'
 interface FilePage {
     records: API.FileInfoList;
     total: number;

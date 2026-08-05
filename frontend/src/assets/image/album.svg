@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 420" role="img" aria-labelledby="title description">
+  <title id="title">默认相册封面</title>
+  <desc id="description">柔和渐变背景上的山景与太阳图形</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#e8f1ff"/>
+      <stop offset="1" stop-color="#d9d8ff"/>
+    </linearGradient>
+    <linearGradient id="mountain" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7b8bea"/>
+      <stop offset="1" stop-color="#5967c9"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="420" rx="32" fill="url(#background)"/>
+  <circle cx="474" cy="112" r="48" fill="#ffd67a"/>
+  <path d="M0 346 158 188l92 91 78-72 190 139Z" fill="#9da8ef"/>
+  <path d="M92 346 272 157l118 126 63-59 187 168v28H0v-74Z" fill="url(#mountain)"/>
+  <path d="m272 157 43 46-34-9-28 21-24-14Z" fill="#f7f8ff" opacity=".9"/>
+</svg>

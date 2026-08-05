@@ -1,30 +1,34 @@
 # Cloud Album
 
-Cloud Album 是一个面向个人与家庭影像资产管理的智能云相册系统。它将 Web 相册、对象存储、异步任务和 AI 视觉能力组合在一起，支持照片/视频管理、相册整理、分享链接、回收站、多维度浏览、相似图片检索、AI 标签识别和人脸分析。
+Cloud Album 是一个面向个人与家庭影像资产管理的智能云相册系统。项目由 Vue 前端、Spring Boot 后端和 FastAPI AI 服务组成，围绕照片/视频管理、对象存储、异步任务、AI 视觉分析和智能体协作构建完整的全栈应用。
 
-这个项目适合作为私有化相册、全栈 Web 应用、对象存储集成、异步任务治理和 AI 图像能力落地的学习与二次开发样例。
+系统支持图片与视频上传、相册整理、分享链接、回收站、多维度浏览、相似图片检索、AI 标签识别、人脸分析，以及面向 Dify 等工作流平台的“云忆相册助手”智能体能力。智能体可以在受控接口下完成图库检索、健康度分析、标签建议、相册整理和待确认写操作，让相册从“存储工具”扩展为“可对话整理的个人影像库”。
 
 ## 功能亮点
 
 - 影像管理：支持图片和视频上传、预览、下载、删除、回收站恢复与彻底删除。
 - 相册组织：支持普通相册，以及按人物、地点、设备、标签等维度浏览媒体内容。
 - 分享能力：支持生成分享链接、保存分享内容、复制分享地址。
-- 智能识别：通过独立 AI 服务完成图片标签识别、图片特征提取、人脸检测和人脸特征分析。
-- 相似检索：支持相似图片检测和以图搜图，便于去重、归类和发现相关影像。
-- 数据统计：提供文件、地点、标签等维度的数据可视化。
-- 账号体系：包含注册登录、邮箱验证码、登录鉴权、容量管理和会员状态。
-- 运维能力：提供异步任务重试、死信处理、历史任务补偿扫描、Actuator 指标和 Prometheus/Grafana 观测配置。
-- 智能体入口：可按需接入 Dify 或其他外部智能体页面。
+- AI 视觉能力：通过独立 AI 服务完成图片标签识别、图片特征提取、人脸检测、人脸特征分析和相似图片检索。
+- 智能体扩展：提供 `/agent` 聚合接口，支持能力边界查询、照片检索、组合搜索、图库健康度分析、相似文件发现、聊天附件以图搜图、AI 标签建议任务和相册/标签整理操作。
+- 待确认写操作：智能体写入类动作采用“预览 -> 确认 -> 执行”的流程，支持一次性确认凭证、幂等执行、状态查询和取消。
+- 异步任务治理：支持任务重试、死信处理、历史任务补偿扫描、执行次数统计和可选 RabbitMQ 分发。
+- 数据可视化：提供文件、地点、标签等维度的数据统计展示。
+- 可观测性：集成 Spring Boot Actuator，并提供 Prometheus、Alertmanager、Grafana 的本地观测配置。
+- 评测工具：提供统一 JSONL 测评工具，覆盖以图搜图、人脸聚类、智能体工具调用、权限与确认流程、异步任务可靠性等指标。
+- 一键启动：根目录提供 `start-apps.cmd`，用于 Windows 本地开发时同时启动后端、前端和 AI 服务。
 
 ## 技术栈
 
 | 模块 | 技术 |
 | --- | --- |
 | 前端 | Vue 3, Vite, TypeScript, Element Plus, ECharts |
-| 后端 | Java 17, Spring Boot 3.4, MyBatis-Plus, Sa-Token, RabbitMQ, Resilience4j |
+| 后端 | Java 17, Spring Boot 3.4, MyBatis-Plus, Sa-Token, Flyway, RabbitMQ, Resilience4j |
 | AI 服务 | Python, FastAPI, Uvicorn, DashScope / 阿里云百炼, MinIO SDK |
+| 智能体 | Dify Workflow, OpenAPI 工具调用, 预览确认式写操作 |
 | 基础设施 | MySQL, Redis, MinIO, RabbitMQ |
 | 可观测性 | Spring Boot Actuator, Prometheus, Alertmanager, Grafana |
+| 评测 | Python 标准库, JSONL, Markdown / JSON 报告 |
 
 ## 系统架构
 
@@ -32,13 +36,15 @@ Cloud Album 是一个面向个人与家庭影像资产管理的智能云相册�
 flowchart LR
     User["Browser / User"] --> Frontend["Vue 3 Frontend"]
     Frontend --> Backend["Spring Boot API"]
-    Backend --> MySQL["MySQL"]
+    Agent["Dify / 云忆相册助手"] --> AgentAPI["/agent 聚合接口"]
+    AgentAPI --> Backend
+    Backend --> MySQL["MySQL / Flyway Schema"]
     Backend --> Redis["Redis"]
     Backend --> MinIO["MinIO Object Storage"]
+    Backend --> MQ["RabbitMQ / Async Tasks"]
     Backend --> AI["FastAPI AI Service"]
     AI --> MinIO
     AI --> DashScope["DashScope / Qwen Vision Models"]
-    Backend --> MQ["RabbitMQ / Async Tasks"]
     Backend --> Metrics["Actuator Metrics"]
     Metrics --> Prometheus["Prometheus / Grafana"]
 ```
@@ -50,10 +56,12 @@ Cloud-Album/
 ├─ ai-service/          # Python FastAPI AI 推理服务
 ├─ backend/             # Spring Boot 后端服务
 ├─ frontend/            # Vue 前端应用
-├─ docs/                # Dify/智能体相关文档
+├─ docs/                # Dify / 智能体工作流与接口文档
+├─ evaluation/          # 统一测评工具、样例数据集和报告样例
 ├─ ops/observability/   # Prometheus、Alertmanager、Grafana 本地配置
 ├─ scripts/             # 辅助脚本
-├─ .env.example         # 环境变量示例，不包含真实密钥
+├─ .env.example         # 环境变量示例
+├─ start-apps.cmd       # Windows 一键启动三端脚本
 └─ README.md
 ```
 
@@ -73,11 +81,13 @@ Cloud-Album/
 
 ## 环境变量
 
-参考根目录的 `.env.example` 配置本地或服务器环境变量。
+参考根目录 `.env.example` 配置本地或服务器环境变量。
 
 后端关键变量：
 
 ```env
+BACKEND_PORT=8088
+
 DB_URL=jdbc:mysql://localhost:3306/memory_space
 DB_USERNAME=root
 DB_PASSWORD=
@@ -93,67 +103,69 @@ RABBITMQ_USERNAME=
 RABBITMQ_PASSWORD=
 RABBITMQ_VIRTUAL_HOST=/
 
+MAIL_HOST=smtp.qq.com
+MAIL_PORT=465
 MAIL_USERNAME=
 MAIL_PASSWORD=
+MAIL_CODE_TTL_SECONDS=300
+
 SA_TOKEN_JWT_SECRET=
 
 MINIO_URL=http://127.0.0.1:9000
+MINIO_ENDPOINT=127.0.0.1:9000
 MINIO_ACCESS_KEY=
 MINIO_SECRET_KEY=
 MINIO_BUCKET=pictures
+MINIO_SECURE=false
 
 AMAP_API_KEY=
-AI_SERVICE_URL=http://localhost:5000
+AMAP_GEO_URL=https://restapi.amap.com/v3/geocode/regeo
 
-FILE_TASK_CORE_POOL_SIZE=4
-FILE_TASK_MAX_POOL_SIZE=8
-FILE_TASK_QUEUE_CAPACITY=100
-AI_BATCH_CORE_POOL_SIZE=4
-AI_BATCH_MAX_POOL_SIZE=4
-AI_BATCH_QUEUE_CAPACITY=50
-ASYNC_TASK_MAX_RETRIES=5
-ASYNC_TASK_SCAN_BATCH_SIZE=50
-ASYNC_TASK_SCAN_DELAY_MS=30000
-ASYNC_TASK_INITIAL_RETRY_DELAY_SECONDS=30
-ASYNC_TASK_MAX_RETRY_DELAY_SECONDS=300
-ASYNC_TASK_RUNNING_TIMEOUT_MINUTES=30
-ASYNC_TASK_ADMIN_USER_IDS=
-ASYNC_TASK_FACE_RECOVERY_ENABLED=true
-ASYNC_TASK_FACE_RECOVERY_BATCH_SIZE=100
-ASYNC_TASK_FACE_RECOVERY_CRON="0 0/50 * * * ?"
-AI_FACE_TASK_VERSION=v1
-ASYNC_TASK_VIDEO_VERSION=v1
-ASYNC_TASK_VIDEO_RECOVERY_ENABLED=true
-ASYNC_TASK_VIDEO_RECOVERY_BATCH_SIZE=50
-ASYNC_TASK_VIDEO_RECOVERY_CRON="0 10/50 * * * ?"
-ASYNC_TASK_VIDEO_TEMP_DIR=
-ASYNC_TASK_GEO_RECOVERY_ENABLED=true
-ASYNC_TASK_TAG_RECOVERY_ENABLED=false
-AI_TAG_RUNNING_TIMEOUT_SECONDS=180
+AI_SERVICE_URL=http://localhost:5000
 
 MANAGEMENT_ADDRESS=127.0.0.1
 MANAGEMENT_PORT=8089
+ASYNC_TASK_ADMIN_USER_IDS=
+ASYNC_TASK_FACE_RECOVERY_ENABLED=true
+ASYNC_TASK_VIDEO_RECOVERY_ENABLED=true
+ASYNC_TASK_GEO_RECOVERY_ENABLED=true
+ASYNC_TASK_TAG_RECOVERY_ENABLED=false
+
+AI_FEATURE_PROVIDER=aliyun
+AI_FEATURE_MODEL=qwen3-vl-embedding
+AI_FEATURE_VERSION=v1
+AI_FACE_DETECT_PROVIDER=aliyun-qwen-vl-face-detect
+AI_TAG_RUNNING_TIMEOUT_SECONDS=180
+FACE_CLUSTER_COSINE_THRESHOLD=0.68
+
+AGENT_AUTH_ENABLED=false
+AGENT_DEV_USER_ID=1
+AGENT_PENDING_ACTION_TTL_SECONDS=300
+AGENT_WORKFLOW_VERSION=1.6.0
+AGENT_PENDING_ACTION_EXECUTION_LEASE_SECONDS=120
+AGENT_PENDING_ACTION_CLEANUP_DELAY_MS=60000
+AGENT_PENDING_ACTION_CLEANUP_INITIAL_DELAY_MS=60000
 ```
 
 AI 服务关键变量：
 
 ```env
-DASHSCOPE_API_KEY=
-MINIO_ENDPOINT=127.0.0.1:9000
-MINIO_ACCESS_KEY=
-MINIO_SECRET_KEY=
-MINIO_BUCKET=pictures
-
 AI_SERVICE_HOST=0.0.0.0
 AI_SERVICE_PORT=5000
-AI_SERVICE_CORS_ALLOWED_ORIGINS=http://localhost:5173,http://localhost:8080
-AI_MAX_CONCURRENCY=4
-AI_CONCURRENCY_WAIT_SECONDS=5
-AI_CONNECT_TIMEOUT_SECONDS=10
+AI_SERVICE_DEBUG=false
+DASHSCOPE_API_KEY=
+DASHSCOPE_COMPATIBLE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
+DASHSCOPE_MULTIMODAL_EMBEDDING_URL=https://dashscope.aliyuncs.com/api/v1/services/embeddings/multimodal-embedding/multimodal-embedding
+VISION_MODEL=qwen3-vl-flash
+EMBEDDING_MODEL=qwen3-vl-embedding
 AI_REQUEST_TIMEOUT_SECONDS=60
+AI_TOP_TAGS=8
 AI_IMAGE_MAX_EDGE=1280
 AI_IMAGE_MAX_PIXELS=1200000
 AI_IMAGE_JPEG_QUALITY=82
+AI_FACE_MAX_FACES=10
+AI_FACE_MIN_CONFIDENCE=0.25
+AI_FACE_CROP_EXPAND_RATIO=0.18
 ```
 
 前端变量：
@@ -164,21 +176,7 @@ VITE_AI_API=/mockApi
 VITE_DIFY_AGENT_URL=
 ```
 
-环境变量临时设置示例。
-
-macOS / Linux：
-
-```bash
-export DB_PASSWORD="your-db-password"
-export REDIS_PASSWORD="your-redis-password"
-export SA_TOKEN_JWT_SECRET="your-long-random-secret"
-export MINIO_ACCESS_KEY="your-minio-access-key"
-export MINIO_SECRET_KEY="your-minio-secret-key"
-export AMAP_API_KEY="your-amap-key"
-export DASHSCOPE_API_KEY="your-dashscope-key"
-```
-
-Windows PowerShell：
+Windows PowerShell 临时设置示例：
 
 ```powershell
 $env:DB_PASSWORD="your-db-password"
@@ -190,50 +188,80 @@ $env:AMAP_API_KEY="your-amap-key"
 $env:DASHSCOPE_API_KEY="your-dashscope-key"
 ```
 
-如果使用 IntelliJ IDEA 启动后端，配置系统环境变量后需要重启 IDEA，或直接在 Run/Debug Configuration 中填写 Environment variables。
+macOS / Linux 临时设置示例：
+
+```bash
+export DB_PASSWORD="your-db-password"
+export REDIS_PASSWORD="your-redis-password"
+export SA_TOKEN_JWT_SECRET="your-long-random-secret"
+export MINIO_ACCESS_KEY="your-minio-access-key"
+export MINIO_SECRET_KEY="your-minio-secret-key"
+export AMAP_API_KEY="your-amap-key"
+export DASHSCOPE_API_KEY="your-dashscope-key"
+```
+
+## 数据库初始化
+
+后端使用 Flyway 管理数据库结构。首次启动前创建数据库：
+
+```sql
+CREATE DATABASE memory_space DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+```
+
+迁移文件位于：
+
+```text
+backend/src/main/resources/db/migration/
+```
+
+其中 `V0__init_schema.sql` 提供完整基础表结构，后续 `V5`、`V6`、`V7`、`V8` 等迁移会补充异步任务执行次数、智能体待确认操作、智能体查询索引和 AI 标签批次表。
 
 ## 启动基础服务
 
-请先启动 MySQL、Redis、MinIO 和 RabbitMQ，并确保配置的账号、密码、bucket 与环境变量一致。
+先启动 MySQL、Redis、MinIO 和 RabbitMQ，并保持账号、密码、bucket 与环境变量一致。
 
-MinIO 需要创建对象存储 bucket，默认名称为：
+MinIO 默认 bucket：
 
 ```text
 pictures
 ```
 
-MySQL 默认数据库名称为：
+MySQL 默认数据库：
 
 ```text
 memory_space
 ```
 
-数据库结构由 Flyway 自动管理。首次使用时只需要创建空库 `memory_space`，后端启动后会自动执行 `memory-backend/src/main/resources/db/migration` 下的迁移脚本。
-
-- `V0__init_schema.sql`：完整基础表结构
-- `V1` - `V4`：异步任务、性能索引、文件状态、事件 outbox 等增量迁移
-
-RabbitMQ 用于异步任务分发。默认情况下，后端仍可使用本地扫描方式处理异步任务；如果启用 MQ 分发，请配置 RabbitMQ 连接信息并设置：
+RabbitMQ 用于异步任务分发。需要启用 MQ 分发时配置 RabbitMQ 连接信息，并设置：
 
 ```env
 ASYNC_TASK_MQ_ENABLED=true
 ```
 
-## 启动后端
+## 一键启动三端
 
-进入后端目录：
+Windows 本地开发可以使用根目录脚本：
+
+```powershell
+start-apps.cmd
+```
+
+它会分别打开三个命令行窗口并启动：
+
+- 后端：`backend`，默认 `http://localhost:8088`
+- 前端：`frontend`，默认 `http://localhost:8080`
+- AI 服务：`ai-service`，默认 `http://localhost:5000`
+
+如果项目目录、Maven、Node.js 或 Python 虚拟环境路径不同，先按本机路径调整 `start-apps.cmd` 中的启动命令。
+
+## 手动启动后端
 
 ```bash
 cd backend
-```
-
-启动：
-
-```bash
 mvn spring-boot:run
 ```
 
-后端默认端口：
+后端默认地址：
 
 ```text
 http://localhost:8088
@@ -245,69 +273,34 @@ Swagger UI：
 http://localhost:8088/swagger-ui.html
 ```
 
-Actuator 健康检查和 Prometheus 指标默认只监听本机管理端口：
+Actuator 健康检查和 Prometheus 指标默认监听本机管理端口：
 
 ```text
 http://127.0.0.1:8089/actuator/health
 http://127.0.0.1:8089/actuator/prometheus
 ```
 
-### 异步任务运维接口
-
-全局任务运维接口只允许 `ASYNC_TASK_ADMIN_USER_IDS` 中配置的已登录用户访问。
-该变量为空时默认拒绝所有用户，多个 ID 使用英文逗号分隔。
-
-主要接口：
-
-- `GET /asyncTask/admin/list`：按状态、任务类型、用户和文件检索任务。
-- `POST /asyncTask/admin/retry`：批量重试 `FAILED/DEAD` 任务，最多 100 个。
-- `POST /asyncTask/admin/dead/cancel`：将无需继续处理的死信标记为 `CANCELLED`，保留审计记录。
-- `GET /asyncTask/admin/recovery`：查询四类历史补偿扫描开关。
-- `POST /asyncTask/admin/recovery/{taskType}/enabled`：运行时启停自动补偿扫描。
-- `POST /asyncTask/admin/recovery/{taskType}/run`：立即执行一批补偿扫描。
-
-运行时扫描开关当前保存在单个 JVM 内存中，应用重启后恢复环境变量配置。多实例部署前
-应将开关迁移到共享配置中心，并配合分布式调度锁。
-
-## 启动 AI 服务
-
-进入 AI 服务目录：
+## 手动启动 AI 服务
 
 ```bash
 cd ai-service
-```
-
-安装依赖：
-
-```bash
 pip install -r requirements.txt
-```
-
-启动：
-
-```bash
 python run.py
 ```
 
-`run.py` 默认启动 FastAPI。开发环境也可以直接运行：
+开发环境也可以直接运行：
 
 ```bash
 uvicorn app.main:app --host 0.0.0.0 --port 5000
 ```
 
-AI 服务默认端口：
+AI 服务默认地址：
 
 ```text
 http://localhost:5000
 ```
 
-健康检查：
-
-```text
-GET http://localhost:5000/health
-```
-
-FastAPI OpenAPI 文档：
+接口文档：
 
 ```text
 http://localhost:5000/docs
@@ -321,38 +314,26 @@ http://localhost:5000/docs
 - `POST /face_analyze`
 - `POST /face_feature`
 
-## 启动前端
-
-进入前端目录：
+## 手动启动前端
 
 ```bash
 cd frontend
-```
-
-安装依赖：
-
-```bash
 npm install
-```
-
-启动开发服务器：
-
-```bash
 npm run dev
 ```
 
-前端默认端口：
+前端默认地址：
 
 ```text
 http://localhost:8080
 ```
 
-开发环境下，Vite 会把：
+开发环境下，Vite 会代理：
 
-- `/devApi` 代理到 `http://127.0.0.1:8088`
-- `/mockApi` 代理到 `http://127.0.0.1:5000`
+- `/devApi` 到 `http://127.0.0.1:8088`
+- `/mockApi` 到 `http://127.0.0.1:5000`
 
-## 构建前端
+构建前端：
 
 ```bash
 cd frontend
@@ -365,18 +346,91 @@ npm run build
 frontend/dist/
 ```
 
-## 启动可观测性服务
+## 智能体能力
 
-项目提供 Prometheus、Alertmanager 和 Grafana 的本地编排配置，以及异步任务
-可靠性告警和自动加载的 Grafana 面板。
+智能体后端门面位于：
 
-Docker 容器需要访问后端管理端口，启动后端前设置：
-
-```powershell
-$env:MANAGEMENT_ADDRESS="0.0.0.0"
+```text
+backend/src/main/java/com/memory/xzp/controller/AgentController.java
 ```
 
-然后启动监控服务：
+核心能力包括：
+
+- `GET /agent/capabilities`：查询当前智能体工具能力边界。
+- `POST /agent/searchFiles`：按类型、地点、相册、标签或关键词检索照片。
+- `POST /agent/advancedSearchFiles`：按日期、多标签、地点层级、设备、相册、人物、媒体类型和数据完整性组合检索。
+- `POST /agent/analyzeLibrary`：分析图库健康度，返回未标签、缺少元数据、相似文件、异常 AI 任务等整理建议。
+- `POST /agent/discoverSimilarFiles`：发现相似文件。
+- `POST /agent/uploadAttachment` 与 `POST /agent/searchByAttachment`：支持聊天附件以图搜图。
+- `POST /agent/previewImageTagTask` 与 `POST /agent/submitImageTagTask`：预览并提交 AI 标签建议任务。
+- `POST /agent/getAgentTaskStatus`：查询智能体 AI 任务状态。
+- `POST /agent/previewApplySuggestedTags` 与 `POST /agent/executeApplySuggestedTags`：预览并应用 AI 标签建议。
+- `POST /agent/previewAlbumAction` 与 `POST /agent/executeAlbumAction`：预览并执行相册整理动作。
+- `POST /agent/previewTagAction` 与 `POST /agent/executeTagAction`：预览并执行标签整理动作。
+- `POST /agent/getPendingActionStatus` 与 `POST /agent/cancelPendingAction`：查询或取消待确认操作。
+
+相关文档位于：
+
+```text
+docs/dify-agent-openapi.yaml
+docs/dify-agent-system-prompt.md
+docs/dify-agent-write-workflow-guide.md
+docs/云忆助手功能.md
+```
+
+## 异步任务运维接口
+
+全局任务运维接口允许按状态、任务类型、用户和文件检索任务，并支持失败任务重试、死信取消、补偿扫描开关和立即补偿。
+
+主要接口：
+
+- `GET /asyncTask/admin/list`
+- `POST /asyncTask/admin/retry`
+- `POST /asyncTask/admin/dead/cancel`
+- `GET /asyncTask/admin/recovery`
+- `POST /asyncTask/admin/recovery/{taskType}/enabled`
+- `POST /asyncTask/admin/recovery/{taskType}/run`
+
+## 评测工具
+
+统一测评工具位于：
+
+```text
+evaluation/
+```
+
+先运行示例：
+
+```powershell
+python evaluation/run.py evaluate `
+  --manifest evaluation/manifest.example.json `
+  --output-dir evaluation/reports/example
+```
+
+测评输出包括：
+
+- `report.json`：机器可读报告。
+- `report.md`：中文可读报告。
+
+覆盖的评测方向：
+
+- 以图搜图：Recall@K、Hit@K、P95、错误率。
+- 人脸聚类：Pairwise Precision、Pairwise Recall、Pairwise F1、错误合并率、人工修正率。
+- 智能体：工具选择准确率、参数抽取准确率、任务完成率、验证覆盖率。
+- 权限与确认流程：越权访问、确认绕过、参数篡改和副作用验证。
+- 异步任务：最终成功率、重复执行数、重复业务副作用数、恢复耗时。
+
+更多采集与指标说明见：
+
+```text
+evaluation/README.md
+```
+
+## 可观测性
+
+项目提供 Prometheus、Alertmanager 和 Grafana 的本地编排配置，以及异步任务可靠性告警和 Grafana 面板。
+
+启动监控服务：
 
 ```bash
 cd ops/observability
@@ -393,21 +447,21 @@ Grafana 默认账号密码为 `admin` / `admin`。详细阈值和通知路由见
 
 ## 常见问题
 
-### 后端启动时报 `Could not resolve placeholder`
+### 后端启动时提示 `Could not resolve placeholder`
 
-说明某个必填环境变量没有被当前进程读到。检查变量名是否配置正确，并重启终端或 IDE。
+说明某个必填环境变量没有被当前进程读取到。检查变量名是否配置正确，并重启终端或 IDE。
 
-### 登录时报 Redis `NOAUTH Authentication required`
+### 登录时提示 Redis `NOAUTH Authentication required`
 
-Redis 开启了密码认证，但后端没有读取到 `REDIS_PASSWORD`。请配置：
+Redis 开启了密码认证，但后端没有读取到 `REDIS_PASSWORD`。配置示例：
 
 ```env
 REDIS_PASSWORD=your-redis-password
 ```
 
-### AI 服务启动时报 `DASHSCOPE_API_KEY environment variable is not configured`
+### AI 服务启动时提示 `DASHSCOPE_API_KEY environment variable is not configured`
 
-说明没有配置阿里云百炼 API Key。请设置：
+配置 DashScope API Key：
 
 ```env
 DASHSCOPE_API_KEY=your-dashscope-key
@@ -415,9 +469,4 @@ DASHSCOPE_API_KEY=your-dashscope-key
 
 ### MinIO 文件无法访问
 
-请检查：
-
-- MinIO 服务是否启动
-- `MINIO_URL` / `MINIO_ENDPOINT` 是否正确
-- `MINIO_ACCESS_KEY` / `MINIO_SECRET_KEY` 是否正确
-- bucket 是否存在，默认是 `pictures`
+检查 MinIO 服务地址、访问密钥、bucket 名称以及后端/AI 服务中的 MinIO 配置是否一致。

@@ -1,89 +1,275 @@
-openapi: 3.0.0
+openapi: 3.0.3
 info:
   title: Cloud-Album Agent Tools
-  version: 1.1.0
-  description: Cloud-Album 为 Dify 提供的照片、相册和标签工具。
+  version: 5.0.7
+  description: |
+    Cloud-Album 为 Dify 提供的照片、相册、标签、人物、附件和可信确认工具。
+    所有写操作必须先调用 Preview 接口，再使用返回的一次性凭证执行。
 servers:
   - url: http://host.docker.internal:8088
+
+security: []
+
 paths:
   /agent/capabilities:
     get:
       operationId: getAgentCapabilities
       summary: 查询智能体能力边界
       description: 查询当前开放、需要确认和禁用的智能体能力。
+      security: []
       responses:
         "200":
           description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericSuccessResponse"
+        "500":
+          $ref: "#/components/responses/InternalError"
 
   /agent/searchFiles:
     post:
       operationId: searchFiles
       summary: 检索照片
-      description: 按标签、地点、设备或其他条件检索当前用户照片。
+      description: 按标签、地点、设备、相册或媒体类型检索当前用户照片。
       requestBody:
         required: false
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                current:
-                  type: integer
-                  default: 1
-                size:
-                  type: integer
-                  default: 20
-                orderType:
-                  type: string
-                  enum:
-                    - asc
-                    - desc
-                  default: desc
-                orderKeyword:
-                  type: string
-                  enum:
-                    - date_time_original
-                    - upload_time
-                  default: date_time_original
-                imageTypeText:
-                  type: string
-                  enum:
-                    - all
-                    - picture
-                    - gif
-                    - video
-                  default: all
-                locationLevel:
-                  type: string
-                  enum:
-                    - country
-                    - province
-                    - city
-                    - district
-                locationValue:
-                  type: string
-                albumId:
-                  type: integer
-                tagFilter:
-                  type: string
-                  enum:
-                    - all
-                    - untagged
-                  default: all
-                tagName:
-                  type: string
-                  description: 精确标签名称。
-                searchType:
-                  type: string
-                  enum:
-                    - tag
-                    - model
-                    - location
-                searchKeyword:
-                  type: string
+              $ref: "#/components/schemas/AgentSearchFilesRequest"
       responses:
         "200":
           description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericSuccessResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /agent/advancedSearchFiles:
+    post:
+      operationId: advancedSearchFiles
+      summary: 组合检索照片
+      description: 按日期、多标签、地点层级、设备、相册、人物、媒体类型和数据完整性组合检索当前用户文件。
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AgentAdvancedSearchRequest"
+      responses:
+        "200":
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgentAdvancedSearchResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /agent/analyzeLibrary:
+    post:
+      operationId: analyzeLibrary
+      summary: 分析图库健康度
+      description: 只读统计未标签、缺少元数据、相似文件和异常 AI 任务，并返回整理建议。
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AgentLibraryAnalysisRequest"
+      responses:
+        "200":
+          description: 分析成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgentLibraryAnalysisResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /agent/previewImageTagTask:
+    post:
+      operationId: previewImageTagTask
+      summary: 预览 AI 标签建议任务
+      description: 冻结最多 50 张图片并签发一次性确认凭证，不提交任务、不写入标签。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AgentImageTagTaskPreviewRequest"
+      responses:
+        "200":
+          description: 预览成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgentActionPreviewResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /agent/submitImageTagTask:
+    post:
+      operationId: submitImageTagTask
+      summary: 提交 AI 标签建议任务
+      description: 消费预览凭证，为服务端冻结图片提交 autoAdd=false 的持久化任务。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AgentExecuteActionRequest"
+      responses:
+        "200":
+          description: 提交成功或返回相同幂等凭证的历史结果
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgentActionResultResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "410":
+          $ref: "#/components/responses/Gone"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /agent/getAgentTaskStatus:
+    post:
+      operationId: getAgentTaskStatus
+      summary: 查询 AI 标签建议任务状态
+      description: 聚合批次进度，并返回达到预览阈值的候选标签。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AgentTaskStatusRequest"
+      responses:
+        "200":
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgentImageTagTaskStatusResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: 任务不存在
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /agent/previewApplySuggestedTags:
+    post:
+      operationId: previewApplySuggestedTags
+      summary: 预览应用 AI 标签建议
+      description: 校验选择来自当前用户任务结果，冻结建议并签发一次性确认凭证。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AgentSuggestedTagsPreviewRequest"
+      responses:
+        "200":
+          description: 预览成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgentActionPreviewResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /agent/executeApplySuggestedTags:
+    post:
+      operationId: executeApplySuggestedTags
+      summary: 执行应用 AI 标签建议
+      description: 消费一次性确认凭证，只写入服务端冻结且已校验的候选标签。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AgentExecuteActionRequest"
+      responses:
+        "200":
+          description: 执行成功或返回相同幂等凭证的历史结果
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgentActionResultResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "410":
+          $ref: "#/components/responses/Gone"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
 
   /agent/listAlbums:
     post:
@@ -95,37 +281,22 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                current:
-                  type: integer
-                  default: 1
-                size:
-                  type: integer
-                  default: 20
-                orderKeyword:
-                  type: string
-                  enum:
-                    - create_time
-                    - update_time
-                  default: create_time
-                orderType:
-                  type: string
-                  enum:
-                    - asc
-                    - desc
-                  default: desc
-                locationLevel:
-                  type: string
-                  enum:
-                    - country
-                    - province
-                    - city
-                    - district
-                  default: city
+              $ref: "#/components/schemas/AgentAlbumQueryRequest"
       responses:
         "200":
           description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericSuccessResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalError"
 
   /agent/listLocationAlbums:
     post:
@@ -137,37 +308,22 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                current:
-                  type: integer
-                  default: 1
-                size:
-                  type: integer
-                  default: 20
-                orderKeyword:
-                  type: string
-                  enum:
-                    - create_time
-                    - update_time
-                  default: create_time
-                orderType:
-                  type: string
-                  enum:
-                    - asc
-                    - desc
-                  default: desc
-                locationLevel:
-                  type: string
-                  enum:
-                    - country
-                    - province
-                    - city
-                    - district
-                  default: city
+              $ref: "#/components/schemas/AgentAlbumQueryRequest"
       responses:
         "200":
           description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericSuccessResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalError"
 
   /agent/listModelAlbums:
     post:
@@ -179,37 +335,22 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                current:
-                  type: integer
-                  default: 1
-                size:
-                  type: integer
-                  default: 20
-                orderKeyword:
-                  type: string
-                  enum:
-                    - create_time
-                    - update_time
-                  default: create_time
-                orderType:
-                  type: string
-                  enum:
-                    - asc
-                    - desc
-                  default: desc
-                locationLevel:
-                  type: string
-                  enum:
-                    - country
-                    - province
-                    - city
-                    - district
-                  default: city
+              $ref: "#/components/schemas/AgentAlbumQueryRequest"
       responses:
         "200":
           description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericSuccessResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalError"
 
   /agent/listTags:
     get:
@@ -219,308 +360,1703 @@ paths:
       responses:
         "200":
           description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericSuccessResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalError"
 
   /agent/listPeople:
     post:
       operationId: listPeople
       summary: 查询人物相册
-      description: 分页查询当前用户的人物相册。
+      description: 分页查询当前用户的人物相册，不进行真实身份断言。
       requestBody:
         required: false
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                current:
-                  type: integer
-                  default: 1
-                size:
-                  type: integer
-                  default: 20
-                display:
-                  type: boolean
-                  default: true
+              $ref: "#/components/schemas/AgentPersonQueryRequest"
       responses:
         "200":
           description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericSuccessResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalError"
 
   /agent/previewAlbumAction:
     post:
       operationId: previewAlbumAction
       summary: 预览相册写操作
-      description: 预览创建相册、加入照片或移出照片，不写入数据。
+      description: |
+        解析并冻结相册操作范围，签发一次性确认凭证。
+        该接口会写入待确认控制状态，但不会修改相册或照片业务数据。
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              required:
-                - action
-              properties:
-                action:
-                  type: string
-                  enum:
-                    - create_album
-                    - add_files_to_album
-                    - remove_files_from_album
-                    - create_album_and_add_files
-                albumId:
-                  type: integer
-                albumName:
-                  type: string
-                fileIds:
-                  type: array
-                  items:
-                    type: string
-                searchType:
-                  type: string
-                  enum:
-                    - tag
-                    - location
-                    - model
-                    - latest
-                    - all
-                  description: 刚上传或最新上传的一张照片使用 latest。
-                searchKeyword:
-                  type: string
-                mediaType:
-                  type: string
-                tagName:
-                  type: string
-                imageTypeText:
-                  type: string
-                  enum:
-                    - all
-                    - picture
-                    - gif
-                    - video
-                  default: all
-                locationLevel:
-                  type: string
-                  enum:
-                    - country
-                    - province
-                    - city
-                    - district
-                locationValue:
-                  type: string
-                sourceAlbumId:
-                  type: integer
-                confirmed:
-                  type: boolean
-                  default: false
+              $ref: "#/components/schemas/AgentAlbumPreviewRequest"
       responses:
         "200":
           description: 预览成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgentActionPreviewResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
 
   /agent/executeAlbumAction:
     post:
       operationId: executeAlbumAction
       summary: 执行相册写操作
-      description: 用户明确确认后执行相册写操作。
+      description: |
+        消费预览阶段签发的凭证，只使用服务端冻结的参数执行。
+        相同凭证和幂等键的安全网络重试返回原结果，不产生重复副作用。
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              required:
-                - action
-                - confirmed
-              properties:
-                action:
-                  type: string
-                  enum:
-                    - create_album
-                    - add_files_to_album
-                    - remove_files_from_album
-                    - create_album_and_add_files
-                albumId:
-                  type: integer
-                albumName:
-                  type: string
-                fileIds:
-                  type: array
-                  items:
-                    type: string
-                searchType:
-                  type: string
-                  enum:
-                    - tag
-                    - location
-                    - model
-                    - latest
-                    - all
-                searchKeyword:
-                  type: string
-                mediaType:
-                  type: string
-                tagName:
-                  type: string
-                imageTypeText:
-                  type: string
-                  enum:
-                    - all
-                    - picture
-                    - gif
-                    - video
-                  default: all
-                locationLevel:
-                  type: string
-                  enum:
-                    - country
-                    - province
-                    - city
-                    - district
-                locationValue:
-                  type: string
-                sourceAlbumId:
-                  type: integer
-                confirmed:
-                  type: boolean
-                  default: true
+              $ref: "#/components/schemas/AgentExecuteActionRequest"
       responses:
         "200":
-          description: 执行成功
+          description: 执行成功或返回相同幂等键的历史成功结果
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgentActionResultResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "410":
+          $ref: "#/components/responses/Gone"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
 
   /agent/previewTagAction:
     post:
       operationId: previewTagAction
       summary: 预览标签写操作
-      description: 预览添加或移除照片标签，不写入数据。
+      description: |
+        解析并冻结标签操作范围，签发一次性确认凭证。
+        该接口会写入待确认控制状态，但不会修改照片标签业务数据。
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              required:
-                - action
-                - tagName
-              properties:
-                action:
-                  type: string
-                  enum:
-                    - add_tags
-                    - remove_tags
-                fileIds:
-                  type: array
-                  items:
-                    type: string
-                imageType:
-                  type: string
-                  default: 其他
-                tagName:
-                  type: string
-                searchType:
-                  type: string
-                  enum:
-                    - tag
-                    - location
-                    - model
-                    - latest
-                    - all
-                  description: 刚上传或最新上传的一张照片使用 latest。
-                searchKeyword:
-                  type: string
-                mediaType:
-                  type: string
-                sourceTagName:
-                  type: string
-                imageTypeText:
-                  type: string
-                  enum:
-                    - all
-                    - picture
-                    - gif
-                    - video
-                  default: all
-                locationLevel:
-                  type: string
-                  enum:
-                    - country
-                    - province
-                    - city
-                    - district
-                locationValue:
-                  type: string
-                sourceAlbumId:
-                  type: integer
-                confirmed:
-                  type: boolean
-                  default: false
+              $ref: "#/components/schemas/AgentTagPreviewRequest"
       responses:
         "200":
           description: 预览成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgentActionPreviewResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
 
   /agent/executeTagAction:
     post:
       operationId: executeTagAction
       summary: 执行标签写操作
-      description: 用户明确确认后添加或移除照片标签。
+      description: |
+        消费预览阶段签发的凭证，只使用服务端冻结的参数执行。
+        相同凭证和幂等键的安全网络重试返回原结果，不产生重复副作用。
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              required:
-                - action
-                - tagName
-                - confirmed
-              properties:
-                action:
-                  type: string
-                  enum:
-                    - add_tags
-                    - remove_tags
-                fileIds:
-                  type: array
-                  items:
-                    type: string
-                imageType:
-                  type: string
-                  default: 其他
-                tagName:
-                  type: string
-                searchType:
-                  type: string
-                  enum:
-                    - tag
-                    - location
-                    - model
-                    - latest
-                    - all
-                searchKeyword:
-                  type: string
-                mediaType:
-                  type: string
-                sourceTagName:
-                  type: string
-                imageTypeText:
-                  type: string
-                  enum:
-                    - all
-                    - picture
-                    - gif
-                    - video
-                  default: all
-                locationLevel:
-                  type: string
-                  enum:
-                    - country
-                    - province
-                    - city
-                    - district
-                locationValue:
-                  type: string
-                sourceAlbumId:
-                  type: integer
-                confirmed:
-                  type: boolean
-                  default: true
+              $ref: "#/components/schemas/AgentExecuteActionRequest"
+      responses:
+        "200":
+          description: 执行成功或返回相同幂等键的历史成功结果
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgentActionResultResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "410":
+          $ref: "#/components/responses/Gone"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /agent/getPendingActionStatus:
+    post:
+      operationId: getPendingActionStatus
+      summary: 查询待确认操作状态
+      description: 查询当前用户待确认操作的状态、摘要和时间信息。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AgentPendingActionStatusRequest"
+      responses:
+        "200":
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgentPendingActionStatusResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "410":
+          $ref: "#/components/responses/Gone"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /agent/cancelPendingAction:
+    post:
+      operationId: cancelPendingAction
+      summary: 取消待确认操作
+      description: 使用预览凭证取消尚未执行的操作。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AgentPendingActionCancelRequest"
+      responses:
+        "200":
+          description: 取消成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgentPendingActionStatusResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "410":
+          $ref: "#/components/responses/Gone"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /agent/discoverSimilarFiles:
+    post:
+      operationId: discoverSimilarFiles
+      summary: 发现相似或重复照片候选组
+      description: 只读实时计算，不返回原始特征向量。
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AgentSimilarDiscoveryRequest"
+      responses:
+        "200":
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericSuccessResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /agent/previewP3Action:
+    post:
+      operationId: previewP3Action
+      summary: 预览P3整理操作
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AgentExtendedActionRequest"
+      responses:
+        "200":
+          description: 预览成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgentActionPreviewResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /agent/executeP3Action:
+    post:
+      operationId: executeP3Action
+      summary: 执行P3整理操作
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AgentExecuteActionRequest"
       responses:
         "200":
           description: 执行成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgentActionResultResponse"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "410":
+          $ref: "#/components/responses/Gone"
+
+  /agent/uploadAttachment:
+    post:
+      operationId: uploadAttachment
+      summary: 上传聊天附件并返回真实fileId
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [attachment]
+              properties:
+                attachment:
+                  type: string
+                  format: binary
+                albumId:
+                  type: integer
+                  format: int64
+                lastModified:
+                  type: integer
+                  format: int64
+      responses:
+        "200":
+          description: 上传成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgentAttachmentUploadResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /agent/searchByAttachment:
+    post:
+      operationId: searchByAttachment
+      summary: 使用聊天附件以图搜图
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [attachment]
+              properties:
+                attachment:
+                  type: string
+                  format: binary
+                mode:
+                  type: string
+                  enum: [fuzzy, exact, local]
+                albumIds:
+                  type: array
+                  maxItems: 20
+                  items:
+                    type: integer
+                    format: int64
+                tagNames:
+                  type: array
+                  maxItems: 20
+                  items:
+                    type: string
+                    maxLength: 30
+                sizeRange:
+                  type: string
+                  enum: [small, medium, large]
+      responses:
+        "200":
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericSuccessResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /agent/previewP4Action:
+    post:
+      operationId: previewP4Action
+      summary: 预览P4高风险操作
+      description: 返回公开范围、有效期、不可逆影响及90秒确认凭证。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AgentExtendedActionRequest"
+      responses:
+        "200":
+          description: 预览成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgentActionPreviewResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /agent/executeP4Action:
+    post:
+      operationId: executeP4Action
+      summary: 执行P4高风险操作
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AgentExecuteActionRequest"
+      responses:
+        "200":
+          description: 执行成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgentActionResultResponse"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "410":
+          $ref: "#/components/responses/Gone"
+
+components:
+  responses:
+    BadRequest:
+      description: 请求字段缺失、类型错误、包含禁止的执行参数或业务参数无效
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Unauthorized:
+      description: 未登录或登录凭证失效
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Forbidden:
+      description: 跨用户访问、确认凭证错误或无权操作目标资源
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Conflict:
+      description: 确认已消费、正在执行、已经取消、执行失败或幂等键冲突
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Gone:
+      description: 确认已过期，或待确认记录已清理
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    TooManyRequests:
+      description: 请求频率超过限制
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    InternalError:
+      description: 服务内部错误或确认状态存储不可用
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+
+  schemas:
+    AgentSearchFilesRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        current:
+          type: integer
+          minimum: 1
+          default: 1
+        size:
+          type: integer
+          minimum: 1
+          maximum: 50
+          default: 20
+        orderType:
+          type: string
+          enum: [asc, desc]
+          default: desc
+        orderKeyword:
+          type: string
+          enum: [date_time_original, upload_time]
+          default: date_time_original
+        imageTypeText:
+          type: string
+          enum: ["", all, picture, gif, video]
+          default: all
+        locationLevel:
+          type: string
+          enum: ["", country, province, city, district]
+        locationValue:
+          type: string
+          maxLength: 200
+        albumId:
+          type: integer
+          format: int64
+          minimum: -1
+          not:
+            enum: [0]
+          description: -1 表示未指定相册。
+        tagFilter:
+          type: string
+          enum: [all, untagged]
+          default: all
+        tagName:
+          type: string
+          maxLength: 30
+          description: 精确标签名称。
+        searchType:
+          type: string
+          enum: ["", tag, model, location]
+        searchKeyword:
+          type: string
+          maxLength: 200
+
+    AgentAdvancedSearchRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        current:
+          type: integer
+          minimum: 1
+          default: 1
+        size:
+          type: integer
+          minimum: 1
+          maximum: 50
+          default: 20
+        dateField:
+          type: string
+          enum: [taken, uploaded]
+          default: taken
+        dateFrom:
+          type: string
+          description: YYYY-MM-DD 或 ISO 本地日期时间。
+        dateTo:
+          type: string
+          description: YYYY-MM-DD 或 ISO 本地日期时间。
+        tags:
+          type: array
+          maxItems: 20
+          uniqueItems: true
+          items:
+            type: string
+            minLength: 1
+            maxLength: 100
+        tagOperator:
+          type: string
+          enum: [AND, OR]
+          default: OR
+        country:
+          type: string
+          maxLength: 50
+        province:
+          type: string
+          maxLength: 50
+        city:
+          type: string
+          maxLength: 50
+        district:
+          type: string
+          maxLength: 50
+        make:
+          type: string
+          maxLength: 100
+        model:
+          type: string
+          maxLength: 100
+        albumId:
+          type: integer
+          format: int64
+          minimum: -1
+          not:
+            enum: [0]
+          description: -1 表示未指定普通相册。
+        albumName:
+          type: string
+          maxLength: 100
+          description: 当前用户的普通相册精确名称。
+        personId:
+          type: integer
+          format: int64
+          minimum: -1
+          not:
+            enum: [0]
+          description: -1 表示未指定人物相册。
+        personName:
+          type: string
+          maxLength: 100
+          description: 当前用户的人物分组精确名称，不是照片标签。
+        withoutNormalAlbum:
+          type: boolean
+          description: 兼容普通 HTTP 客户端；Dify 工作流请使用 normalAlbumState。
+        normalAlbumState:
+          type: string
+          enum: [any, included, excluded]
+          default: any
+          description: any 不限制；included 已加入普通相册；excluded 未加入普通相册。
+        mediaTypes:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+            enum: [picture, gif, video]
+        tagState:
+          type: string
+          enum: [all, tagged, untagged]
+          default: all
+        missingLocation:
+          type: boolean
+          description: 兼容普通 HTTP 客户端；Dify 工作流请使用 locationState。
+        missingFeature:
+          type: boolean
+          description: 兼容普通 HTTP 客户端；Dify 工作流请使用 featureState。
+        missingAiAnalysis:
+          type: boolean
+          description: 兼容普通 HTTP 客户端；Dify 工作流请使用 aiAnalysisState。
+        locationState:
+          type: string
+          enum: [any, missing, present]
+          default: any
+        featureState:
+          type: string
+          enum: [any, missing, present]
+          default: any
+        aiAnalysisState:
+          type: string
+          enum: [any, missing, present]
+          default: any
+        keyword:
+          type: string
+          maxLength: 200
+        searchType:
+          type: string
+          enum: [tag, location, model, all]
+        searchKeyword:
+          type: string
+          maxLength: 200
+        orderBy:
+          type: string
+          enum: [takenAt, uploadedAt]
+          default: takenAt
+        orderType:
+          type: string
+          enum: [asc, desc]
+          default: desc
+
+    AgentLibraryAnalysisRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        staleMinutes:
+          type: integer
+          minimum: 5
+          maximum: 10080
+          default: 60
+          description: 等待或运行超过该时长的 AI 任务计为停滞任务。
+
+    AgentImageTagTaskPreviewRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        fileIds:
+          type: array
+          maxItems: 50
+          uniqueItems: true
+          items:
+            type: string
+            minLength: 1
+            maxLength: 36
+        filters:
+          $ref: "#/components/schemas/AgentAdvancedSearchRequest"
+        albumId:
+          type: integer
+          format: int64
+          minimum: -1
+          not:
+            enum: [0]
+        tagName:
+          type: string
+          maxLength: 100
+        locationLevel:
+          type: string
+          enum: [country, province, city, district]
+        locationValue:
+          type: string
+          maxLength: 50
+        model:
+          type: string
+          maxLength: 100
+        keyword:
+          type: string
+          maxLength: 200
+        searchType:
+          type: string
+          enum: [tag, location, model, latest, all]
+          description: latest 表示按上传时间倒序选择最近图片。
+        searchKeyword:
+          type: string
+          maxLength: 200
+        selectionLimit:
+          type: integer
+          minimum: 1
+          maximum: 50
+          default: 1
+          description: searchType=latest 时选择的最近图片数量。
+        minConfidence:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 1
+          default: 0.5
+      description: fileIds、filters 或简化筛选条件必须提供一种；searchType=latest 时按 selectionLimit 选择最近 1～50 张图片，其他筛选结果超过 50 张时拒绝提交。
+
+    AgentTaskStatusRequest:
+      type: object
+      additionalProperties: false
+      required: [agentTaskId]
+      properties:
+        agentTaskId:
+          type: string
+          format: uuid
+
+    AgentSuggestedTagSelection:
+      type: object
+      additionalProperties: false
+      required: [fileId, tagName]
+      properties:
+        fileId:
+          type: string
+          minLength: 1
+          maxLength: 36
+        tagName:
+          type: string
+          minLength: 1
+          maxLength: 100
+
+    AgentSuggestedTagsPreviewRequest:
+      type: object
+      additionalProperties: false
+      required: [agentTaskId]
+      properties:
+        agentTaskId:
+          type: string
+          format: uuid
+        applyAll:
+          type: boolean
+          default: false
+        selections:
+          type: array
+          maxItems: 100
+          uniqueItems: true
+          items:
+            $ref: "#/components/schemas/AgentSuggestedTagSelection"
+        selectedTagNames:
+          type: array
+          maxItems: 20
+          uniqueItems: true
+          items:
+            type: string
+            minLength: 1
+            maxLength: 100
+      description: applyAll、selections、selectedTagNames 三种选择方式只能使用一种。
+
+    AgentAlbumQueryRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        current:
+          type: integer
+          minimum: 1
+          default: 1
+        size:
+          type: integer
+          minimum: 1
+          maximum: 50
+          default: 20
+        orderKeyword:
+          type: string
+          enum: [create_time, update_time]
+          default: create_time
+        orderType:
+          type: string
+          enum: [asc, desc]
+          default: desc
+        locationLevel:
+          type: string
+          enum: [country, province, city, district]
+          default: city
+
+    AgentPersonQueryRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        current:
+          type: integer
+          minimum: 1
+          default: 1
+        size:
+          type: integer
+          minimum: 1
+          maximum: 50
+          default: 20
+        display:
+          type: boolean
+          default: true
+
+    AgentAlbumPreviewRequest:
+      type: object
+      additionalProperties: false
+      required: [action]
+      properties:
+        action:
+          type: string
+          enum:
+            - create_album
+            - add_files_to_album
+            - remove_files_from_album
+            - create_album_and_add_files
+        albumId:
+          type: integer
+          format: int64
+          minimum: -1
+          not:
+            enum: [0]
+          description: -1 表示未指定，后端按相册名解析。
+        albumName:
+          type: string
+          maxLength: 30
+        fileIds:
+          type: array
+          maxItems: 100
+          uniqueItems: true
+          items:
+            type: string
+            minLength: 1
+            maxLength: 36
+        searchType:
+          $ref: "#/components/schemas/WriteSearchType"
+        searchKeyword:
+          type: string
+          maxLength: 200
+        selectionLimit:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 1
+          description: searchType=latest 时冻结最近上传的照片数量。
+        tagName:
+          type: string
+          maxLength: 30
+        imageTypeText:
+          $ref: "#/components/schemas/ImageTypeText"
+        locationLevel:
+          $ref: "#/components/schemas/LocationLevel"
+        locationValue:
+          type: string
+          maxLength: 200
+        sourceAlbumId:
+          type: integer
+          format: int64
+          minimum: -1
+          not:
+            enum: [0]
+          description: -1 表示未指定来源相册。
+
+    AgentTagPreviewRequest:
+      type: object
+      additionalProperties: false
+      required: [action, tagName]
+      properties:
+        action:
+          type: string
+          enum: [add_tags, remove_tags]
+        fileIds:
+          type: array
+          maxItems: 100
+          uniqueItems: true
+          items:
+            type: string
+            minLength: 1
+            maxLength: 36
+        imageType:
+          type: string
+          maxLength: 30
+          default: 其他
+        tagName:
+          type: string
+          minLength: 1
+          maxLength: 30
+        searchType:
+          $ref: "#/components/schemas/WriteSearchType"
+        searchKeyword:
+          type: string
+          maxLength: 200
+        selectionLimit:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 1
+          description: searchType=latest 时冻结最近上传的照片数量。
+        sourceTagName:
+          type: string
+          maxLength: 30
+        imageTypeText:
+          $ref: "#/components/schemas/ImageTypeText"
+        locationLevel:
+          $ref: "#/components/schemas/LocationLevel"
+        locationValue:
+          type: string
+          maxLength: 200
+        sourceAlbumId:
+          type: integer
+          format: int64
+          minimum: -1
+          not:
+            enum: [0]
+          description: -1 表示未指定来源相册。
+
+    AgentSimilarDiscoveryRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        similarity:
+          type: number
+          format: double
+          minimum: 0.5
+          maximum: 1
+          default: 0.9
+        size:
+          type: integer
+          minimum: 1
+          maximum: 50
+          default: 20
+
+    AgentExtendedActionRequest:
+      type: object
+      additionalProperties: false
+      required: [action]
+      properties:
+        action:
+          type: string
+          enum:
+            - build_image_features
+            - update_location
+            - restore_files
+            - rename_person
+            - hide_people
+            - show_people
+            - move_person_files
+            - merge_people
+            - create_file_share_link
+            - create_album_share_link
+            - create_file_download_token
+            - create_album_download_token
+            - move_files_to_recycle_bin
+            - delete_albums
+            - permanently_delete_files
+            - empty_recycle_bin
+        fileIds:
+          type: array
+          maxItems: 100
+          uniqueItems: true
+          items:
+            type: string
+            minLength: 1
+            maxLength: 36
+        albumIds:
+          type: array
+          maxItems: 5
+          uniqueItems: true
+          items:
+            type: integer
+            format: int64
+            minimum: 1
+        personIds:
+          type: array
+          maxItems: 10
+          uniqueItems: true
+          items:
+            type: integer
+            format: int64
+            minimum: 1
+        sourcePersonId:
+          type: integer
+          format: int64
+          minimum: 1
+        targetPersonId:
+          type: integer
+          format: int64
+          minimum: 1
+        personName:
+          type: string
+          minLength: 1
+          maxLength: 50
+        personRelation:
+          type: string
+          maxLength: 50
+        locationValue:
+          type: string
+          minLength: 1
+          maxLength: 255
+        shareDays:
+          type: integer
+          minimum: 1
+          maximum: 30
+        includePictures:
+          type: boolean
+        imageType:
+          type: string
+          enum: [all, picture, gif, video]
+
+    AgentExecuteActionRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - pendingActionId
+        - confirmationToken
+        - idempotencyKey
+        - confirmed
+      properties:
+        pendingActionId:
+          type: string
+          format: uuid
+        confirmationToken:
+          type: string
+          minLength: 32
+          maxLength: 128
+          writeOnly: true
+        idempotencyKey:
+          type: string
+          minLength: 32
+          maxLength: 128
+          writeOnly: true
+        confirmed:
+          type: boolean
+          enum: [true]
+
+    AgentPendingActionStatusRequest:
+      type: object
+      additionalProperties: false
+      required: [pendingActionId]
+      properties:
+        pendingActionId:
+          type: string
+          format: uuid
+
+    AgentPendingActionCancelRequest:
+      type: object
+      additionalProperties: false
+      required: [pendingActionId, confirmationToken]
+      properties:
+        pendingActionId:
+          type: string
+          format: uuid
+        confirmationToken:
+          type: string
+          minLength: 32
+          maxLength: 128
+          writeOnly: true
+
+    WriteSearchType:
+      type: string
+      enum: ["", tag, location, model, latest, all]
+
+    ImageTypeText:
+      type: string
+      enum: ["", all, picture, gif, video]
+      default: all
+
+    LocationLevel:
+      type: string
+      enum: ["", country, province, city, district]
+
+    AgentFileReference:
+      type: object
+      required: [fileId]
+      properties:
+        fileId:
+          type: string
+          description: 当前用户照片的真实文件 ID。
+        originFileName:
+          type: string
+          nullable: true
+          description: 原始文件名；文件在任务执行后失效时可能为空。
+
+    AgentActionPreview:
+      type: object
+      required:
+        - action
+        - summary
+        - requiresConfirmation
+        - affectedFileCount
+        - createdAlbumCount
+      properties:
+        action:
+          type: string
+        title:
+          type: string
+        summary:
+          type: string
+        requiresConfirmation:
+          type: boolean
+        affectedFileCount:
+          type: integer
+          minimum: 0
+        affectedFiles:
+          type: array
+          description: 用于让用户核对本次预览目标的照片摘要。
+          items:
+            $ref: "#/components/schemas/AgentFileReference"
+        createdAlbumCount:
+          type: integer
+          minimum: 0
+        albumId:
+          type: integer
+          format: int64
+        albumName:
+          type: string
+        tagName:
+          type: string
+        agentTaskId:
+          type: string
+          format: uuid
+          nullable: true
+        suggestedTagCount:
+          type: integer
+          minimum: 0
+        affectedAlbumCount:
+          type: integer
+          minimum: 0
+        affectedPersonCount:
+          type: integer
+          minimum: 0
+        shareDays:
+          type: integer
+          minimum: 1
+          maximum: 30
+          nullable: true
+        publicScope:
+          type: string
+          nullable: true
+        riskLevel:
+          type: string
+          enum: [normal, high, critical]
+        irreversible:
+          type: boolean
+        warnings:
+          type: array
+          items:
+            type: string
+        confirmationPrompt:
+          type: string
+          nullable: true
+        pendingActionId:
+          type: string
+          format: uuid
+          nullable: true
+        confirmationToken:
+          type: string
+          nullable: true
+        idempotencyKey:
+          type: string
+          nullable: true
+        expiresAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    AgentActionResult:
+      type: object
+      required:
+        - action
+        - success
+        - affectedFileCount
+        - skippedFileCount
+        - skippedReasons
+        - createdAlbumCount
+        - idempotentReplay
+      properties:
+        action:
+          type: string
+        success:
+          type: boolean
+        message:
+          type: string
+        affectedFileCount:
+          type: integer
+          minimum: 0
+        affectedFiles:
+          type: array
+          description: 本次实际发生变化或已提交分析的照片摘要。
+          items:
+            $ref: "#/components/schemas/AgentFileReference"
+        skippedFileCount:
+          type: integer
+          minimum: 0
+        skippedReasons:
+          type: array
+          items:
+            type: string
+        createdAlbumCount:
+          type: integer
+          minimum: 0
+        albumId:
+          type: integer
+          format: int64
+        albumName:
+          type: string
+        tagName:
+          type: string
+        agentTaskId:
+          type: string
+          format: uuid
+          nullable: true
+        affectedTagCount:
+          type: integer
+          minimum: 0
+        skippedTagCount:
+          type: integer
+          minimum: 0
+        affectedAlbumCount:
+          type: integer
+          minimum: 0
+        affectedPersonCount:
+          type: integer
+          minimum: 0
+        taskIds:
+          type: array
+          items:
+            type: integer
+            format: int64
+        resourceToken:
+          type: string
+          nullable: true
+          description: 分享或下载操作产生的短期资源凭证。
+        tokenType:
+          type: string
+          enum: [file_share, album_share, file_download, album_snapshot_download]
+          nullable: true
+        expiresInDays:
+          type: integer
+          nullable: true
+        pendingActionId:
+          type: string
+          format: uuid
+        idempotentReplay:
+          type: boolean
+
+    AgentPendingActionStatus:
+      type: object
+      required: [pendingActionId, status, family, action]
+      properties:
+        pendingActionId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [PREVIEWED, EXECUTING, SUCCEEDED, FAILED, CANCELLED, EXPIRED]
+        family:
+          type: string
+          enum: [album, tag, ai_task, suggested_tag, p3_action, p4_action]
+        action:
+          type: string
+        summary:
+          type: string
+        affectedFileCount:
+          type: integer
+          minimum: 0
+        createdAlbumCount:
+          type: integer
+          minimum: 0
+        previewAffectedFileCount:
+          type: integer
+          minimum: 0
+        actualAffectedFileCount:
+          type: integer
+          minimum: 0
+          nullable: true
+        skippedFileCount:
+          type: integer
+          minimum: 0
+          nullable: true
+        previewCreatedAlbumCount:
+          type: integer
+          minimum: 0
+        actualCreatedAlbumCount:
+          type: integer
+          minimum: 0
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+        confirmedAt:
+          type: string
+          format: date-time
+          nullable: true
+        executedAt:
+          type: string
+          format: date-time
+          nullable: true
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+        failureMessage:
+          type: string
+          nullable: true
+
+    AgentTagSuggestion:
+      type: object
+      required: [fileId, imageType, tagName, confidence]
+      properties:
+        fileId:
+          type: string
+        imageType:
+          type: string
+        tagName:
+          type: string
+        confidence:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 1
+
+    AgentImageTagTaskStatus:
+      type: object
+      required:
+        - agentTaskId
+        - status
+        - totalCount
+        - pendingCount
+        - runningCount
+        - succeededCount
+        - failedCount
+        - deadCount
+        - progressPercent
+        - files
+        - suggestionCount
+        - suggestions
+      properties:
+        agentTaskId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [SUBMITTED, RUNNING, SUCCEEDED, PARTIAL_SUCCEEDED, FAILED]
+        totalCount:
+          type: integer
+          minimum: 0
+        pendingCount:
+          type: integer
+          minimum: 0
+        runningCount:
+          type: integer
+          minimum: 0
+        succeededCount:
+          type: integer
+          minimum: 0
+        failedCount:
+          type: integer
+          minimum: 0
+        deadCount:
+          type: integer
+          minimum: 0
+        progressPercent:
+          type: integer
+          minimum: 0
+          maximum: 100
+        minConfidence:
+          type: number
+          format: double
+        files:
+          type: array
+          description: 该 AI 标签批次冻结并分析的照片摘要。
+          items:
+            $ref: "#/components/schemas/AgentFileReference"
+        suggestionCount:
+          type: integer
+          minimum: 0
+        suggestions:
+          type: array
+          items:
+            $ref: "#/components/schemas/AgentTagSuggestion"
+        failureSummaries:
+          type: array
+          maxItems: 10
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    AgentImageTagTaskStatusResponse:
+      type: object
+      required: [code, data, message]
+      properties:
+        code:
+          type: integer
+          enum: [200]
+        data:
+          $ref: "#/components/schemas/AgentImageTagTaskStatus"
+        message:
+          type: string
+
+    AgentFileSearchItem:
+      type: object
+      properties:
+        fileId:
+          type: string
+        originFileName:
+          type: string
+        size:
+          type: integer
+          format: int64
+        contentType:
+          type: string
+        category:
+          type: string
+        duration:
+          type: integer
+        width:
+          type: integer
+        height:
+          type: integer
+        fileUrl:
+          type: string
+        thumbnailUrl:
+          type: string
+        takenAt:
+          type: string
+          format: date-time
+          nullable: true
+        uploadedAt:
+          type: string
+          format: date-time
+        make:
+          type: string
+          nullable: true
+        model:
+          type: string
+          nullable: true
+        country:
+          type: string
+          nullable: true
+        province:
+          type: string
+          nullable: true
+        city:
+          type: string
+          nullable: true
+        district:
+          type: string
+          nullable: true
+        hasLocation:
+          type: boolean
+        hasFeature:
+          type: boolean
+        hasAiAnalysis:
+          type: boolean
+        tags:
+          type: array
+          items:
+            type: string
+
+    AgentSearchRelaxSuggestion:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+
+    AgentAdvancedSearchResult:
+      type: object
+      properties:
+        current:
+          type: integer
+          format: int64
+        size:
+          type: integer
+          format: int64
+        total:
+          type: integer
+          format: int64
+        pages:
+          type: integer
+          format: int64
+        hasNext:
+          type: boolean
+        conditionSummary:
+          type: string
+        records:
+          type: array
+          items:
+            $ref: "#/components/schemas/AgentFileSearchItem"
+        relaxSuggestions:
+          type: array
+          items:
+            $ref: "#/components/schemas/AgentSearchRelaxSuggestion"
+
+    AgentLibrarySuggestion:
+      type: object
+      properties:
+        code:
+          type: string
+        priority:
+          type: string
+          enum: [HIGH, MEDIUM, LOW]
+        affectedCount:
+          type: integer
+          format: int64
+        title:
+          type: string
+        description:
+          type: string
+        recommendedAction:
+          type: string
+        suggestedFilters:
+          type: object
+          additionalProperties: true
+
+    AgentLibraryAnalysis:
+      type: object
+      properties:
+        generatedAt:
+          type: string
+          format: date-time
+        staleMinutes:
+          type: integer
+        healthScore:
+          type: integer
+          minimum: 0
+          maximum: 100
+        healthLevel:
+          type: string
+          enum: [EMPTY, EXCELLENT, GOOD, NEEDS_ATTENTION, CRITICAL]
+        totalFileCount:
+          type: integer
+          format: int64
+        untaggedFileCount:
+          type: integer
+          format: int64
+        missingLocationFileCount:
+          type: integer
+          format: int64
+        missingFeatureFileCount:
+          type: integer
+          format: int64
+        missingAiAnalysisFileCount:
+          type: integer
+          format: int64
+        similarGroupCount:
+          type: integer
+          format: int64
+        similarFileCount:
+          type: integer
+          format: int64
+        failedAiTaskCount:
+          type: integer
+          format: int64
+        staleAiTaskCount:
+          type: integer
+          format: int64
+        pendingAiTaskCount:
+          type: integer
+          format: int64
+        unalbumedFileCount:
+          type: integer
+          format: int64
+        suggestions:
+          type: array
+          items:
+            $ref: "#/components/schemas/AgentLibrarySuggestion"
+
+    AgentAdvancedSearchResponse:
+      type: object
+      required: [code, data, message]
+      properties:
+        code:
+          type: integer
+          enum: [200]
+        data:
+          $ref: "#/components/schemas/AgentAdvancedSearchResult"
+        message:
+          type: string
+
+    AgentLibraryAnalysisResponse:
+      type: object
+      required: [code, data, message]
+      properties:
+        code:
+          type: integer
+          enum: [200]
+        data:
+          $ref: "#/components/schemas/AgentLibraryAnalysis"
+        message:
+          type: string
+
+    AgentAttachmentUploadResponse:
+      type: object
+      required: [code, data, message]
+      properties:
+        code:
+          type: integer
+          enum: [200]
+        data:
+          type: object
+          required: [fileId, originalFilename, category, size, uploaded]
+          properties:
+            fileId:
+              type: string
+              maxLength: 36
+            originalFilename:
+              type: string
+            category:
+              type: string
+              enum: [image, video]
+            size:
+              type: integer
+              format: int64
+            albumId:
+              type: integer
+              format: int64
+              nullable: true
+            uploaded:
+              type: boolean
+        message:
+          type: string
+
+    AgentActionPreviewResponse:
+      type: object
+      required: [code, data, message]
+      properties:
+        code:
+          type: integer
+          enum: [200]
+        data:
+          $ref: "#/components/schemas/AgentActionPreview"
+        message:
+          type: string
+
+    AgentActionResultResponse:
+      type: object
+      required: [code, data, message]
+      properties:
+        code:
+          type: integer
+          enum: [200]
+        data:
+          $ref: "#/components/schemas/AgentActionResult"
+        message:
+          type: string
+
+    AgentPendingActionStatusResponse:
+      type: object
+      required: [code, data, message]
+      properties:
+        code:
+          type: integer
+          enum: [200]
+        data:
+          $ref: "#/components/schemas/AgentPendingActionStatus"
+        message:
+          type: string
+
+    GenericSuccessResponse:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: integer
+          enum: [200]
+        data:
+          nullable: true
+        message:
+          type: string
+
+    ErrorResponse:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: integer
+          enum: [400, 401, 402, 403, 404, 409, 410, 429, 500, 501]
+        data:
+          nullable: true
+        message:
+          type: string

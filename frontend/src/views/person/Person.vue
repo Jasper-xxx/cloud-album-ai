@@ -146,7 +146,7 @@ import { onMounted, ref, computed, onUnmounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { Check, Select } from '@element-plus/icons-vue'
 import { selectAllPersonAlbum, updatePersonName, mergePerson, hiddenPerson, restorePerson } from '@/api/person/person'
-import defaultCover from '@/assets/image/album.png'
+import defaultCover from '@/assets/image/album.svg'
 
 
 /******************************​ 配置项 ​******************************/

@@ -21,5 +21,7 @@ public interface FaceService extends IService<Face> {
 
     int reclusterUserFaces(Long userId);
 
+    int rebuildUserFaceClusters(Long userId);
+
 }
 

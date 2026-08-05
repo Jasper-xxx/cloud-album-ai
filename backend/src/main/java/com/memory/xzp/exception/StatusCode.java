@@ -12,6 +12,8 @@ public enum StatusCode {
     NO_AUTH_ERROR(402, "无权限"),
     FORBIDDEN_ERROR(403, "禁止访问"),
     NOT_FOUND_ERROR(404, "请求数据不存在"),
+    CONFLICT_ERROR(409, "请求状态冲突"),
+    GONE_ERROR(410, "请求数据已失效"),
     RATE_LIMIT_ERROR(429, "请求过于频繁"),
     SYSTEM_ERROR(500, "系统内部异常"),
     OPERATION_ERROR(501, "操作失败");

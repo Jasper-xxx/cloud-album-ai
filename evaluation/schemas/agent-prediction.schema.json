@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cloud-album.local/evaluation/agent-prediction.schema.json",
+  "title": "Cloud-Album Agent P0 prediction",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["case_id", "actual"],
+  "properties": {
+    "case_id": {"type": "string", "minLength": 1},
+    "actual": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tool_calls", "completed", "verification"],
+      "properties": {
+        "tool_calls": {
+          "type": "array",
+          "items": {"$ref": "agent-gold.schema.json#/$defs/toolCall"}
+        },
+        "completed": {"type": "boolean"},
+        "verification": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["source", "passed"],
+          "properties": {
+            "source": {"type": "string", "minLength": 1},
+            "passed": {"type": "boolean"},
+            "evidence_id": {"type": "string"}
+          }
+        }
+      }
+    }
+  }
+}

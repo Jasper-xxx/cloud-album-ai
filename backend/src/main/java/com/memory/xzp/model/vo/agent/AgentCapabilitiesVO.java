@@ -12,6 +12,7 @@ public class AgentCapabilitiesVO {
     private String name;
     private String mode;
     private List<String> readOnlyTools;
+    private List<String> directMutationTools;
     private List<String> confirmationRequiredTools;
     private List<String> disabledTools;
     private List<String> riskRules;

@@ -336,11 +336,20 @@ ai:
 
 face:
   cluster:
-    cosine-threshold: ${FACE_CLUSTER_COSINE_THRESHOLD:0.46}
+    cosine-threshold: ${FACE_CLUSTER_COSINE_THRESHOLD:0.68}
 
 # Dify 智能体本地调试配置
 agent:
   # 本地调试可关闭 /agent/* 登录校验；生产环境请改回 true
-  auth-enabled: ${AGENT_AUTH_ENABLED:true}
+  auth-enabled: ${AGENT_AUTH_ENABLED:false}
   # auth-enabled=false 时，智能体查询这个用户的数据
   dev-user-id: ${AGENT_DEV_USER_ID:1000000012}
+  pending-action:
+    # 预览确认有效期；过期后必须重新预览
+    ttl-seconds: ${AGENT_PENDING_ACTION_TTL_SECONDS:300}
+    # 写入待执行记录的工作流契约版本
+    workflow-version: ${AGENT_WORKFLOW_VERSION:1.6.0}
+    # 执行租约超时后由清理任务置为失败，业务事务随后只能回滚
+    execution-lease-seconds: ${AGENT_PENDING_ACTION_EXECUTION_LEASE_SECONDS:120}
+    cleanup-delay-ms: ${AGENT_PENDING_ACTION_CLEANUP_DELAY_MS:60000}
+    cleanup-initial-delay-ms: ${AGENT_PENDING_ACTION_CLEANUP_INITIAL_DELAY_MS:60000}

@@ -360,8 +360,26 @@ public class AsyncTaskServiceImpl implements AsyncTaskService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long enqueueImageTag(String fileId, Long userId, boolean autoAddTag) {
+        return enqueueImageTag(fileId, userId, autoAddTag, null);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Long enqueueImageTag(
+            String fileId,
+            Long userId,
+            boolean autoAddTag,
+            String taskScope
+    ) {
         if (fileId == null || fileId.isBlank() || userId == null) {
             throw new BusinessException(StatusCode.PARAMS_ERROR, "图片标签任务参数不完整");
+        }
+        String normalizedScope = taskScope == null ? null : taskScope.trim();
+        if (normalizedScope != null
+                && (normalizedScope.isEmpty()
+                || normalizedScope.length() > 64
+                || !normalizedScope.matches("^[A-Za-z0-9_-]+$"))) {
+            throw new BusinessException(StatusCode.PARAMS_ERROR, "图片标签任务作用域无效");
         }
 
         List<FileEntity> files = fileMapper.selectFileByIds(List.of(fileId), userId);
@@ -375,7 +393,8 @@ public class AsyncTaskServiceImpl implements AsyncTaskService {
 
         String mode = autoAddTag ? "auto" : "preview";
         String taskKey = AsyncTaskType.IMAGE_TAG + ":" + fileId + ":" + userId + ":"
-                + imageTagTaskVersion + ":" + mode;
+                + imageTagTaskVersion + ":" + mode
+                + (normalizedScope == null ? "" : ":" + normalizedScope);
         AsyncTaskEntity newTask = new AsyncTaskEntity();
         newTask.setTaskKey(taskKey);
         newTask.setTaskType(AsyncTaskType.IMAGE_TAG.name());
@@ -1189,6 +1208,7 @@ public class AsyncTaskServiceImpl implements AsyncTaskService {
         vo.setTaskType(entity.getTaskType());
         vo.setFileId(entity.getFileId());
         vo.setStatus(entity.getStatus());
+        vo.setExecutionCount(entity.getExecutionCount());
         if (entity.getResultJson() != null && !entity.getResultJson().isBlank()) {
             try {
                 vo.setResult(objectMapper.readTree(entity.getResultJson()));

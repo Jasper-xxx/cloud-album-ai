@@ -42,6 +42,21 @@ class AsyncTaskMapperSqlTest {
         assertTrue(cancelSql.getSql().contains("id IN"));
     }
 
+    @Test
+    void claimAtomicallyCountsEveryExecutionAttempt() {
+        Configuration configuration = new Configuration();
+        configuration.addMapper(AsyncTaskMapper.class);
+
+        BoundSql claimSql = boundSql(
+                configuration,
+                "com.memory.xzp.mapper.AsyncTaskMapper.claim",
+                Map.of("taskId", 42L)
+        );
+
+        assertTrue(claimSql.getSql().contains("execution_count = execution_count + 1"));
+        assertTrue(claimSql.getSql().contains("status IN ('PENDING', 'FAILED')"));
+    }
+
     private BoundSql boundSql(
             Configuration configuration,
             String statementId,

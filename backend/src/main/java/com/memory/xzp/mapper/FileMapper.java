@@ -3,6 +3,7 @@ package com.memory.xzp.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.memory.xzp.model.entity.FileEntity;
+import com.memory.xzp.model.entity.UserFileEntity;
 import com.memory.xzp.model.dto.task.PendingFileTask;
 import com.memory.xzp.model.vo.FileInfoListVO;
 import com.memory.xzp.model.vo.entity.FileInfo;
@@ -103,6 +104,47 @@ public interface FileMapper extends BaseMapper<FileEntity> {
     List<String> selectOwnedActiveFileIds(
             @Param("fileIds") List<String> fileIds,
             @Param("userId") Long userId
+    );
+
+    @Select({
+            "<script>",
+            "SELECT uf.file_id",
+            "FROM user_file uf",
+            "WHERE uf.user_id = #{userId}",
+            "  AND uf.is_deleted = 0",
+            "  AND uf.file_id IN",
+            "  <foreach collection='fileIds' item='fileId' open='(' separator=',' close=')'>",
+            "    #{fileId}",
+            "  </foreach>",
+            "  AND NOT EXISTS (",
+            "    SELECT 1",
+            "    FROM user_file other",
+            "    WHERE other.file_id = uf.file_id",
+            "      AND other.user_id != #{userId}",
+            "      AND other.is_deleted = 0",
+            "  )",
+            "</script>"
+    })
+    List<String> selectExclusivelyOwnedActiveFileIds(
+            @Param("fileIds") List<String> fileIds,
+            @Param("userId") Long userId
+    );
+
+    @Select({
+            "<script>",
+            "SELECT uf.*",
+            "FROM user_file uf FORCE INDEX (idx_user_file_file_user_deleted)",
+            "WHERE uf.file_id IN",
+            "  <foreach collection='fileIds' item='fileId' open='(' separator=',' close=')'>",
+            "    #{fileId}",
+            "  </foreach>",
+            "  AND uf.is_deleted = 0",
+            "ORDER BY uf.file_id, uf.user_id",
+            "FOR UPDATE",
+            "</script>"
+    })
+    List<UserFileEntity> selectActiveOwnershipRowsForUpdate(
+            @Param("fileIds") List<String> fileIds
     );
 
     @Select("select count(*) from user_file where user_id=#{userId} ")

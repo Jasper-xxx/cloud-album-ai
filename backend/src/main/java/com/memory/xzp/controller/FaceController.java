@@ -33,4 +33,12 @@ public class FaceController {
         return ResultUtil.success(mergedCount, "回并重聚类完成");
     }
 
+    @PostMapping("/rebuild-clusters")
+    @Operation(summary = "重建人物聚类", description = "基于当前用户已提取的人脸向量重建人物分组，可拆分错误合并的人物")
+    public BaseResponse<?> rebuildClusters() {
+        Long userId = Long.parseLong(StpUtil.getLoginId().toString());
+        int personCount = faceService.rebuildUserFaceClusters(userId);
+        return ResultUtil.success(personCount, "人物聚类重建完成");
+    }
+
 }

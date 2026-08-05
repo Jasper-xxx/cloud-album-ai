@@ -1,0 +1,10 @@
+{"case_id":"img-001","relevant_ids":["file-a"],"returned_ids":["file-a","x-1","x-2"],"latency_ms":421.2}
+{"case_id":"img-002","relevant_ids":["file-b"],"returned_ids":["x-1","file-b","x-2"],"latency_ms":438.7}
+{"case_id":"img-003","relevant_ids":["file-c"],"returned_ids":["x-1","x-2","file-c"],"latency_ms":402.1}
+{"case_id":"img-004","relevant_ids":["file-d"],"returned_ids":["file-d"],"latency_ms":447.8}
+{"case_id":"img-005","relevant_ids":["file-e"],"returned_ids":["x-1","x-2","x-3","file-e"],"latency_ms":469.4}
+{"case_id":"img-006","relevant_ids":["file-f"],"returned_ids":["x-1","file-f"],"latency_ms":415.3}
+{"case_id":"img-007","relevant_ids":["file-g"],"returned_ids":["file-g","x-1"],"latency_ms":430.6}
+{"case_id":"img-008","relevant_ids":["file-h"],"returned_ids":["x-1","x-2","file-h"],"latency_ms":451.9}
+{"case_id":"img-009","relevant_ids":["file-i"],"returned_ids":["x-1","x-2","x-3","x-4","file-i"],"latency_ms":461.5}
+{"case_id":"img-010","relevant_ids":["file-j"],"returned_ids":["x-1","x-2","x-3","x-4","x-5","file-j"],"latency_ms":476.0}

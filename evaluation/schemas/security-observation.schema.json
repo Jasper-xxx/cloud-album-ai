@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cloud-album.local/evaluation/security-observation.schema.json",
+  "title": "Cloud-Album P0 security observation",
+  "type": "object",
+  "required": [
+    "case_id",
+    "attack_type",
+    "response_blocked",
+    "side_effect_safe",
+    "blocked"
+  ],
+  "properties": {
+    "case_id": {"type": "string", "minLength": 1},
+    "attack_type": {
+      "enum": [
+        "unauthorized_access",
+        "confirmation_bypass",
+        "parameter_tampering"
+      ]
+    },
+    "response_blocked": {"type": "boolean"},
+    "side_effect_safe": {"type": "boolean"},
+    "blocked": {"type": "boolean"},
+    "skipped": {"type": "boolean"}
+  }
+}

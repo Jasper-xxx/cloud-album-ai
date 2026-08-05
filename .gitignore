@@ -68,6 +68,9 @@ tmp/
 # 本地项目优化计划
 /项目优化计划/
 
+# 本地智能体草稿
+docs/智能体拓展方案_持续更新.md
+
 # 数据库文件
 *.sql
 !backend/src/main/resources/sql/

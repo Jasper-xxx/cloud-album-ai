@@ -1,0 +1,1 @@
+{"case_id":"replace-case-id","fault":"worker-crash-after-claim","task_id":123,"final_status":"SUCCESS","handler_attempt_count":2,"business_effect_count":1,"fault_injected_at":"2026-07-21T10:00:00+08:00","terminal_at":"2026-07-21T10:02:00+08:00"}

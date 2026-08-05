@@ -18,6 +18,9 @@ public class AsyncTaskVO {
 
     private String status;
 
+    /** Number of times a worker successfully claimed and started this task. */
+    private Integer executionCount;
+
     private JsonNode result;
 
     private Integer retryCount;

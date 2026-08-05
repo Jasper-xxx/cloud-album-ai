@@ -1,0 +1,478 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.memory.xzp.mapper.AgentLibraryMapper">
+
+    <select id="selectAdvancedSearch"
+            resultType="com.memory.xzp.model.vo.agent.AgentFileSearchItemVO">
+        SELECT
+            f.file_id AS fileId,
+            f.origin_file_name AS originFileName,
+            f.size AS size,
+            f.content_type AS contentType,
+            f.category AS category,
+            vm.duration AS duration,
+            f.width AS width,
+            f.height AS height,
+            f.file_url AS fileUrl,
+            f.thumbnail_url AS thumbnailUrl,
+            f.date_time_original AS takenAt,
+            uf.upload_time AS uploadedAt,
+            NULLIF(TRIM(f.make), '') AS make,
+            NULLIF(TRIM(f.model), '') AS model,
+            l.country AS country,
+            l.province AS province,
+            l.city AS city,
+            l.district AS district,
+            CASE WHEN l.file_id IS NOT NULL
+                      AND COALESCE(NULLIF(TRIM(l.full_address), ''),
+                                   NULLIF(TRIM(l.district), ''),
+                                   NULLIF(TRIM(l.city), ''),
+                                   NULLIF(TRIM(l.province), ''),
+                                   NULLIF(TRIM(l.country), '')) IS NOT NULL
+                 THEN TRUE ELSE FALSE END AS hasLocation,
+            EXISTS (
+                SELECT 1
+                FROM file_feature ff
+                WHERE ff.user_id = #{userId}
+                  AND ff.file_id = f.file_id
+            ) AS hasFeature,
+            EXISTS (
+                SELECT 1
+                FROM async_task ai
+                WHERE ai.user_id = #{userId}
+                  AND ai.file_id = f.file_id
+                  AND ai.task_type IN ('IMAGE_TAG', 'FACE_ANALYSIS')
+                  AND ai.status = 'SUCCEEDED'
+            ) AS hasAiAnalysis,
+            (
+                SELECT GROUP_CONCAT(DISTINCT pt_names.tag_name
+                                    ORDER BY pt_names.tag_name SEPARATOR '|')
+                FROM picture_tag pt_names
+                WHERE pt_names.file_id = f.file_id
+            ) AS tagNamesText
+        FROM user_file uf
+        INNER JOIN file f ON f.file_id = uf.file_id
+        LEFT JOIN location l ON l.file_id = f.file_id
+        LEFT JOIN video_meta_data vm ON vm.file_id = f.file_id
+        WHERE uf.user_id = #{userId}
+          AND uf.is_deleted = 0
+          AND COALESCE(f.status, 'READY') != 'DELETING'
+
+        <if test="criteria.dateFrom != null">
+            <choose>
+                <when test="criteria.dateField == 'uploaded'">
+                    AND uf.upload_time &gt;= #{criteria.dateFrom}
+                </when>
+                <otherwise>
+                    AND f.date_time_original &gt;= #{criteria.dateFrom}
+                </otherwise>
+            </choose>
+        </if>
+        <if test="criteria.dateTo != null">
+            <choose>
+                <when test="criteria.dateField == 'uploaded'">
+                    AND uf.upload_time &lt;= #{criteria.dateTo}
+                </when>
+                <otherwise>
+                    AND f.date_time_original &lt;= #{criteria.dateTo}
+                </otherwise>
+            </choose>
+        </if>
+
+        <if test="criteria.tags != null and !criteria.tags.isEmpty()">
+            <choose>
+                <when test="criteria.tagOperator == 'AND'">
+                    <bind name="tagCount" value="criteria.tags.size()"/>
+                    AND (
+                        SELECT COUNT(DISTINCT pt_and.tag_name)
+                        FROM picture_tag pt_and
+                        WHERE pt_and.file_id = f.file_id
+                          AND pt_and.tag_name IN
+                          <foreach collection="criteria.tags" item="tag"
+                                   open="(" separator="," close=")">
+                              #{tag}
+                          </foreach>
+                    ) = #{tagCount}
+                </when>
+                <otherwise>
+                    AND EXISTS (
+                        SELECT 1
+                        FROM picture_tag pt_or
+                        WHERE pt_or.file_id = f.file_id
+                          AND pt_or.tag_name IN
+                          <foreach collection="criteria.tags" item="tag"
+                                   open="(" separator="," close=")">
+                              #{tag}
+                          </foreach>
+                    )
+                </otherwise>
+            </choose>
+        </if>
+
+        <if test="criteria.country != null">
+            AND l.country = #{criteria.country}
+        </if>
+        <if test="criteria.province != null">
+            AND l.province = #{criteria.province}
+        </if>
+        <if test="criteria.city != null">
+            AND l.city = #{criteria.city}
+        </if>
+        <if test="criteria.district != null">
+            AND l.district = #{criteria.district}
+        </if>
+        <if test="criteria.make != null">
+            AND f.make LIKE CONCAT('%', #{criteria.make}, '%')
+        </if>
+        <if test="criteria.model != null">
+            AND f.model LIKE CONCAT('%', #{criteria.model}, '%')
+        </if>
+
+        <if test="criteria.albumId != null">
+            AND EXISTS (
+                SELECT 1
+                FROM album_picture ap
+                INNER JOIN album a ON a.album_id = ap.album_id
+                WHERE ap.user_id = #{userId}
+                  AND ap.file_id = f.file_id
+                  AND ap.album_id = #{criteria.albumId}
+                  AND a.user_id = #{userId}
+                  AND a.type = 'normal'
+            )
+        </if>
+
+        <if test="criteria.albumName != null">
+            AND EXISTS (
+                SELECT 1
+                FROM album_picture ap_name
+                INNER JOIN album a_name
+                    ON a_name.album_id = ap_name.album_id
+                   AND a_name.user_id = #{userId}
+                   AND a_name.type = 'normal'
+                WHERE ap_name.user_id = #{userId}
+                  AND ap_name.file_id = f.file_id
+                  AND a_name.album_name = #{criteria.albumName}
+            )
+        </if>
+
+        <if test="criteria.personId != null">
+            AND EXISTS (
+                SELECT 1
+                FROM face face_filter
+                INNER JOIN person_face pf
+                    ON pf.face_id = face_filter.face_id
+                   AND pf.user_id = #{userId}
+                INNER JOIN person p
+                    ON p.person_id = pf.person_id
+                   AND p.user_id = #{userId}
+                WHERE face_filter.user_id = #{userId}
+                  AND face_filter.file_id = f.file_id
+                  AND p.person_id = #{criteria.personId}
+            )
+        </if>
+
+        <if test="criteria.personName != null">
+            AND EXISTS (
+                SELECT 1
+                FROM face face_name
+                INNER JOIN person_face pf_name
+                    ON pf_name.face_id = face_name.face_id
+                   AND pf_name.user_id = #{userId}
+                INNER JOIN person p_name
+                    ON p_name.person_id = pf_name.person_id
+                   AND p_name.user_id = #{userId}
+                WHERE face_name.user_id = #{userId}
+                  AND face_name.file_id = f.file_id
+                  AND p_name.person_name = #{criteria.personName}
+            )
+        </if>
+
+        <if test="criteria.withoutNormalAlbum != null">
+            <choose>
+                <when test="criteria.withoutNormalAlbum">
+                    AND NOT EXISTS (
+                        SELECT 1
+                        FROM album_picture ap_missing_album
+                        INNER JOIN album a_missing_album
+                            ON a_missing_album.album_id = ap_missing_album.album_id
+                           AND a_missing_album.user_id = #{userId}
+                           AND a_missing_album.type = 'normal'
+                        WHERE ap_missing_album.user_id = #{userId}
+                          AND ap_missing_album.file_id = f.file_id
+                    )
+                </when>
+                <otherwise>
+                    AND EXISTS (
+                        SELECT 1
+                        FROM album_picture ap_present_album
+                        INNER JOIN album a_present_album
+                            ON a_present_album.album_id = ap_present_album.album_id
+                           AND a_present_album.user_id = #{userId}
+                           AND a_present_album.type = 'normal'
+                        WHERE ap_present_album.user_id = #{userId}
+                          AND ap_present_album.file_id = f.file_id
+                    )
+                </otherwise>
+            </choose>
+        </if>
+
+        <if test="criteria.mediaTypes != null and !criteria.mediaTypes.isEmpty()">
+            AND (
+                <foreach collection="criteria.mediaTypes" item="mediaType" separator=" OR ">
+                    <choose>
+                        <when test="mediaType == 'picture'">
+                            (f.category = 'image' AND f.content_type != 'image/gif')
+                        </when>
+                        <when test="mediaType == 'gif'">
+                            f.content_type = 'image/gif'
+                        </when>
+                        <otherwise>
+                            f.category = 'video'
+                        </otherwise>
+                    </choose>
+                </foreach>
+            )
+        </if>
+
+        <choose>
+            <when test="criteria.tagState == 'tagged'">
+                AND EXISTS (
+                    SELECT 1 FROM picture_tag pt_tagged
+                    WHERE pt_tagged.file_id = f.file_id
+                )
+            </when>
+            <when test="criteria.tagState == 'untagged'">
+                AND NOT EXISTS (
+                    SELECT 1 FROM picture_tag pt_untagged
+                    WHERE pt_untagged.file_id = f.file_id
+                )
+            </when>
+        </choose>
+
+        <if test="criteria.missingLocation != null">
+            <choose>
+                <when test="criteria.missingLocation">
+                    AND (
+                        l.file_id IS NULL
+                        OR COALESCE(NULLIF(TRIM(l.full_address), ''),
+                                    NULLIF(TRIM(l.district), ''),
+                                    NULLIF(TRIM(l.city), ''),
+                                    NULLIF(TRIM(l.province), ''),
+                                    NULLIF(TRIM(l.country), '')) IS NULL
+                    )
+                </when>
+                <otherwise>
+                    AND l.file_id IS NOT NULL
+                    AND COALESCE(NULLIF(TRIM(l.full_address), ''),
+                                 NULLIF(TRIM(l.district), ''),
+                                 NULLIF(TRIM(l.city), ''),
+                                 NULLIF(TRIM(l.province), ''),
+                                 NULLIF(TRIM(l.country), '')) IS NOT NULL
+                </otherwise>
+            </choose>
+        </if>
+
+        <if test="criteria.missingFeature != null">
+            <choose>
+                <when test="criteria.missingFeature">
+                    AND f.category = 'image'
+                    AND NOT EXISTS (
+                        SELECT 1 FROM file_feature ff_missing
+                        WHERE ff_missing.user_id = #{userId}
+                          AND ff_missing.file_id = f.file_id
+                    )
+                </when>
+                <otherwise>
+                    AND EXISTS (
+                        SELECT 1 FROM file_feature ff_present
+                        WHERE ff_present.user_id = #{userId}
+                          AND ff_present.file_id = f.file_id
+                    )
+                </otherwise>
+            </choose>
+        </if>
+
+        <if test="criteria.missingAiAnalysis != null">
+            <choose>
+                <when test="criteria.missingAiAnalysis">
+                    AND f.category = 'image'
+                    AND NOT EXISTS (
+                        SELECT 1 FROM async_task ai_missing
+                        WHERE ai_missing.user_id = #{userId}
+                          AND ai_missing.file_id = f.file_id
+                          AND ai_missing.task_type IN ('IMAGE_TAG', 'FACE_ANALYSIS')
+                          AND ai_missing.status = 'SUCCEEDED'
+                    )
+                </when>
+                <otherwise>
+                    AND EXISTS (
+                        SELECT 1 FROM async_task ai_present
+                        WHERE ai_present.user_id = #{userId}
+                          AND ai_present.file_id = f.file_id
+                          AND ai_present.task_type IN ('IMAGE_TAG', 'FACE_ANALYSIS')
+                          AND ai_present.status = 'SUCCEEDED'
+                    )
+                </otherwise>
+            </choose>
+        </if>
+
+        <if test="criteria.keyword != null">
+            AND (
+                f.origin_file_name LIKE CONCAT('%', #{criteria.keyword}, '%')
+                OR f.make LIKE CONCAT('%', #{criteria.keyword}, '%')
+                OR f.model LIKE CONCAT('%', #{criteria.keyword}, '%')
+                OR l.full_address LIKE CONCAT('%', #{criteria.keyword}, '%')
+                OR EXISTS (
+                    SELECT 1 FROM picture_tag pt_keyword
+                    WHERE pt_keyword.file_id = f.file_id
+                      AND pt_keyword.tag_name LIKE CONCAT('%', #{criteria.keyword}, '%')
+                )
+            )
+        </if>
+
+        ORDER BY
+        <choose>
+            <when test="criteria.orderBy == 'uploadedAt'">uf.upload_time</when>
+            <otherwise>COALESCE(f.date_time_original, uf.upload_time)</otherwise>
+        </choose>
+        <choose>
+            <when test="criteria.orderType == 'asc'">ASC</when>
+            <otherwise>DESC</otherwise>
+        </choose>,
+        f.file_id ASC
+    </select>
+
+    <select id="analyzeLibrary"
+            resultType="com.memory.xzp.model.vo.agent.AgentLibraryHealthRawVO">
+        SELECT
+            (
+                SELECT COUNT(*)
+                FROM user_file uf
+                INNER JOIN file f ON f.file_id = uf.file_id
+                WHERE uf.user_id = #{userId}
+                  AND uf.is_deleted = 0
+                  AND COALESCE(f.status, 'READY') != 'DELETING'
+            ) AS totalFileCount,
+            (
+                SELECT COUNT(*)
+                FROM user_file uf
+                INNER JOIN file f ON f.file_id = uf.file_id
+                WHERE uf.user_id = #{userId}
+                  AND uf.is_deleted = 0
+                  AND COALESCE(f.status, 'READY') != 'DELETING'
+                  AND NOT EXISTS (
+                      SELECT 1 FROM picture_tag pt
+                      WHERE pt.file_id = f.file_id
+                  )
+            ) AS untaggedFileCount,
+            (
+                SELECT COUNT(*)
+                FROM user_file uf
+                INNER JOIN file f ON f.file_id = uf.file_id
+                LEFT JOIN location l ON l.file_id = f.file_id
+                WHERE uf.user_id = #{userId}
+                  AND uf.is_deleted = 0
+                  AND COALESCE(f.status, 'READY') != 'DELETING'
+                  AND (
+                      l.file_id IS NULL
+                      OR COALESCE(NULLIF(TRIM(l.full_address), ''),
+                                  NULLIF(TRIM(l.district), ''),
+                                  NULLIF(TRIM(l.city), ''),
+                                  NULLIF(TRIM(l.province), ''),
+                                  NULLIF(TRIM(l.country), '')) IS NULL
+                  )
+            ) AS missingLocationFileCount,
+            (
+                SELECT COUNT(*)
+                FROM user_file uf
+                INNER JOIN file f ON f.file_id = uf.file_id
+                WHERE uf.user_id = #{userId}
+                  AND uf.is_deleted = 0
+                  AND f.category = 'image'
+                  AND COALESCE(f.status, 'READY') != 'DELETING'
+                  AND NOT EXISTS (
+                      SELECT 1 FROM file_feature ff
+                      WHERE ff.user_id = #{userId}
+                        AND ff.file_id = f.file_id
+                  )
+            ) AS missingFeatureFileCount,
+            (
+                SELECT COUNT(*)
+                FROM user_file uf
+                INNER JOIN file f ON f.file_id = uf.file_id
+                WHERE uf.user_id = #{userId}
+                  AND uf.is_deleted = 0
+                  AND f.category = 'image'
+                  AND COALESCE(f.status, 'READY') != 'DELETING'
+                  AND NOT EXISTS (
+                      SELECT 1 FROM async_task ai
+                      WHERE ai.user_id = #{userId}
+                        AND ai.file_id = f.file_id
+                        AND ai.task_type IN ('IMAGE_TAG', 'FACE_ANALYSIS')
+                        AND ai.status = 'SUCCEEDED'
+                  )
+            ) AS missingAiAnalysisFileCount,
+            (
+                SELECT COUNT(*)
+                FROM (
+                    SELECT sp.similar_id
+                    FROM similar_picture sp
+                    INNER JOIN user_file uf
+                        ON uf.file_id = sp.file_id
+                       AND uf.user_id = #{userId}
+                       AND uf.is_deleted = 0
+                    WHERE sp.user_id = #{userId}
+                    GROUP BY sp.similar_id
+                    HAVING COUNT(DISTINCT sp.file_id) &gt; 1
+                ) similar_groups
+            ) AS similarGroupCount,
+            (
+                SELECT COUNT(DISTINCT sp.file_id)
+                FROM similar_picture sp
+                INNER JOIN user_file uf
+                    ON uf.file_id = sp.file_id
+                   AND uf.user_id = #{userId}
+                   AND uf.is_deleted = 0
+                WHERE sp.user_id = #{userId}
+            ) AS similarFileCount,
+            (
+                SELECT COUNT(*)
+                FROM async_task task
+                WHERE task.user_id = #{userId}
+                  AND task.task_type IN ('IMAGE_FEATURE', 'FACE_ANALYSIS', 'IMAGE_TAG')
+                  AND task.status IN ('FAILED', 'DEAD')
+            ) AS failedAiTaskCount,
+            (
+                SELECT COUNT(*)
+                FROM async_task task
+                WHERE task.user_id = #{userId}
+                  AND task.task_type IN ('IMAGE_FEATURE', 'FACE_ANALYSIS', 'IMAGE_TAG')
+                  AND task.status IN ('PENDING', 'RUNNING')
+                  AND task.update_time &lt; #{staleBefore}
+            ) AS staleAiTaskCount,
+            (
+                SELECT COUNT(*)
+                FROM async_task task
+                WHERE task.user_id = #{userId}
+                  AND task.task_type IN ('IMAGE_FEATURE', 'FACE_ANALYSIS', 'IMAGE_TAG')
+                  AND task.status IN ('PENDING', 'RUNNING', 'FAILED')
+            ) AS pendingAiTaskCount,
+            (
+                SELECT COUNT(*)
+                FROM user_file uf
+                INNER JOIN file f ON f.file_id = uf.file_id
+                WHERE uf.user_id = #{userId}
+                  AND uf.is_deleted = 0
+                  AND COALESCE(f.status, 'READY') != 'DELETING'
+                  AND NOT EXISTS (
+                      SELECT 1
+                      FROM album_picture ap
+                      INNER JOIN album a ON a.album_id = ap.album_id
+                      WHERE ap.user_id = #{userId}
+                        AND ap.file_id = f.file_id
+                        AND a.user_id = #{userId}
+                        AND a.type = 'normal'
+                  )
+            ) AS unalbumedFileCount
+    </select>
+</mapper>

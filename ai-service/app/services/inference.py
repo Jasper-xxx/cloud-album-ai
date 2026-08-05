@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+import ast
 import base64
 import binascii
 import io
 import json
+import logging
 import math
+import re
 from typing import Any
 
 from PIL import Image, ImageFile, ImageOps, UnidentifiedImageError
@@ -17,6 +20,18 @@ from app.service_config import Config
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 settings = get_settings()
+logger = logging.getLogger(__name__)
+JSON_UNQUOTED_KEY_PATTERN = re.compile(r'([{\[,]\s*)([A-Za-z_][A-Za-z0-9_]*)(\s*:)')
+JSON_TRAILING_COMMA_PATTERN = re.compile(r",\s*([}\]])")
+FACE_KEY_VALUE_PATTERN = re.compile(r"\b(x1|y1|x2|y2)\b\s*[:：=]\s*(-?\d+(?:\.\d+)?)", re.IGNORECASE)
+FACE_BBOX_LIST_PATTERN = re.compile(
+    r"(?:bbox|box|坐标|位置|人脸框)[^\d-]{0,30}"
+    r"(-?\d+(?:\.\d+)?)[,，\s]+"
+    r"(-?\d+(?:\.\d+)?)[,，\s]+"
+    r"(-?\d+(?:\.\d+)?)[,，\s]+"
+    r"(-?\d+(?:\.\d+)?)",
+    re.IGNORECASE,
+)
 
 
 class NoFaceDetectedError(ValueError):
@@ -197,22 +212,63 @@ def _image_to_data_url(image: Image.Image) -> str:
 
 
 def _extract_json_object(text: str) -> Any:
-    text = text.strip()
+    text = _strip_json_markdown(text)
+    decoder = json.JSONDecoder()
+
+    for candidate in _json_candidates(text):
+        for payload in (candidate, _repair_loose_json(candidate)):
+            try:
+                return json.loads(payload)
+            except json.JSONDecodeError:
+                pass
+            try:
+                return ast.literal_eval(payload)
+            except (SyntaxError, ValueError):
+                pass
+            try:
+                value, _ = decoder.raw_decode(payload)
+                return value
+            except json.JSONDecodeError:
+                pass
+
+    raise json.JSONDecodeError("Unable to extract JSON payload", text, 0)
+
+
+def _strip_json_markdown(text: str) -> str:
+    text = text.strip().translate(str.maketrans({"“": '"', "”": '"', "‘": "'", "’": "'"}))
     if text.startswith("```"):
-        text = text.strip("`")
+        lines = text.splitlines()
+        if lines and lines[0].strip().startswith("```"):
+            lines = lines[1:]
+        if lines and lines[-1].strip().startswith("```"):
+            lines = lines[:-1]
+        text = "\n".join(lines).strip()
         if text.lower().startswith("json"):
             text = text[4:].strip()
-    try:
-        return json.loads(text)
-    except json.JSONDecodeError:
-        start_candidates = [pos for pos in [text.find("["), text.find("{")] if pos >= 0]
-        if not start_candidates:
-            raise
-        start = min(start_candidates)
-        end = max(text.rfind("]"), text.rfind("}"))
-        if end <= start:
-            raise
-        return json.loads(text[start : end + 1])
+    return text
+
+
+def _json_candidates(text: str):
+    yield text
+    for index, char in enumerate(text):
+        if char in "[{":
+            yield text[index:]
+
+
+def _repair_loose_json(text: str) -> str:
+    repaired = JSON_UNQUOTED_KEY_PATTERN.sub(
+        lambda match: f'{match.group(1)}"{match.group(2)}"{match.group(3)}',
+        text,
+    )
+    repaired = JSON_TRAILING_COMMA_PATTERN.sub(r"\1", repaired)
+    return repaired
+
+
+def _preview_text(text: str, limit: int = 300) -> str:
+    compact = " ".join(text.split())
+    if len(compact) <= limit:
+        return compact
+    return compact[:limit] + "..."
 
 
 def _call_qwen_vl(prompt: str, image_data_url: str) -> str:
@@ -281,33 +337,104 @@ def _detect_faces_with_vl(image: Image.Image) -> list[dict[str, Any]]:
     width, height = image.size
     prompt = (
         f"检测图片中的真实人脸。图片宽 {width} 像素，高 {height} 像素。"
-        "返回严格 JSON 对象，不要解释："
+        "只能输出 JSON，首字符必须是 {，不要输出解释、Markdown、代码块或自然语言。"
+        "返回格式："
         '{"faces":[{"bbox":{"x1":10,"y1":20,"x2":100,"y2":120},'
         '"confidence":0.95,"qualityScore":0.90}]}。'
         "bbox 必须使用像素坐标，坐标需要在图片范围内。没有人脸则返回 {\"faces\":[]}。"
     )
-    data = _extract_json_object(_call_qwen_vl(prompt, _image_to_data_url(image)))
-    face_items = data.get("faces", []) if isinstance(data, dict) else []
+    raw_response = _call_qwen_vl(prompt, _image_to_data_url(image))
+    try:
+        data = _extract_json_object(raw_response)
+    except (json.JSONDecodeError, ValueError) as exc:
+        face_items = _extract_face_items_from_text(raw_response, width, height)
+        if not face_items:
+            logger.warning(
+                "Unable to parse face detection payload: %s; raw=%s",
+                exc,
+                _preview_text(raw_response),
+            )
+            return []
+        logger.info(
+            "Parsed face detection coordinates from non-JSON payload: faceCount=%d raw=%s",
+            len(face_items),
+            _preview_text(raw_response),
+        )
+        data = face_items
+
+    if isinstance(data, dict):
+        face_items = data.get("faces", [])
+    elif isinstance(data, list):
+        face_items = data
+    else:
+        face_items = []
+
+    if not isinstance(face_items, list):
+        return []
+
     faces: list[dict[str, Any]] = []
     for item in face_items[: Config.FACE_MAX_FACES]:
-        bbox = item.get("bbox") if isinstance(item, dict) else None
-        if not isinstance(bbox, dict):
+        if not isinstance(item, dict):
             continue
-        x1 = _clamp_int(bbox.get("x1"), 0, width - 1)
-        y1 = _clamp_int(bbox.get("y1"), 0, height - 1)
-        x2 = _clamp_int(bbox.get("x2"), x1 + 1, width)
-        y2 = _clamp_int(bbox.get("y2"), y1 + 1, height)
+        bbox = _normalize_bbox(item.get("bbox"), width, height)
+        if bbox is None:
+            continue
         confidence = _to_float(item.get("confidence"), 0.8)
-        if x2 <= x1 or y2 <= y1 or confidence < Config.FACE_MIN_CONFIDENCE:
+        if confidence < Config.FACE_MIN_CONFIDENCE:
             continue
         faces.append(
             {
-                "bbox": {"x1": x1, "y1": y1, "x2": x2, "y2": y2},
+                "bbox": bbox,
                 "confidence": confidence,
                 "qualityScore": _to_float(item.get("qualityScore"), confidence),
             }
         )
     return faces
+
+
+def _extract_face_items_from_text(text: str, width: int, height: int) -> list[dict[str, Any]]:
+    normalized = _strip_json_markdown(text)
+    lowered = normalized.lower()
+    if ("没有" in normalized and "人脸" in normalized) or "no face" in lowered:
+        return []
+
+    items: list[dict[str, Any]] = []
+    key_values = {
+        match.group(1).lower(): match.group(2)
+        for match in FACE_KEY_VALUE_PATTERN.finditer(normalized)
+    }
+    bbox = _normalize_bbox(key_values, width, height)
+    if bbox is not None:
+        items.append({"bbox": bbox, "confidence": 0.8, "qualityScore": 0.8})
+
+    for match in FACE_BBOX_LIST_PATTERN.finditer(normalized):
+        bbox = _normalize_bbox(match.groups(), width, height)
+        if bbox is not None and bbox not in [item["bbox"] for item in items]:
+            items.append({"bbox": bbox, "confidence": 0.8, "qualityScore": 0.8})
+
+    return items[: Config.FACE_MAX_FACES]
+
+
+def _normalize_bbox(value: Any, width: int, height: int) -> dict[str, int] | None:
+    if isinstance(value, dict):
+        raw_x1, raw_y1, raw_x2, raw_y2 = (
+            value.get("x1"),
+            value.get("y1"),
+            value.get("x2"),
+            value.get("y2"),
+        )
+    elif isinstance(value, (list, tuple)) and len(value) >= 4:
+        raw_x1, raw_y1, raw_x2, raw_y2 = value[:4]
+    else:
+        return None
+
+    x1 = _clamp_int(raw_x1, 0, width - 1)
+    y1 = _clamp_int(raw_y1, 0, height - 1)
+    x2 = _clamp_int(raw_x2, x1 + 1, width)
+    y2 = _clamp_int(raw_y2, y1 + 1, height)
+    if x2 <= x1 or y2 <= y1:
+        return None
+    return {"x1": x1, "y1": y1, "x2": x2, "y2": y2}
 
 
 def _expand_bbox(bbox: dict[str, int], width: int, height: int) -> tuple[int, int, int, int]:
@@ -330,7 +457,11 @@ def _analyze_faces(image: Image.Image) -> list[dict[str, Any]]:
     analyzed: list[dict[str, Any]] = []
     for face in faces:
         crop = image.crop(_expand_bbox(face["bbox"], width, height))
-        feature = _extract_feature_vector(crop)
+        try:
+            feature = _extract_feature_vector(crop)
+        except ValueError as exc:
+            logger.warning("Skip face candidate with invalid feature payload: %s", exc)
+            continue
         analyzed.append(
             {
                 "bbox": face["bbox"],

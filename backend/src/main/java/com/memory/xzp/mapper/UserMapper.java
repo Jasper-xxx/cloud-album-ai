@@ -4,6 +4,8 @@ package com.memory.xzp.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.memory.xzp.model.entity.User;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
 
 /**
  * <p>
@@ -16,4 +18,9 @@ import org.apache.ibatis.annotations.Mapper;
 @Mapper
 public interface UserMapper extends BaseMapper<User> {
 
+    /**
+     * 串行化同一用户下的智能体相册创建，避免同名相册并发分叉。
+     */
+    @Select("SELECT id FROM `user` WHERE id = #{userId} FOR UPDATE")
+    Long lockUserForAlbumCreation(@Param("userId") Long userId);
 }

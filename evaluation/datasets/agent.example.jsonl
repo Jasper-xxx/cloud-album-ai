@@ -1,0 +1,2 @@
+{"case_id":"read-by-tag-001","prompt":"找出带有猫标签的照片","expected":{"tool_calls":[{"name":"searchFiles","arguments":{"searchType":"tag","searchKeyword":"猫"}}]},"actual":{"tool_calls":[],"completed":false}}
+{"case_id":"write-preview-001","prompt":"把猫的照片加上宠物标签","expected":{"tool_calls":[{"name":"previewTagAction","arguments":{"action":"add_tags","tagName":"宠物","searchType":"tag","searchKeyword":"猫"}}]},"actual":{"tool_calls":[],"completed":false}}

@@ -31,6 +31,9 @@ public class AsyncTaskEntity implements Serializable {
 
     private String status;
 
+    /** Number of successful claims/handler starts, including crash recovery replays. */
+    private Integer executionCount;
+
     private Integer retryCount;
 
     private Integer maxRetries;

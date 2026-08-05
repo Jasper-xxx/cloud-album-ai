@@ -1,0 +1,5 @@
+{"case_id":"async-001","fault":"ai-service-503","final_status":"SUCCESS","handler_attempt_count":2,"business_effect_count":1,"recovery_time_ms":42000}
+{"case_id":"async-002","fault":"minio-timeout","final_status":"SUCCESS","handler_attempt_count":2,"business_effect_count":1,"recovery_time_ms":61000}
+{"case_id":"async-003","fault":"worker-crash-after-claim","final_status":"SUCCESS","handler_attempt_count":2,"business_effect_count":1,"recovery_time_ms":125000}
+{"case_id":"async-004","fault":"rabbitmq-unavailable","final_status":"SUCCESS","handler_attempt_count":1,"business_effect_count":1,"recovery_time_ms":18000}
+{"case_id":"async-005","fault":"mysql-transient-error","final_status":"SUCCESS","handler_attempt_count":1,"business_effect_count":1,"recovery_time_ms":33000}

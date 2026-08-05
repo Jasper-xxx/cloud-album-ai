@@ -51,6 +51,7 @@ public interface AsyncTaskMapper extends BaseMapper<AsyncTaskEntity> {
     @Update("""
             UPDATE async_task
             SET status = 'RUNNING',
+                execution_count = execution_count + 1,
                 started_at = NOW(),
                 completed_at = NULL,
                 update_time = NOW()

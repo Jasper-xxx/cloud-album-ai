@@ -295,6 +295,7 @@ declare namespace API {
     taskType: string;
     fileId: string;
     status: 'PENDING' | 'RUNNING' | 'SUCCESS' | 'FAILED' | 'DEAD' | 'CANCELLED';
+    executionCount: number;
     result?: TagResult[] | null;
     retryCount: number;
     maxRetries: number;

@@ -312,7 +312,7 @@ import $bus from '@/utils/bus.ts'
 import { addPictureTag, addSomePictureTag, batchGetPictureTag, getPictureTag, selectTagByFileId } from '@/api/file/file'
 import { getAsyncTask } from '@/api/task/task'
 import { selectAllAlbum } from '@/api/album/album'
-import defaultCover from '@/assets/image/album.png'
+import defaultCover from '@/assets/image/album.svg'
 
 const tableData = ref<API.SelectPicture[]>([])
 const isPreviewImage = ref(false)

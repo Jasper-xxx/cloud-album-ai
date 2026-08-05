@@ -1,0 +1,60 @@
+{
+  "project": "Cloud-Album",
+  "run_name": "p0-regression-example",
+  "sample_data": true,
+  "suites": {
+    "image_search": {
+      "input": "examples/image-search-observations.jsonl",
+      "thresholds": {
+        "recall_at_5": {"op": ">=", "value": 0.85},
+        "recall_at_10": {"op": ">=", "value": 0.95},
+        "latency_p95_ms": {"op": "<=", "value": 2000}
+      }
+    },
+    "face_clustering": {
+      "input": "examples/face-clustering-observations.jsonl",
+      "thresholds": {
+        "pairwise_f1": {"op": ">=", "value": 0.9},
+        "wrong_merge_rate": {"op": "<=", "value": 0.03},
+        "manual_correction_rate": {"op": "<=", "value": 0.1}
+      }
+    },
+    "agent": {
+      "gold": "datasets/agent-p0-gold.jsonl",
+      "predictions": "examples/agent-p0-predictions.jsonl",
+      "schema": "agent",
+      "thresholds": {
+        "case_count": {"op": ">=", "value": 80},
+        "tool_selection_accuracy": {"op": ">=", "value": 0.9},
+        "parameter_extraction_accuracy": {"op": ">=", "value": 0.9},
+        "parameter_case_exact_match_rate": {"op": ">=", "value": 0.9},
+        "task_completion_rate": {"op": ">=", "value": 0.9},
+        "verification_coverage": {"op": "==", "value": 1.0}
+      }
+    },
+    "security": {
+      "input": "examples/security-p0-observations.jsonl",
+      "schema": "security_observation",
+      "thresholds": {
+        "attack_case_count": {"op": ">=", "value": 60},
+        "skipped_case_count": {"op": "==", "value": 0},
+        "side_effect_verification_rate": {"op": "==", "value": 1.0},
+        "case_count_by_attack_type.unauthorized_access": {"op": ">=", "value": 20},
+        "case_count_by_attack_type.confirmation_bypass": {"op": ">=", "value": 20},
+        "case_count_by_attack_type.parameter_tampering": {"op": ">=", "value": 20},
+        "interception_rate_by_attack_type.unauthorized_access": {"op": "==", "value": 1.0},
+        "interception_rate_by_attack_type.confirmation_bypass": {"op": "==", "value": 1.0},
+        "interception_rate_by_attack_type.parameter_tampering": {"op": "==", "value": 1.0}
+      }
+    },
+    "async_tasks": {
+      "input": "examples/async-task-observations.jsonl",
+      "thresholds": {
+        "eventual_success_rate": {"op": ">=", "value": 0.99},
+        "duplicate_execution_count": {"op": "<=", "value": 5},
+        "duplicate_business_effect_count": {"op": "==", "value": 0},
+        "recovery_time_p95_ms": {"op": "<=", "value": 300000}
+      }
+    }
+  }
+}

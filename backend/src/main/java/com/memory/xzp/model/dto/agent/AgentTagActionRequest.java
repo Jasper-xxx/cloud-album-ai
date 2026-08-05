@@ -1,8 +1,12 @@
 package com.memory.xzp.model.dto.agent;
 
+import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 智能体标签写操作请求。
@@ -18,14 +22,18 @@ public class AgentTagActionRequest {
     private String tagName;
     private String searchType;
     private String searchKeyword;
-    private String mediaType;
+    private Integer selectionLimit;
     private String sourceTagName;
     private String imageTypeText;
     private String locationLevel;
     private String locationValue;
     private Long sourceAlbumId;
-    /**
-     * 执行接口必须为 true，预览接口忽略该字段。
-     */
-    private Boolean confirmed;
+
+    @JsonIgnore
+    private final Map<String, Object> unexpectedFields = new LinkedHashMap<>();
+
+    @JsonAnySetter
+    public void captureUnexpectedField(String name, Object value) {
+        unexpectedFields.put(name, value);
+    }
 }

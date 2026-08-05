@@ -218,7 +218,7 @@ import { deleteFileByIds, getDownloadToken } from '@/api/file/file'
 import { updateAlbumCover, removePictureFromAlbum } from '@/api/album/album'
 import { movePersonPicture, removePersonPicture, selectAllPersonAlbum } from '@/api/person/person'
 import requestPublicConfig from "@/api/config";
-import defaultCover from '@/assets/image/album.png'
+import defaultCover from '@/assets/image/album.svg'
 /******************************​ 接口定义 ​******************************/
 
 interface Props {

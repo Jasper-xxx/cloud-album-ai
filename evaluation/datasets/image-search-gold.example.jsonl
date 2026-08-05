@@ -1,0 +1,3 @@
+{"case_id":"img-same-scene-001","query_path":"queries/img-same-scene-001.jpg","relevant_ids":["replace-with-file-id"],"mode":"fuzzy","slice":"same_scene"}
+{"case_id":"img-crop-001","query_path":"queries/img-crop-001.jpg","relevant_ids":["replace-with-file-id"],"mode":"local","slice":"crop"}
+{"case_id":"img-edit-001","query_path":"queries/img-edit-001.jpg","relevant_ids":["replace-with-file-id"],"mode":"exact","slice":"color_edit"}

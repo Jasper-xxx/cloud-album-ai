@@ -24,6 +24,8 @@ public interface AsyncTaskService {
 
     Long enqueueImageTag(String fileId, Long userId, boolean autoAddTag);
 
+    Long enqueueImageTag(String fileId, Long userId, boolean autoAddTag, String taskScope);
+
     int enqueuePendingImageTags(int batchSize);
 
     Page<AsyncTaskVO> listUserTasks(Long userId, long current, long size, String status);

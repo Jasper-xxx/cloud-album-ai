@@ -71,7 +71,7 @@ import { onMounted, ref, computed, watch, onUnmounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { Check } from '@element-plus/icons-vue'
 import { selectAllModelAlbum } from '@/api/album/album'
-import defaultCover from '@/assets/image/album.png'
+import defaultCover from '@/assets/image/album.svg'
 
 
 /******************************​ 配置项 ​******************************/
