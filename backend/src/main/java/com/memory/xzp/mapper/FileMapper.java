@@ -27,6 +27,10 @@ import java.util.List;
  * @since 2025-02-20
  */
 public interface FileMapper extends BaseMapper<FileEntity> {
+    @Select({"<script>","SELECT f.file_id AS fileId,f.origin_file_name AS name,f.thumbnail_url AS thumbnailUrl",
+            "FROM file f JOIN user_file uf ON f.file_id=uf.file_id WHERE uf.user_id=#{userId} AND f.file_id IN",
+            "<foreach collection='ids' item='id' open='(' separator=',' close=')'>#{id}</foreach>","LIMIT 100","</script>"})
+    java.util.List<java.util.Map<String,Object>> selectAgentActivityPhotos(@Param("ids") java.util.List<String> ids,@Param("userId") Long userId);
 
 
     /**
@@ -166,7 +170,7 @@ public interface FileMapper extends BaseMapper<FileEntity> {
      */
     int setIsDeletedByFileIds(List<String> fileIds, boolean isDeleted, Long userId);
 
-    @Select("select file.file_id from file join album_picture ap on file.file_id = ap.file_id join user_file uf on file.file_id = uf.file_id where album_id=#{albumId} and uf.user_id = #{userId} and uf.is_deleted = 0")
+    @Select("select file.file_id from file join album_picture ap on file.file_id = ap.file_id join user_file uf on file.file_id = uf.file_id where ap.album_id=#{albumId} and ap.user_id = #{userId} and uf.user_id = #{userId} and uf.is_deleted = 0")
     List<String> selectFileIdByAlbumId(Long albumId, Long userId);
 
     List<FileEntity> selectFileByIds(@Param("fileIds") List<String> fileIds, @Param("userId") Long userId);

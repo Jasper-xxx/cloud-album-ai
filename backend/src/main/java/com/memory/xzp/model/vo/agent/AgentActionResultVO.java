@@ -28,6 +28,7 @@ public class AgentActionResultVO {
     private Integer affectedPersonCount = 0;
     private List<Long> taskIds = new ArrayList<>();
     private String resourceToken;
+    private String resourceUrl;
     private String tokenType;
     private Integer expiresInDays;
     private String pendingActionId;

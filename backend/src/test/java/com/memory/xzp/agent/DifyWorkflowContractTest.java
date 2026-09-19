@@ -107,6 +107,7 @@ class DifyWorkflowContractTest {
                     "pendingActionId",
                     "confirmationToken",
                     "idempotencyKey",
+                    "conversationId",
                     "confirmed"
             ), parameters.keySet(), nodeId + " must not accept mutable business parameters");
             assertEquals(Boolean.TRUE,

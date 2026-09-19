@@ -31,6 +31,12 @@ import java.util.Set;
  */
 @Service
 public class AgentExtendedActionService {
+    @jakarta.annotation.Resource
+    private AgentResourceGrantService resourceGrantService;
+    @org.springframework.beans.factory.annotation.Value("${agent.public-web-url:http://localhost:8080}")
+    private String publicWebUrl;
+    @org.springframework.beans.factory.annotation.Value("${agent.public-api-url:http://localhost:8080/devApi}")
+    private String publicApiUrl;
 
     public static final String FAMILY_P3 = "p3_action";
     public static final String FAMILY_P4 = "p4_action";
@@ -123,6 +129,12 @@ public class AgentExtendedActionService {
     ) {
         requireRequest(request);
         String action = text(request.getAction());
+        if (Boolean.TRUE.equals(request.getAllRecycleImages()) && !"restore_files".equals(action)) {
+            throw new BusinessException(StatusCode.PARAMS_ERROR, "回收站图片范围仅支持恢复操作");
+        }
+        if (text(request.getAlbumName()) != null && !"move_files_to_recycle_bin".equals(action)) {
+            throw new BusinessException(StatusCode.PARAMS_ERROR, "相册名称范围仅支持图片移入回收站");
+        }
         Set<String> allowed = FAMILY_P3.equals(family) ? P3_ACTIONS : P4_ACTIONS;
         if (!allowed.contains(action)) {
             throw new BusinessException(StatusCode.PARAMS_ERROR, "不支持的扩展操作");
@@ -239,7 +251,24 @@ public class AgentExtendedActionService {
             AgentExtendedActionRequest request,
             Long userId
     ) {
-        List<String> fileIds = requireDeletedFiles(request.getFileIds(), userId, MAX_NORMAL_FILES);
+        List<String> requested = request.getFileIds();
+        if (Boolean.TRUE.equals(request.getAllRecycleImages())) {
+            if ((requested != null && !requested.isEmpty())
+                    || (request.getAlbumIds() != null && !request.getAlbumIds().isEmpty())) {
+                throw new BusinessException(StatusCode.PARAMS_ERROR, "恢复全部回收站图片不能混用其他照片范围");
+            }
+            requested = extendedMapper.selectOwnedRecycleImageIds(userId, MAX_NORMAL_FILES + 1);
+            if (requested.size() > MAX_NORMAL_FILES) {
+                throw new BusinessException(StatusCode.PARAMS_ERROR, "回收站图片超过50张，请分批选择要恢复的照片");
+            }
+            if (requested.isEmpty()) {
+                preview.setRequiresConfirmation(false);
+                preview.setTitle("恢复回收站照片");
+                preview.setSummary("回收站中没有可恢复的图片，本次无需执行恢复。");
+                return;
+            }
+        }
+        List<String> fileIds = requireDeletedFiles(requested, userId, MAX_NORMAL_FILES);
         preview.setFileIds(fileIds);
         preview.setAffectedFileCount(fileIds.size());
         preview.setTitle("恢复回收站照片");
@@ -380,11 +409,33 @@ public class AgentExtendedActionService {
             AgentExtendedActionRequest request,
             Long userId
     ) {
-        List<String> fileIds = requireActiveFiles(request.getFileIds(), userId, MAX_DELETE_FILES);
+        String albumName = text(request.getAlbumName());
+        List<String> requested = request.getFileIds();
+        if (albumName != null) {
+            if (albumName.length() > 100 || (requested != null && !requested.isEmpty())
+                    || (request.getAlbumIds() != null && !request.getAlbumIds().isEmpty())) {
+                throw new BusinessException(StatusCode.PARAMS_ERROR, "请只指定一个相册名称，不要混用文件或相册 ID 范围");
+            }
+            List<Long> albums = extendedMapper.selectOwnedNormalAlbumsByName(userId, albumName);
+            if (albums.size() != 1) {
+                throw new BusinessException(StatusCode.PARAMS_ERROR, albums.isEmpty()
+                        ? "未找到该名称的普通相册，请核对相册名称"
+                        : "存在同名相册，请先查询并明确要处理的照片范围");
+            }
+            requested = extendedMapper.selectOwnedAlbumImageIds(userId, albums.get(0), MAX_DELETE_FILES + 1);
+            if (requested.isEmpty() || requested.size() > MAX_DELETE_FILES) {
+                throw new BusinessException(StatusCode.PARAMS_ERROR, requested.isEmpty()
+                        ? "该相册没有可移入回收站的图片，未创建待确认操作"
+                        : "该相册图片超过20张，请明确分批照片范围；未创建待确认操作");
+            }
+        }
+        List<String> fileIds = requireActiveFiles(requested, userId, MAX_DELETE_FILES);
         preview.setFileIds(fileIds);
         preview.setAffectedFileCount(fileIds.size());
         preview.setTitle("移入回收站");
-        preview.setSummary("将 " + fileIds.size() + " 个文件移入回收站，可在自动清理前恢复。");
+        preview.setSummary((albumName == null ? "将 " : "将相册「" + albumName + "」中的 ")
+                + fileIds.size() + " 个" + (albumName == null ? "文件" : "图片")
+                + "移入回收站，可在自动清理前恢复。" + (albumName == null ? "" : "相册保留。"));
         preview.getWarnings().add("这是删除操作，但仍可从回收站恢复。");
     }
 
@@ -593,7 +644,7 @@ public class AgentExtendedActionService {
             AgentActionResultVO result
     ) {
         List<String> files = requireUnchangedActiveFiles(payload.getFileIds(), userId);
-        result.setResourceToken(fileService.createShareUrl(files, userId, payload.getShareDays()));
+        setResource(result, resourceGrantService.issue(userId, files, "share", payload.getShareDays() * 1440), true);
         result.setTokenType("file_share");
         result.setExpiresInDays(payload.getShareDays());
         result.setAffectedFileCount(files.size());
@@ -607,7 +658,7 @@ public class AgentExtendedActionService {
     ) {
         List<Long> albums = requireUnchangedAlbums(payload.getAlbumIds(), userId);
         List<String> files = requireUnchangedAlbumSnapshot(payload, albums, userId);
-        result.setResourceToken(fileService.createShareUrl(files, userId, payload.getShareDays()));
+        setResource(result, resourceGrantService.issue(userId, files, "share", payload.getShareDays() * 1440), true);
         result.setTokenType("album_share");
         result.setExpiresInDays(payload.getShareDays());
         result.setAffectedAlbumCount(albums.size());
@@ -621,7 +672,7 @@ public class AgentExtendedActionService {
             AgentActionResultVO result
     ) {
         List<String> files = requireUnchangedActiveFiles(payload.getFileIds(), userId);
-        result.setResourceToken(fileService.getDownloadToken(files, userId));
+        setResource(result, resourceGrantService.issue(userId, files, "download", 60), false);
         result.setTokenType("file_download");
         result.setAffectedFileCount(files.size());
         result.setMessage("照片下载凭证已创建");
@@ -637,11 +688,22 @@ public class AgentExtendedActionService {
             throw new BusinessException(StatusCode.CONFLICT_ERROR, "相册范围无效，请重新预览");
         }
         List<String> files = requireUnchangedAlbumSnapshot(payload, albums, userId);
-        result.setResourceToken(fileService.getDownloadToken(files, userId));
+        setResource(result, resourceGrantService.issue(userId, files, "download", 60), false);
         result.setTokenType("album_snapshot_download");
         result.setAffectedAlbumCount(1);
         result.setAffectedFileCount(files.size());
         result.setMessage("相册下载凭证已创建");
+    }
+
+    private void setResource(AgentActionResultVO result, String token, boolean share) {
+        String base = share ? publicWebUrl : publicApiUrl;
+        java.net.URI uri = java.net.URI.create(base);
+        if (!Set.of("http", "https").contains(uri.getScheme()) || uri.getHost() == null
+                || uri.getUserInfo() != null || uri.getQuery() != null || uri.getFragment() != null) {
+            throw new IllegalStateException("Configure an absolute agent public URL");
+        }
+        result.setResourceToken(token);
+        result.setResourceUrl(base.replaceAll("/+$", "") + (share ? "/share/" : "/file/downloadFileByToken?downloadToken=") + token);
     }
 
     private void executeMoveToRecycle(

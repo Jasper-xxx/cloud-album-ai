@@ -34,6 +34,18 @@
         </if>
     </sql>
 
+    <select id="selectDiscoveryCandidates" resultMap="featureQueryDTOResultMap" timeout="15">
+        SELECT ff.id, ff.file_id, ff.feature_vector, ff.feature_dim, ff.feature_model,
+               ff.feature_provider, ff.feature_version, f.origin_file_name, f.size, f.content_type,
+               f.category, f.file_url, f.thumbnail_url, f.thumbnail_object_name, f.width, f.height
+        FROM file_feature ff
+        JOIN user_file uf ON uf.file_id=ff.file_id AND uf.user_id=ff.user_id AND uf.is_deleted=0
+        JOIN file f ON f.file_id=ff.file_id AND f.category='image'
+        WHERE ff.user_id=#{userId} AND ff.feature_provider=#{featureProvider} AND ff.feature_model=#{featureModel}
+          AND ff.feature_dim BETWEEN 1 AND 4096 AND LENGTH(ff.feature_vector)=ff.feature_dim*4
+        ORDER BY ff.id DESC LIMIT #{limit}
+    </select>
+
     <select id="selectFeatureListByUserId" resultMap="featureQueryDTOResultMap">
         SELECT
             ff.id,

@@ -24,6 +24,10 @@ import java.time.Duration;
 @Component
 @Slf4j
 public class CronSyncTask {
+    @Value("${app.background-maintenance-enabled:true}")
+    private boolean maintenanceEnabled = true;
+    @Value("${app.file.cleanup-enabled:true}")
+    private boolean cleanupEnabled;
 
     @Resource
     private RecycleService recycleService;
@@ -65,6 +69,7 @@ public class CronSyncTask {
     @Scheduled(cron = "0 0 0 * * ?")
     @Transactional
     public void CronDropPictureSync() {
+        if (!cleanupEnabled || !maintenanceEnabled) return;
         log.info("定时任务触发删除回收站照片");
         scheduledTaskLockService.runWithLock(
                 "cron:recycle-drop-picture",
@@ -85,6 +90,7 @@ public class CronSyncTask {
     }
 
     private void refreshFileUrlsWithLock() {
+        if (!maintenanceEnabled) return;
         scheduledTaskLockService.runWithLock(
                 "cron:file-url-refresh",
                 Duration.ofSeconds(fileUrlRefreshLockTtlSeconds),
@@ -175,6 +181,7 @@ public class CronSyncTask {
             int batchSize,
             String label
     ) {
+        if (!maintenanceEnabled) return;
         if (!asyncTaskRecoveryService.isEnabled(taskType)) {
             return;
         }

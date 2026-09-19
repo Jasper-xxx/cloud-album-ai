@@ -8,6 +8,7 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     AddAlbum: typeof import('./src/components/album/AddAlbum.vue')['default']
+    AgentActivityPanel: typeof import('./src/components/agent/AgentActivityPanel.vue')['default']
     AgentAssistant: typeof import('./src/components/agent/AgentAssistant.vue')['default']
     AsyncTaskCenter: typeof import('./src/components/task/AsyncTaskCenter.vue')['default']
     AuthStarfield: typeof import('./src/components/auth/AuthStarfield.vue')['default']

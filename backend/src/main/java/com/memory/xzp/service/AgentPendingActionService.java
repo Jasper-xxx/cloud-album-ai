@@ -55,6 +55,25 @@ public class AgentPendingActionService {
 
     private final AgentPendingActionMapper pendingActionMapper;
     private final ObjectMapper objectMapper;
+    @jakarta.annotation.Resource
+    private com.memory.xzp.mapper.FileMapper activityFiles;
+
+    public java.util.List<java.util.Map<String,Object>> recentActivity(Long userId) {
+        return pendingActionMapper.recentByUser(userId).stream().map(entity -> {
+            java.util.Map<String,Object> item = new java.util.LinkedHashMap<>();
+            AgentPendingActionStatusVO status = toStatus(entity);
+            if(STATUS_PREVIEWED.equals(status.getStatus()) && entity.getExpiresAt().isBefore(LocalDateTime.now()))
+                status.setStatus(STATUS_EXPIRED);
+            item.put("operation",status);
+            try {
+                var payload=readPayload(entity.getPayloadJson());
+                var ids=payload.getFileIds();
+                item.put("photos",ids==null||ids.isEmpty()?java.util.List.of():activityFiles.selectAgentActivityPhotos(ids,userId));
+            } catch (RuntimeException error) {item.put("photos",java.util.List.of());}
+            // No pending payload, confirmation token or idempotency key leaves this view.
+            return item;
+        }).toList();
+    }
 
     @Value("${agent.pending-action.ttl-seconds:300}")
     private long confirmationTtlSeconds;
@@ -94,13 +113,16 @@ public class AgentPendingActionService {
         }
 
         LocalDateTime now = LocalDateTime.now();
-        pendingActionMapper.supersedeOpenPreviews(userId, now);
         if (!Boolean.TRUE.equals(preview.getRequiresConfirmation())) {
             return;
         }
         if (payload == null) {
             throw new BusinessException(StatusCode.SYSTEM_ERROR, "无法保存待确认操作");
         }
+
+        String conversationId = com.memory.xzp.config.AgentConversation.current();
+        pendingActionMapper.lockConversation(userId, conversationId);
+        pendingActionMapper.supersedeOpenPreviews(userId, conversationId, now);
 
         String pendingActionId = UUID.randomUUID().toString();
         String confirmationToken = newSecret();
@@ -115,6 +137,7 @@ public class AgentPendingActionService {
         AgentPendingActionEntity entity = new AgentPendingActionEntity();
         entity.setPendingActionId(pendingActionId);
         entity.setUserId(userId);
+        entity.setConversationId(conversationId);
         entity.setFamily(payload.getFamily());
         entity.setAction(payload.getAction());
         entity.setPayloadJson(payloadJson);
@@ -297,6 +320,7 @@ public class AgentPendingActionService {
     )
     @Transactional
     public void recoverExpiredAndStaleActions() {
+        if (!maintenanceEnabled) return;
         LocalDateTime now = LocalDateTime.now();
         pendingActionMapper.sweepExpired(now);
         pendingActionMapper.sweepStaleExecuting(
@@ -306,6 +330,9 @@ public class AgentPendingActionService {
         );
     }
 
+    @Value("${app.background-maintenance-enabled:true}")
+    private boolean maintenanceEnabled = true;
+
     private AgentPendingActionEntity requireOwned(String pendingActionId, Long userId) {
         AgentPendingActionEntity entity = pendingActionMapper.selectByPendingActionId(pendingActionId);
         if (entity == null) {
@@ -313,6 +340,9 @@ public class AgentPendingActionService {
         }
         if (!userId.equals(entity.getUserId())) {
             throw new BusinessException(StatusCode.FORBIDDEN_ERROR, "无权访问该待确认操作");
+        }
+        if (!Objects.equals(entity.getConversationId(), com.memory.xzp.config.AgentConversation.current())) {
+            throw new BusinessException(StatusCode.FORBIDDEN_ERROR, "确认不属于当前会话，请在原会话继续");
         }
         return entity;
     }

@@ -15,4 +15,6 @@ import java.util.List;
 public class SimilarFileInfoListVO {
     private String similarId;
     private List<FileInfo> fileList;
+    private Integer totalFiles;
+    private Boolean truncated;
 }

@@ -15,6 +15,10 @@ import java.util.Map;
 public class AgentExtendedActionRequest {
 
     private String action;
+    /** 仅用于按普通相册名称预览图片移入回收站；与显式 ID 范围互斥。 */
+    private String albumName;
+    /** 明确恢复回收站全部图片时，由预览解析并冻结范围；不能与 fileIds 混用。 */
+    private Boolean allRecycleImages;
     private List<String> fileIds;
     private List<Long> albumIds;
     private List<Long> personIds;

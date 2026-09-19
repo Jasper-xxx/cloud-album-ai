@@ -1,0 +1,21 @@
+{
+  "project": "Cloud-Album",
+  "run_name": "agent-real-baseline-2026-08-05",
+  "sample_data": false,
+  "suites": {
+    "agent": {
+      "gold": "datasets/agent-real-gold.jsonl",
+      "predictions": "observations/agent-real-predictions.jsonl",
+      "schema": "agent",
+      "thresholds": {
+        "case_count": {"op": ">=", "value": 80},
+        "tool_selection_accuracy": {"op": ">=", "value": 0.9},
+        "parameter_extraction_accuracy": {"op": ">=", "value": 0.8},
+        "parameter_case_exact_match_rate": {"op": ">=", "value": 0.75},
+        "task_completion_rate": {"op": ">=", "value": 0.9},
+        "verification_coverage": {"op": ">=", "value": 0.9},
+        "agent_latency_p95_ms": {"op": "<=", "value": 20000}
+      }
+    }
+  }
+}

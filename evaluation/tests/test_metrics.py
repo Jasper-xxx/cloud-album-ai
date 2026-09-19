@@ -2,6 +2,7 @@ import json
 import sys
 import tempfile
 import unittest
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 
@@ -170,6 +171,22 @@ class MetricTests(unittest.TestCase):
         self.assertEqual(3, metrics["duplicate_execution_count"])
         self.assertEqual(1, metrics["duplicate_business_effect_count"])
         self.assertEqual(2000, metrics["recovery_time_p95_ms"])
+
+    def test_async_recovery_time_treats_naive_backend_time_as_local(self):
+        injected_local = datetime(2026, 8, 5, 21, 0, 0).astimezone()
+        terminal_local = (injected_local + timedelta(seconds=60)).replace(tzinfo=None)
+        metrics = evaluate_async_tasks(
+            [
+                {
+                    "case_id": "timezone",
+                    "final_status": "SUCCESS",
+                    "execution_count": 2,
+                    "fault_injected_at": injected_local.astimezone(timezone.utc).isoformat(),
+                    "terminal_at": terminal_local.isoformat(),
+                }
+            ]
+        )
+        self.assertEqual(60_000, metrics["recovery_time_p95_ms"])
 
     def test_report_gate_and_sample_warning(self):
         metrics = {"recall_at_5": 0.9}

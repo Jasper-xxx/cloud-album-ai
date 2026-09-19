@@ -1,0 +1,16 @@
+# Personal local Dify WebApp and plugin debug endpoints must not be reachable from the LAN.
+# Apply after the existing Dify compose file. Requires Docker Compose supporting !override.
+services:
+  ssrf_proxy:
+    volumes:
+      - type: bind
+        source: ${CLOUD_ALBUM_SQUID_CONF:-D:/projects/Cloud-Album/ops/agent/dify-squid-cloud-album.conf}
+        target: /etc/squid/conf.d/cloud-album.conf
+        read_only: true
+  nginx:
+    ports: !override
+      - "127.0.0.1:80:80"
+      - "127.0.0.1:443:443"
+  plugin_daemon:
+    ports: !override
+      - "127.0.0.1:5003:5003"

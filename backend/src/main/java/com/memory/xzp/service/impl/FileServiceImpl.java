@@ -69,6 +69,13 @@ import static cn.dev33.satoken.SaManager.log;
  */
 @Service
 public class FileServiceImpl implements FileService {
+    @Resource
+    private com.memory.xzp.service.AgentResourceGrantService agentResourceGrantService;
+
+    private Map<String, String> shareData(String token) {
+        return token != null && token.startsWith("ag_") ? agentResourceGrantService.shareData(token)
+                : redisUtil.hgetAllAsString("share:link:" + token);
+    }
 
     @Resource
     private MinioOSSUtil minioOSSUtil;
@@ -698,7 +705,7 @@ public class FileServiceImpl implements FileService {
         if (shareToken == null || shareToken.isBlank() || fileIds == null || fileIds.isEmpty()) {
             throw new BusinessException(StatusCode.PARAMS_ERROR, "分享令牌和文件不能为空");
         }
-        Map<String, String> shareMap = redisUtil.hgetAllAsString("share:link:" + shareToken);
+        Map<String, String> shareMap = shareData(shareToken);
         if (shareMap == null || shareMap.isEmpty()) {
             throw new BusinessException(StatusCode.NOT_FOUND_ERROR, "分享链接不存在或已过期");
         }
@@ -857,32 +864,9 @@ public class FileServiceImpl implements FileService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Boolean setIsDeleted(List<String> fileIds, boolean isDeleted, Long userId) {
-        List<String> exclusivelyOwnedFileIds = isDeleted
-                ? fileMapper.selectExclusivelyOwnedActiveFileIds(fileIds, userId)
-                : List.of();
+        // Soft deletion retains album membership, tags, faces and similarity membership.
+        // Active-library queries hide recycled relations; restoration must be lossless.
         int update = fileMapper.setIsDeletedByFileIds(fileIds, isDeleted, userId);
-        //从相册里删除
-        albumService.removePictureFromAlbum(fileIds, null, userId);
-
-        // 处理关联表
-        if (isDeleted) {
-            // 软删除时，删除相关的关联记录
-            // 1. 删除 picture_tag 记录
-            if (!exclusivelyOwnedFileIds.isEmpty()) {
-                QueryWrapper<PictureTag> pictureTagQueryWrapper = new QueryWrapper<>();
-                pictureTagQueryWrapper.in("file_id", exclusivelyOwnedFileIds);
-                pictureTagMapper.delete(pictureTagQueryWrapper);
-            }
-
-            // 2. 删除 similar_picture 记录
-            QueryWrapper<SimilarPicture> similarPictureQueryWrapper = new QueryWrapper<>();
-            similarPictureQueryWrapper.in("file_id", fileIds)
-                                   .eq("user_id", userId);
-            similarPictureMapper.delete(similarPictureQueryWrapper);
-
-            // 3. 保留 person_face 记录，只修改 user_file.is_deleted 状态
-            // 这样图片从回收站恢复后，能自动重新在人物模块显示
-        }
 
         return update > 0;
     }
@@ -989,7 +973,7 @@ public class FileServiceImpl implements FileService {
             throw new BusinessException(StatusCode.PARAMS_ERROR, "fileId和shareToken不能为空");
         }
 
-        Map<String, String> shareMap = redisUtil.hgetAllAsString("share:link:" + shareToken);
+        Map<String, String> shareMap = shareData(shareToken);
         if (shareMap == null || shareMap.isEmpty()) {
             throw new BusinessException(StatusCode.NOT_FOUND_ERROR, "分享链接已过期或不存在");
         }
@@ -1053,13 +1037,13 @@ public class FileServiceImpl implements FileService {
 
     @Override
     public ShareFileVO getShareInfo(String shareKey) {
-        shareKey = "share:link:" + shareKey;
-
-        Map<String, String> shareMap = redisUtil.hgetAllAsString(shareKey);
+        Map<String, String> shareMap = shareData(shareKey);
         if (shareMap == null || shareMap.isEmpty()) {
             throw new BusinessException(StatusCode.NOT_FOUND_ERROR, "分享链接已过期或不存在");
         }
-        Long expireMillis = redisUtil.getExpire(shareKey);
+        Long expireMillis = shareKey.startsWith("ag_")
+                ? java.time.Duration.between(LocalDateTime.now(), agentResourceGrantService.require(shareKey, "share").getExpiresAt()).toMillis()
+                : redisUtil.getExpire("share:link:" + shareKey);
         if (expireMillis == null || expireMillis <= 0) {
             throw new BusinessException(StatusCode.NOT_FOUND_ERROR, "分享链接已过期或不存在");
         }

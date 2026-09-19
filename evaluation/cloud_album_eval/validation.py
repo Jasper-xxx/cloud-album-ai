@@ -13,6 +13,7 @@ AGENT_TOOL_NAMES = {
     "listModelAlbums",
     "listTags",
     "listPeople",
+    "advancedSearchFiles",
     "previewAlbumAction",
     "executeAlbumAction",
     "previewTagAction",

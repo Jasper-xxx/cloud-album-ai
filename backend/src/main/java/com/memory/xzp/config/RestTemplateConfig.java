@@ -22,6 +22,8 @@ import java.util.List;
  */
 @Configuration
 public class RestTemplateConfig {
+    @org.springframework.beans.factory.annotation.Value("${ai.service.key:}")
+    private String aiServiceKey = "";
 
     /**
      * 注册 RestTemplate Bean
@@ -45,7 +47,15 @@ public class RestTemplateConfig {
      */
     @Bean(name = "aiHttp11RestTemplate")
     public RestTemplate aiHttp11RestTemplate() {
-        return createRestTemplate();
+        RestTemplate template = createRestTemplate();
+        template.getInterceptors().add((request, body, execution) -> {
+            if (aiServiceKey.length() < 32) {
+                throw new IllegalStateException("AI_SERVICE_KEY must contain at least 32 characters");
+            }
+            request.getHeaders().set("X-AI-Service-Key", aiServiceKey);
+            return execution.execute(request, body);
+        });
+        return template;
     }
 
     private RestTemplate createRestTemplate() {

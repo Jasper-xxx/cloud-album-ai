@@ -22,6 +22,7 @@ public class AgentPendingActionEntity implements Serializable {
 
     private String pendingActionId;
     private Long userId;
+    private String conversationId;
     private String family;
     private String action;
     private String payloadJson;

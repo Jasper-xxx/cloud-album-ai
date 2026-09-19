@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 from functools import lru_cache
+from pathlib import Path
 
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -11,13 +12,23 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=".env",
+        # Resolve against source paths so run.py and uvicorn use the same files,
+        # independent of the terminal's working directory. Environment overrides
+        # files; service-specific settings override shared repository settings.
+        env_file=(
+            Path(__file__).resolve().parents[3] / ".env",
+            Path(__file__).resolve().parents[2] / ".env",
+        ),
         env_file_encoding="utf-8",
         case_sensitive=False,
         extra="ignore",
     )
 
-    ai_service_host: str = "0.0.0.0"
+    ai_service_host: str = "127.0.0.1"
+    ai_service_key: str = ""
+    ai_daily_model_call_limit: int = Field(default=500, ge=1)
+    ai_budget_database: str = ".runtime/model-budget.sqlite3"
+    ai_decode_max_pixels: int = Field(default=40_000_000, ge=1)
     ai_service_port: int = Field(default=5000, ge=1, le=65535)
     ai_service_debug: bool = False
     ai_service_cors_allowed_origins: str = (

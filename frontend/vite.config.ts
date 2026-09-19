@@ -9,10 +9,14 @@ import Icons from 'unplugin-icons/vite'
 
 export default defineConfig({
 
+  // 前后端统一使用仓库根目录的 .env；Vite 默认只读取 frontend 目录。
+  envDir: fileURLToPath(new URL('..', import.meta.url)),
+
   // 配置本地服务
   server: {
-    host: true, //0.0.0.0或者true为监听所有ip
+    host: '127.0.0.1',
     port: 8080, //端口号
+    strictPort: true, // 与后端 CORS 来源一致；占用时明确报错，不自动切到 8081。
     open: false, //是否自动打开浏览器
     hmr: true,//热更新
     //反向代理
@@ -21,11 +25,6 @@ export default defineConfig({
         target: "http://127.0.0.1:8088", //代理地址 目标后端服务地址
         changeOrigin: true, //开启跨域
         rewrite: (path) => path.replace(/^\/devApi/, ""), //重写路径，将/devApi替换为""
-      },
-      "/mockApi": {
-        target: "http://127.0.0.1:5000", //代理地址 mock环境后端服务地址
-        changeOrigin: true, //开启跨域
-        rewrite: (path) => path.replace(/^\/mockApi/, ""), //重写路径，将/mockApi替换为""
       },
     },
   },

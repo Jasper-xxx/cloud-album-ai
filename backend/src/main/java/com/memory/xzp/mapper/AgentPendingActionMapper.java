@@ -12,6 +12,13 @@ import java.time.LocalDateTime;
  * 智能体待确认操作持久化。
  */
 public interface AgentPendingActionMapper extends BaseMapper<AgentPendingActionEntity> {
+    @Select("SELECT * FROM agent_pending_action WHERE user_id=#{userId} ORDER BY create_time DESC LIMIT 10")
+    java.util.List<AgentPendingActionEntity> recentByUser(Long userId);
+    @org.apache.ibatis.annotations.Insert("""
+            INSERT INTO agent_conversation (user_id, conversation_id) VALUES (#{userId}, #{conversationId})
+            ON DUPLICATE KEY UPDATE conversation_id = conversation_id
+            """)
+    int lockConversation(@Param("userId") Long userId, @Param("conversationId") String conversationId);
 
     @Update("""
             UPDATE agent_pending_action
@@ -19,10 +26,12 @@ public interface AgentPendingActionMapper extends BaseMapper<AgentPendingActionE
                 completed_at = #{now},
                 update_time = #{now}
             WHERE user_id = #{userId}
+              AND conversation_id = #{conversationId}
               AND status = 'PREVIEWED'
             """)
     int supersedeOpenPreviews(
             @Param("userId") Long userId,
+            @Param("conversationId") String conversationId,
             @Param("now") LocalDateTime now
     );
 

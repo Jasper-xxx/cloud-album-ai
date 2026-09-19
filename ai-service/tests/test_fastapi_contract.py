@@ -15,6 +15,7 @@ from PIL import Image
 os.environ.setdefault("DASHSCOPE_API_KEY", "test-key")
 os.environ.setdefault("MINIO_ACCESS_KEY", "test-access")
 os.environ.setdefault("MINIO_SECRET_KEY", "test-secret")
+os.environ["AI_SERVICE_KEY"] = "test-service-key-" + "a" * 32
 
 from fastapi.testclient import TestClient  # noqa: E402
 from pydantic import ValidationError  # noqa: E402
@@ -33,7 +34,7 @@ def _image_bytes() -> bytes:
 
 class FastApiContractTest(unittest.TestCase):
     def setUp(self) -> None:
-        self.client_context = TestClient(app)
+        self.client_context = TestClient(app, headers={"X-AI-Service-Key": os.environ["AI_SERVICE_KEY"]})
         self.client = self.client_context.__enter__()
 
     def tearDown(self) -> None:
@@ -105,7 +106,7 @@ class FastApiContractTest(unittest.TestCase):
     @patch.object(inference, "recognize_tags")
     def test_unexpected_failure_hides_internal_details(self, recognize_tags) -> None:
         recognize_tags.side_effect = Exception("sensitive upstream detail")
-        with TestClient(app, raise_server_exceptions=False) as client:
+        with TestClient(app, raise_server_exceptions=False, headers={"X-AI-Service-Key": os.environ["AI_SERVICE_KEY"]}) as client:
             response = client.post(
                 "/recognize",
                 json={"image": base64.b64encode(_image_bytes()).decode("ascii")},

@@ -53,8 +53,28 @@ class AgentPendingActionServiceTest {
     private ObjectMapper objectMapper;
     private AgentPendingActionService service;
 
+    @org.junit.jupiter.api.AfterEach
+    void clearRequest() {
+        org.springframework.web.context.request.RequestContextHolder.resetRequestAttributes();
+    }
+
+    @Test
+    void otherConversationCannotClaimEvenWithValidCredentials() throws Exception {
+        AgentPendingActionEntity entity = validEntity();
+        entity.setConversationId("conversation-b");
+        when(pendingActionMapper.selectByPendingActionId(PENDING_ID)).thenReturn(entity);
+        BusinessException error = assertThrows(BusinessException.class,
+                () -> service.claim(PENDING_ID, TOKEN, IDEMPOTENCY_KEY, USER_ID, "album"));
+        assertCode(StatusCode.FORBIDDEN_ERROR, error);
+        verify(pendingActionMapper, never()).claim(anyString(), anyLong(), any());
+    }
+
     @BeforeEach
     void setUp() {
+        org.springframework.mock.web.MockHttpServletRequest request = new org.springframework.mock.web.MockHttpServletRequest();
+        request.setParameter("conversationId", "conversation-a");
+        org.springframework.web.context.request.RequestContextHolder.setRequestAttributes(
+                new org.springframework.web.context.request.ServletRequestAttributes(request));
         objectMapper = new ObjectMapper();
         service = new AgentPendingActionService(pendingActionMapper, objectMapper);
         ReflectionTestUtils.setField(service, "confirmationTtlSeconds", 300L);
@@ -63,16 +83,13 @@ class AgentPendingActionServiceTest {
     }
 
     @Test
-    void registerWithoutConfirmationSupersedesOldPreviewButIssuesNoCredentials() {
+    void registerWithoutConfirmationPreservesOldPreviewAndIssuesNoCredentials() {
         AgentActionPreviewVO preview = new AgentActionPreviewVO();
         preview.setRequiresConfirmation(false);
 
         service.register(preview, payload(), USER_ID);
 
-        verify(pendingActionMapper).supersedeOpenPreviews(
-                org.mockito.ArgumentMatchers.eq(USER_ID),
-                any(LocalDateTime.class)
-        );
+        verifyNoInteractions(pendingActionMapper);
         verify(pendingActionMapper, never()).insert(any(AgentPendingActionEntity.class));
         assertNull(preview.getPendingActionId());
         assertNull(preview.getConfirmationToken());
@@ -95,6 +112,10 @@ class AgentPendingActionServiceTest {
                 ArgumentCaptor.forClass(AgentPendingActionEntity.class);
         verify(pendingActionMapper).insert(captor.capture());
         AgentPendingActionEntity stored = captor.getValue();
+        assertEquals("conversation-a", stored.getConversationId());
+        verify(pendingActionMapper).lockConversation(USER_ID, "conversation-a");
+        verify(pendingActionMapper).supersedeOpenPreviews(org.mockito.ArgumentMatchers.eq(USER_ID),
+                org.mockito.ArgumentMatchers.eq("conversation-a"), any(LocalDateTime.class));
 
         assertNotNull(preview.getPendingActionId());
         assertNotNull(preview.getConfirmationToken());
@@ -166,7 +187,7 @@ class AgentPendingActionServiceTest {
 
         BusinessException exception = assertThrows(
                 BusinessException.class,
-                () -> service.claim(PENDING_ID, "wrong-token", IDEMPOTENCY_KEY, USER_ID, "album")
+                () -> service.claim(PENDING_ID, "wrong-token-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", IDEMPOTENCY_KEY, USER_ID, "album")
         );
 
         assertCode(StatusCode.FORBIDDEN_ERROR, exception);
@@ -179,7 +200,7 @@ class AgentPendingActionServiceTest {
 
         BusinessException exception = assertThrows(
                 BusinessException.class,
-                () -> service.claim(PENDING_ID, TOKEN, "wrong-key", USER_ID, "album")
+                () -> service.claim(PENDING_ID, TOKEN, "wrong-key-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", USER_ID, "album")
         );
 
         assertCode(StatusCode.FORBIDDEN_ERROR, exception);
@@ -316,7 +337,8 @@ class AgentPendingActionServiceTest {
 
         assertEquals(AgentPendingActionService.STATUS_CANCELLED, result.getStatus());
         assertEquals(PENDING_ID, result.getPendingActionId());
-        assertNotNull(result.getExecutedAt());
+        assertNull(result.getExecutedAt());
+        assertNotNull(result.getCompletedAt());
     }
 
     @Test
@@ -325,7 +347,7 @@ class AgentPendingActionServiceTest {
 
         BusinessException exception = assertThrows(
                 BusinessException.class,
-                () -> service.cancel(PENDING_ID, "wrong", USER_ID)
+                () -> service.cancel(PENDING_ID, "wrong-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", USER_ID)
         );
 
         assertCode(StatusCode.FORBIDDEN_ERROR, exception);
@@ -341,7 +363,8 @@ class AgentPendingActionServiceTest {
         AgentPendingActionStatusVO result = service.getStatus(PENDING_ID, USER_ID);
 
         assertEquals(AgentPendingActionService.STATUS_EXPIRED, result.getStatus());
-        assertNotNull(result.getExecutedAt());
+        assertNull(result.getExecutedAt());
+        assertNotNull(result.getCompletedAt());
         verify(pendingActionMapper).markExpired(
                 org.mockito.ArgumentMatchers.eq(PENDING_ID),
                 org.mockito.ArgumentMatchers.eq(USER_ID),
@@ -395,6 +418,7 @@ class AgentPendingActionServiceTest {
         AgentPendingActionEntity entity = new AgentPendingActionEntity();
         entity.setPendingActionId(PENDING_ID);
         entity.setUserId(USER_ID);
+        entity.setConversationId("conversation-a");
         entity.setFamily("album");
         entity.setAction(payload.getAction());
         entity.setPayloadJson(payloadJson);
@@ -402,6 +426,7 @@ class AgentPendingActionServiceTest {
         entity.setConfirmationTokenHash(sha256(TOKEN));
         entity.setIdempotencyKeyHash(sha256(IDEMPOTENCY_KEY));
         entity.setStatus(AgentPendingActionService.STATUS_PREVIEWED);
+        entity.setWorkflowVersion("test-workflow");
         entity.setSummary("summary");
         entity.setPreviewAffectedFileCount(2);
         entity.setPreviewCreatedAlbumCount(1);

@@ -4,6 +4,10 @@ server:
 #    basedir: F:\Desktop\Memory\backend\src\main\resources\tmp\
 
 spring:
+  config:
+    # Shared local credentials for manual Maven/JAR and AI service startup.
+    # Support running from the backend directory or the repository root.
+    import: optional:file:../.env[.properties],optional:file:./.env[.properties]
   servlet:
     multipart:
       max-file-size: ${LEGACY_UPLOAD_MAX_SIZE:100MB}
@@ -321,6 +325,7 @@ amp:
 ai:
   service:
     url: ${AI_SERVICE_URL:http://localhost:5000}
+    key: ${AI_SERVICE_KEY:}
   feature:
     provider: ${AI_FEATURE_PROVIDER:aliyun}
     model: ${AI_FEATURE_MODEL:qwen3-vl-embedding}
@@ -338,12 +343,12 @@ face:
   cluster:
     cosine-threshold: ${FACE_CLUSTER_COSINE_THRESHOLD:0.68}
 
-# Dify 智能体本地调试配置
+# Dify 服务凭据只保存在服务端；所有浏览器调用必须登录。
 agent:
-  # 本地调试可关闭 /agent/* 登录校验；生产环境请改回 true
-  auth-enabled: ${AGENT_AUTH_ENABLED:false}
-  # auth-enabled=false 时，智能体查询这个用户的数据
-  dev-user-id: ${AGENT_DEV_USER_ID:1000000012}
+  service-key: ${AGENT_SERVICE_KEY:}
+  owner-user-id: ${AGENT_OWNER_USER_ID:0}
+  public-web-url: ${AGENT_PUBLIC_WEB_URL:http://localhost:8080}
+  public-api-url: ${AGENT_PUBLIC_API_URL:http://localhost:8080/devApi}
   pending-action:
     # 预览确认有效期；过期后必须重新预览
     ttl-seconds: ${AGENT_PENDING_ACTION_TTL_SECONDS:300}

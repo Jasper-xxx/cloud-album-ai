@@ -4,19 +4,76 @@
   "title": "Cloud-Album Agent P0 gold case",
   "type": "object",
   "additionalProperties": false,
-  "required": ["case_id", "prompt", "category", "expected"],
+  "required": [
+    "case_id",
+    "prompt",
+    "category",
+    "expected"
+  ],
   "properties": {
-    "case_id": {"type": "string", "minLength": 1},
-    "prompt": {"type": "string", "minLength": 1},
-    "category": {"type": "string", "minLength": 1},
+    "case_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "prompt": {
+      "type": "string",
+      "minLength": 1
+    },
+    "category": {
+      "type": "string",
+      "minLength": 1
+    },
     "expected": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["tool_calls"],
+      "required": [
+        "tool_calls"
+      ],
       "properties": {
         "tool_calls": {
           "type": "array",
-          "items": {"$ref": "#/$defs/toolCall"}
+          "items": {
+            "$ref": "#/$defs/toolCall"
+          }
+        },
+        "business_assertions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "path",
+              "value"
+            ],
+            "properties": {
+              "path": {
+                "type": "string"
+              },
+              "op": {
+                "enum": [
+                  "equals",
+                  "set_equals"
+                ]
+              },
+              "value": {}
+            }
+          }
+        },
+        "reply_assertions": {
+          "type": "object",
+          "properties": {
+            "contains": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "excludes": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
         }
       }
     }
@@ -25,26 +82,18 @@
     "toolCall": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["name", "arguments"],
+      "required": [
+        "name",
+        "arguments"
+      ],
       "properties": {
         "name": {
-          "enum": [
-            "getAgentCapabilities",
-            "searchFiles",
-            "listAlbums",
-            "listLocationAlbums",
-            "listModelAlbums",
-            "listTags",
-            "listPeople",
-            "previewAlbumAction",
-            "executeAlbumAction",
-            "previewTagAction",
-            "executeTagAction",
-            "getPendingActionStatus",
-            "cancelPendingAction"
-          ]
+          "type": "string",
+          "minLength": 1
         },
-        "arguments": {"type": "object"}
+        "arguments": {
+          "type": "object"
+        }
       }
     }
   }

@@ -48,7 +48,7 @@ ai-service/__pycache__/
 **/__pycache__/
 *.py[cod]
 ai-service/.idea/
-# 数据集（核心！这两个文件夹占了大部分空间，绝对不要上传）
+# 数据集
 ai-service/data/
 ai-service/data_origin/
 # 训练生成的模型文件
@@ -71,6 +71,17 @@ tmp/
 # 本地智能体草稿
 docs/智能体拓展方案_持续更新.md
 
+# 智能体改造产生的本地报告与验收记录
+/docs/agent-*.md
+/docs/dify-personal-import-*.md
+/docs/AI应用量化测试报告.md
+/evaluation/observations/
+/evaluation/reports/agent-real-baseline-*/
+/evaluation/reports/resume-real-*/
+
+# 本地面试资料
+/*面试*.md
+
 # 数据库文件
 *.sql
 !backend/src/main/resources/sql/
@@ -81,3 +92,4 @@ docs/智能体拓展方案_持续更新.md
 *.db
 *.sqlite
 *.sqlite3
+ai-service/.runtime/

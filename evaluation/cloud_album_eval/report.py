@@ -20,6 +20,8 @@ METRIC_LABELS = {
     "parameter_case_exact_match_rate": "参数整例精确匹配率",
     "task_completion_rate": "任务完成率",
     "verification_coverage": "业务验证覆盖率",
+    "agent_latency_p95_ms": "Agent 端到端 P95",
+    "average_tokens_per_case": "平均 Token/用例",
     "interception_rate": "安全拦截率",
     "attack_case_count": "安全场景数",
     "skipped_case_count": "跳过场景数",
@@ -28,12 +30,15 @@ METRIC_LABELS = {
     "case_count_by_attack_type.confirmation_bypass": "绕过确认场景数",
     "case_count_by_attack_type.parameter_tampering": "参数篡改场景数",
     "interception_rate_by_attack_type.unauthorized_access": "越权访问拦截率",
-    "interception_rate_by_attack_type.confirmation_bypass": "跳过确认拦截率",
+    "interception_rate_by_attack_type.confirmation_bypass": "绕过确认拦截率",
     "interception_rate_by_attack_type.parameter_tampering": "参数篡改拦截率",
     "eventual_success_rate": "最终成功率",
-    "duplicate_execution_count": "重复执行数",
+    "duplicate_execution_count": "额外执行次数",
     "duplicate_business_effect_count": "重复业务副作用数",
     "recovery_time_p95_ms": "恢复耗时 P95",
+    "fault_case_count": "故障注入用例数",
+    "cases_with_duplicate_execution": "发生重执行的用例数",
+    "business_effect_observation_coverage": "业务副作用验证覆盖率",
 }
 
 SUITE_LABELS = {
@@ -51,6 +56,7 @@ SUITE_PRIMARY_METRICS = {
         "tool_selection_accuracy",
         "parameter_extraction_accuracy",
         "task_completion_rate",
+        "agent_latency_p95_ms",
     ],
     "security": ["interception_rate"],
     "async_tasks": [

@@ -89,6 +89,7 @@
         ROW_NUMBER() OVER (PARTITION BY ap.album_id ORDER BY ap.is_cover DESC, ap.id) AS rn
         FROM album_picture ap
         JOIN file ON ap.file_id = file.file_id
+        JOIN user_file uf ON uf.file_id = ap.file_id AND uf.user_id = ap.user_id AND uf.is_deleted = 0
         WHERE ap.user_id = #{userId}
           AND ap.album_id = #{albumId}
         ) first_cover ON album.album_id = first_cover.album_id AND first_cover.rn = 1
@@ -99,6 +100,7 @@
         COUNT(CASE WHEN f.category = 'video' THEN 1 END) AS videoCount
         FROM album_picture ap
         JOIN file f ON ap.file_id = f.file_id
+        JOIN user_file uf ON uf.file_id = ap.file_id AND uf.user_id = ap.user_id AND uf.is_deleted = 0
         WHERE ap.user_id = #{userId}
           AND ap.album_id = #{albumId}
         GROUP BY ap.album_id
@@ -121,6 +123,7 @@
         ROW_NUMBER() OVER (PARTITION BY ap.album_id ORDER BY ap.is_cover DESC, ap.id) AS rn
         FROM album_picture ap
         JOIN file ON ap.file_id = file.file_id
+        JOIN user_file uf ON uf.file_id = ap.file_id AND uf.user_id = ap.user_id AND uf.is_deleted = 0
         WHERE ap.user_id = #{userId}
         ) first_cover ON album.album_id = first_cover.album_id AND first_cover.rn = 1
         LEFT JOIN (
@@ -130,6 +133,7 @@
         COUNT(CASE WHEN f.category = 'video' THEN 1 END) AS videoCount
         FROM album_picture ap
         JOIN file f ON ap.file_id = f.file_id
+        JOIN user_file uf ON uf.file_id = ap.file_id AND uf.user_id = ap.user_id AND uf.is_deleted = 0
         WHERE ap.user_id = #{userId}
         GROUP BY ap.album_id
         ) file_stats ON album.album_id = file_stats.album_id

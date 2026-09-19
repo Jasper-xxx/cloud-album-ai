@@ -20,6 +20,9 @@ import java.util.List;
  * @date 2026/03/20
  */
 public interface FileFeatureMapper extends BaseMapper<FileFeature> {
+    List<FileFeatureQueryDTO> selectDiscoveryCandidates(@Param("userId") Long userId,
+            @Param("featureProvider") String provider, @Param("featureModel") String model,
+            @Param("limit") int limit);
 
     /**
      * 查询指定用户的全部图片特征（联表 file 获取文件展示信息）

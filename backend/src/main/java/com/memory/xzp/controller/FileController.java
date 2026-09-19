@@ -51,6 +51,8 @@ import java.util.*;
 @RequestMapping("/file")
 @Tag(name = "文件接口", description = "文件接口")
 public class FileController {
+    @jakarta.annotation.Resource
+    private com.memory.xzp.service.AgentResourceGrantService agentResourceGrantService;
 
     @Resource
     private FileUtil fileUtil;
@@ -309,7 +311,9 @@ public class FileController {
         if (downloadToken == null || downloadToken.isBlank()) {
             throw new BusinessException(StatusCode.PARAMS_ERROR, "下载令牌不能为空!");
         }
-        DownLoadInfoDTO downLoadInfoDTO = (DownLoadInfoDTO) redisUtil.get("tempDownload:" + downloadToken);
+        DownLoadInfoDTO downLoadInfoDTO = downloadToken.startsWith("ag_")
+                ? agentResourceGrantService.downloadData(downloadToken)
+                : (DownLoadInfoDTO) redisUtil.get("tempDownload:" + downloadToken);
         if (downLoadInfoDTO == null || downLoadInfoDTO.getFileIds() == null
                 || downLoadInfoDTO.getFileIds().isEmpty() || downLoadInfoDTO.getUserId() == null) {
             throw new BusinessException(StatusCode.NOT_FOUND_ERROR, "下载令牌已过期或不存在");
@@ -325,7 +329,8 @@ public class FileController {
         } else {
             fileService.downloadFileByIds(response, fileIds, userId);
         }
-        redisUtil.delete("tempDownload:" + downloadToken);
+        // Durable agent grants remain usable until expiry so interrupted downloads can retry.
+        if (!downloadToken.startsWith("ag_")) redisUtil.delete("tempDownload:" + downloadToken);
         //日志记录
         recordService.createRecordLog("下载照片", fileIds.size(), userId, request);
     }

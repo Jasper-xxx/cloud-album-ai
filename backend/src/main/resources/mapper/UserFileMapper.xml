@@ -41,22 +41,7 @@
         </if>
     </delete>
 
-    <delete id="dropAllFile">
-        DELETE from user_file
-        where
-        is_deleted = 1
-        <if test="fileIds != null and fileIds.size() > 0">
-            AND file_id IN
-            <foreach collection="fileIds" item="fileId"
-                     open="(" separator="," close=")">
-                #{fileId}
-            </foreach>
-        </if>
-        <!-- 空集合时添加永假条件避免全表删除 -->
-        <if test="fileIds == null or fileIds.size() == 0">
-            AND 1=0
-        </if>
-    </delete>
+
 
 
 </mapper>

@@ -11,6 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.routes.inference import router
 from app.clients.runtime import close_clients, initialize_clients
 from app.core.config import get_settings
+from app.core.access import ServiceAccessMiddleware
 from app.core.errors import register_exception_handlers
 from app.core.observability import (
     generate_id,
@@ -26,8 +27,15 @@ setup_logging(settings.ai_service_debug)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    if len(settings.ai_service_key) < 32:
+        raise RuntimeError(
+            "AI_SERVICE_KEY is missing or shorter than 32 characters. "
+            "Set it in the repository root .env or process environment, using "
+            "the same value as the backend, then restart the AI service."
+        )
     initialize_clients()
     app.state.ai_semaphore = asyncio.Semaphore(settings.ai_max_concurrency)
+    app.state.ai_admission = asyncio.Semaphore(settings.ai_max_concurrency)
     yield
     close_clients()
 
@@ -70,3 +78,4 @@ async def add_request_id(request: Request, call_next):
 
 register_exception_handlers(app)
 app.include_router(router)
+app.add_middleware(ServiceAccessMiddleware)

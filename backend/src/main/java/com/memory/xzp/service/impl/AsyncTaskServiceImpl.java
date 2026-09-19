@@ -560,12 +560,16 @@ public class AsyncTaskServiceImpl implements AsyncTaskService {
     }
 
     private void runRecoverAndDispatchWithLock() {
+        if (!maintenanceEnabled) return;
         scheduledTaskLockService.runWithLock(
                 "async-task:recover-and-dispatch",
                 Duration.ofSeconds(asyncDispatchLockTtlSeconds),
                 this::recoverAndDispatch
         );
     }
+
+    @Value("${app.background-maintenance-enabled:true}")
+    private boolean maintenanceEnabled = true;
 
     private void runStartupTask(String taskName, Runnable action) {
         try {

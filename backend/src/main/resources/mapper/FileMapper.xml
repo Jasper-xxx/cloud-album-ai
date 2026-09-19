@@ -252,6 +252,7 @@
         <where>
             uf.is_deleted = 0
             AND sp.user_id = #{userId}
+            AND uf.user_id = #{userId}
             <choose>
                 <when test="imageTypeText == 'picture'">
                     AND file.category = 'image'
@@ -353,7 +354,7 @@
     <!--    通过相册id逻辑删除  -->
     <update id="setIsDeletedByAlbumIds">
         UPDATE user_file uf
-        JOIN album_picture ap ON uf.file_id = ap.file_id
+        JOIN album_picture ap ON uf.file_id = ap.file_id AND uf.user_id = ap.user_id
         SET uf.is_deleted = 1,uf.deleted_time = now()
         WHERE ap.album_id IN
         <foreach item="id" collection="albumIds" open="(" separator="," close=")">
@@ -366,7 +367,7 @@
         UPDATE user_file
         SET
         is_deleted = #{isDeleted},
-        deleted_time = now()
+        deleted_time = CASE WHEN #{isDeleted} THEN NOW() ELSE NULL END
         WHERE file_id IN
         <foreach collection="fileIds" item="fileId" open="(" separator="," close=")">
             #{fileId}

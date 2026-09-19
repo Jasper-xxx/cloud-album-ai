@@ -16,6 +16,7 @@ from PIL import Image, ImageFile, ImageOps, UnidentifiedImageError
 
 from app.clients.runtime import get_http_client, get_minio_client
 from app.core.config import get_settings
+from app.core.budget import reserve_model_call
 from app.service_config import Config
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
@@ -41,9 +42,14 @@ class NoFaceDetectedError(ValueError):
 def image_from_bytes(image_bytes: bytes) -> Image.Image:
     if not image_bytes:
         raise ValueError("Uploaded image is empty.")
+    if len(image_bytes) > settings.ai_max_upload_bytes:
+        raise ValueError("Image exceeds byte limit.")
     try:
-        return Image.open(io.BytesIO(image_bytes)).convert("RGB")
-    except (UnidentifiedImageError, OSError) as exc:
+        with Image.open(io.BytesIO(image_bytes)) as image:
+            if image.width * image.height > settings.ai_decode_max_pixels:
+                raise ValueError("Image exceeds decoded pixel limit.")
+            return image.convert("RGB")
+    except (UnidentifiedImageError, OSError, Image.DecompressionBombError) as exc:
         raise ValueError("Invalid image payload.") from exc
 
 
@@ -57,16 +63,14 @@ def image_from_base64(value: str) -> Image.Image:
 
 
 def image_from_url(url: str) -> Image.Image:
-    response = get_http_client().get(url)
-    response.raise_for_status()
-    return image_from_bytes(response.content)
+    raise ValueError("Remote image URLs are disabled. Use an authorized upload or object key.")
 
 
 def image_from_minio(object_name: str) -> Image.Image:
     client = get_minio_client()
     response = client.get_object(Config.MINIO_BUCKET, object_name)
     try:
-        return image_from_bytes(response.read())
+        return image_from_bytes(response.read(settings.ai_max_upload_bytes + 1))
     finally:
         response.close()
         response.release_conn()
@@ -165,8 +169,10 @@ def _require_dashscope_key() -> str:
 
 
 def _headers() -> dict[str, str]:
+    key = _require_dashscope_key()
+    reserve_model_call()
     return {
-        "Authorization": f"Bearer {_require_dashscope_key()}",
+        "Authorization": f"Bearer {key}",
         "Content-Type": "application/json",
     }
 

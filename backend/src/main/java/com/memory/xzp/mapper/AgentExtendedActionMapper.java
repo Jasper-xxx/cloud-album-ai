@@ -10,6 +10,34 @@ import java.util.List;
  */
 public interface AgentExtendedActionMapper {
 
+    @Select("""
+            SELECT uf.file_id FROM user_file uf JOIN file f ON f.file_id = uf.file_id
+            WHERE uf.user_id = #{userId} AND uf.is_deleted = 1 AND f.category = 'image'
+            ORDER BY uf.deleted_time ASC, uf.file_id ASC LIMIT #{limit}
+            """)
+    List<String> selectOwnedRecycleImageIds(@Param("userId") Long userId, @Param("limit") int limit);
+
+    @Select("""
+            SELECT album_id FROM album
+            WHERE user_id = #{userId} AND type = 'normal' AND album_name = #{albumName}
+            ORDER BY album_id LIMIT 2
+            """)
+    List<Long> selectOwnedNormalAlbumsByName(@Param("userId") Long userId,
+                                            @Param("albumName") String albumName);
+
+    @Select("""
+            SELECT DISTINCT uf.file_id FROM album_picture ap
+            JOIN album a ON a.album_id = ap.album_id
+            JOIN user_file uf ON uf.file_id = ap.file_id
+            JOIN file f ON f.file_id = uf.file_id
+            WHERE a.album_id = #{albumId} AND a.user_id = #{userId} AND a.type = 'normal'
+              AND ap.user_id = #{userId} AND uf.user_id = #{userId} AND uf.is_deleted = 0
+              AND f.category = 'image'
+            ORDER BY uf.file_id LIMIT #{limit}
+            """)
+    List<String> selectOwnedAlbumImageIds(@Param("userId") Long userId,
+                                         @Param("albumId") Long albumId, @Param("limit") int limit);
+
     @Select({
             "<script>",
             "SELECT uf.file_id FROM user_file uf",

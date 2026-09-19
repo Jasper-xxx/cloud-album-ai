@@ -231,6 +231,8 @@ def evaluate_agent(records: list[dict[str, Any]]) -> dict[str, Any]:
     parameter_failures: list[str] = []
     incomplete_cases: list[str] = []
     unverifiable_cases: list[str] = []
+    latencies: list[float] = []
+    token_counts: list[int] = []
 
     for index, record in enumerate(records):
         case_id = str(record.get("case_id", f"row-{index + 1}"))
@@ -297,6 +299,10 @@ def evaluate_agent(records: list[dict[str, Any]]) -> dict[str, Any]:
             incomplete_cases.append(case_id)
         if not verification_passed:
             unverifiable_cases.append(case_id)
+        if actual.get("latency_ms") is not None:
+            latencies.append(float(actual["latency_ms"]))
+        if actual.get("total_tokens") is not None:
+            token_counts.append(int(actual["total_tokens"]))
 
     case_count = len(records)
     return {
@@ -308,6 +314,10 @@ def evaluate_agent(records: list[dict[str, Any]]) -> dict[str, Any]:
         "parameter_case_exact_match_rate": parameter_exact / case_count,
         "task_completion_rate": completed / case_count,
         "verification_coverage": (case_count - len(unverifiable_cases)) / case_count,
+        "agent_latency_p95_ms": nearest_rank_percentile(latencies, 95),
+        "average_tokens_per_case": (
+            sum(token_counts) / len(token_counts) if token_counts else None
+        ),
         "parameter_field_count": total_parameter_fields,
         "tool_failure_case_ids": tool_failures,
         "parameter_failure_case_ids": parameter_failures,
@@ -399,9 +409,13 @@ def _recovery_time_ms(record: dict[str, Any]) -> float | None:
         terminal_time = _parse_time(str(terminal_at))
         injected_time = _parse_time(str(injected_at))
         if terminal_time.tzinfo is None and injected_time.tzinfo is not None:
-            terminal_time = terminal_time.replace(tzinfo=injected_time.tzinfo)
+            terminal_time = terminal_time.replace(
+                tzinfo=datetime.now().astimezone().tzinfo
+            )
         if injected_time.tzinfo is None and terminal_time.tzinfo is not None:
-            injected_time = injected_time.replace(tzinfo=terminal_time.tzinfo)
+            injected_time = injected_time.replace(
+                tzinfo=datetime.now().astimezone().tzinfo
+            )
         return (terminal_time - injected_time).total_seconds() * 1000
     return None
 

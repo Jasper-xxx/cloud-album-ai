@@ -32,88 +32,61 @@ public class SimilarDetectServiceImpl implements SimilarDetectService {
     @Value("${ai.feature.model:qwen3-vl-embedding}")
     private String featureModel;
 
+    private final java.util.Map<String, CacheEntry> cache = new java.util.LinkedHashMap<>();
+    private record CacheEntry(long expiresAt, List<List<Integer>> groups) {}
+
     @Override
     public List<SimilarFileInfoListVO> detectSimilarImages(Double threshold, Integer maxGroups, Long userId) {
-        if (threshold == null || threshold < 0.0) threshold = 0.0;
-        if (threshold > 1.0) threshold = 1.0;
-        if (maxGroups == null || maxGroups < 1) maxGroups = 1;
-
-        log.info("Similar image detection started: userId={}, threshold={}, maxGroups={}, provider={}, model={}",
-                userId, threshold, maxGroups, featureProvider, featureModel);
-
-        List<FileFeatureQueryDTO> features = fileFeatureMapper.selectFeatureListByUserId(
-                userId,
-                featureProvider,
-                featureModel,
-                null,
-                null
-        );
-        if (features.size() < 2) {
-            return Collections.emptyList();
-        }
-
-        int n = features.size();
-        float[][] vectors = new float[n][];
-        for (int i = 0; i < n; i++) {
-            byte[] bytes = features.get(i).getFeatureVector();
-            Integer storedDim = features.get(i).getFeatureDim();
-            if (bytes == null || storedDim == null || storedDim <= 0 || bytes.length != storedDim * Float.BYTES) {
-                vectors[i] = new float[0];
-                log.warn("Skipping feature with unexpected byte length: fileId={}, bytes={}",
-                        features.get(i).getFileId(),
-                        bytes == null ? "null" : bytes.length);
-            } else {
-                vectors[i] = CosineSimilarityUtil.bytesToFloats(bytes);
-            }
-        }
-
-        int[] parent = new int[n];
-        for (int i = 0; i < n; i++) parent[i] = i;
-
-        for (int i = 0; i < n; i++) {
-            if (vectors[i].length == 0) continue;
-            for (int j = i + 1; j < n; j++) {
-                if (vectors[j].length == 0) continue;
-                if (vectors[i].length != vectors[j].length) continue;
-                double sim = CosineSimilarityUtil.cosine(vectors[i], vectors[j]);
-                if (sim >= threshold) {
-                    union(parent, i, j);
-                }
-            }
-        }
-
-        Map<Integer, List<FileFeatureQueryDTO>> groups = new LinkedHashMap<>();
-        for (int i = 0; i < n; i++) {
-            int root = find(parent, i);
-            groups.computeIfAbsent(root, k -> new ArrayList<>()).add(features.get(i));
-        }
-
-        List<SimilarFileInfoListVO> result = groups.values().stream()
-                .filter(g -> g.size() >= 2)
-                .limit(maxGroups)
-                .map(g -> {
-                    SimilarFileInfoListVO vo = new SimilarFileInfoListVO();
-                    vo.setSimilarId(UUID.randomUUID().toString());
-                    vo.setFileList(g.stream().map(this::toFileInfo).collect(Collectors.toList()));
-                    return vo;
-                })
-                .collect(Collectors.toList());
-
-        log.info("Similar image detection finished: userId={}, groups={}", userId, result.size());
-        return result;
+        return discover(threshold, maxGroups, userId, 500, 10, value -> {});
     }
 
-    private int find(int[] parent, int i) {
-        if (parent[i] != i) {
-            parent[i] = find(parent, parent[i]);
+    public List<SimilarFileInfoListVO> discover(Double threshold, Integer maxGroups, Long userId,
+            int candidateLimit, int seconds, java.util.function.IntConsumer progress) {
+        if (threshold == null || !Double.isFinite(threshold) || threshold < 0 || threshold > 1
+                || maxGroups == null || maxGroups < 1 || maxGroups > 50 || userId == null)
+            throw new com.memory.xzp.exception.BusinessException(com.memory.xzp.exception.StatusCode.PARAMS_ERROR, "相似发现参数无效");
+        candidateLimit = Math.max(2, Math.min(10000, candidateLimit));
+        List<FileFeatureQueryDTO> features = fileFeatureMapper.selectDiscoveryCandidates(
+                userId, featureProvider, featureModel, candidateLimit + 1);
+        if (features.size() > candidateLimit) throw new com.memory.xzp.exception.BusinessException(
+                com.memory.xzp.exception.StatusCode.PARAMS_ERROR,
+                candidateLimit == 500 ? "图库超过500张，请使用后台相似发现任务，可查看进度和取消。" : "当前任务最多支持10000张有效特征图片，请缩小范围。");
+        String key = fingerprint(features, userId, threshold);
+        List<List<Integer>> groups = null;
+        synchronized(cache) {
+            cache.entrySet().removeIf(e -> e.getValue().expiresAt() < System.currentTimeMillis());
+            CacheEntry entry = cache.get(key);
+            if(entry != null) groups=entry.groups();
         }
-        return parent[i];
+        if(groups==null) {
+            groups=com.memory.xzp.service.SimilarDiscoveryEngine.group(features, threshold,
+                    System.nanoTime()+java.util.concurrent.TimeUnit.SECONDS.toNanos(Math.min(120,seconds)), progress);
+            synchronized(cache) {
+                if(cache.size()>=8) cache.remove(cache.keySet().iterator().next());
+                cache.put(key,new CacheEntry(System.currentTimeMillis()+120000,groups));
+            }
+        }
+        progress.accept(100);
+        return groups.stream().limit(maxGroups).map(g -> {
+            SimilarFileInfoListVO result=new SimilarFileInfoListVO();
+            result.setSimilarId(UUID.randomUUID().toString());
+            result.setTotalFiles(g.size());
+            result.setTruncated(g.size()>50);
+            result.setFileList(g.stream().limit(50).map(i -> toFileInfo(features.get(i))).toList());
+            return result;
+        }).toList();
     }
 
-    private void union(int[] parent, int i, int j) {
-        int ri = find(parent, i);
-        int rj = find(parent, j);
-        if (ri != rj) parent[ri] = rj;
+    private String fingerprint(List<FileFeatureQueryDTO> features, Long userId, double threshold) {
+        try {
+            var digest=java.security.MessageDigest.getInstance("SHA-256");
+            digest.update((userId+":"+threshold+":"+featureProvider+":"+featureModel).getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            for(var f:features) {
+                digest.update(f.getFileId().getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                digest.update(f.getFeatureVector());
+            }
+            return java.util.HexFormat.of().formatHex(digest.digest());
+        } catch(java.security.NoSuchAlgorithmException e) {throw new IllegalStateException(e);}
     }
 
     private FileInfo toFileInfo(FileFeatureQueryDTO dto) {

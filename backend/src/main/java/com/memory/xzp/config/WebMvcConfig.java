@@ -22,8 +22,8 @@ import java.util.List;
 @Configuration
 public class WebMvcConfig implements WebMvcConfigurer {
 
-    @Value("${agent.auth-enabled:false}")
-    private boolean agentAuthEnabled;
+    @jakarta.annotation.Resource
+    private AgentAccessGuard agentAccessGuard;
 
     /**
      * 配置saToken的身份权限拦截器
@@ -54,9 +54,12 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 "/mockApi/album/downloadAlbumByToken"
         ));
 
-        if (!agentAuthEnabled) {
-            excludePatterns.add("/agent/**");
-        }
+        excludePatterns.add("/agent/**");
+
+        registry.addInterceptor(new SaInterceptor().setAuth(handle -> agentAccessGuard.checkAccess()))
+                .addPathPatterns("/agent/**")
+                .excludePathPatterns("/agent/capabilities")
+                .order(Ordered.HIGHEST_PRECEDENCE);
 
         registry.addInterceptor(new SaInterceptor().setAuth(handle -> StpUtil.checkLogin()))
                 .addPathPatterns("/**")

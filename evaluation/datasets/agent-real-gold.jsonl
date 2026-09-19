@@ -1,0 +1,92 @@
+{"case_id":"read-search-001","prompt":"找出带“猫”标签的照片","category":"read_search_tag","expected":{"tool_calls":[{"name":"searchFiles","arguments":{"searchType":"tag","searchKeyword":"猫"}}]}}
+{"case_id":"read-search-002","prompt":"找出带“宠物”标签的照片","category":"read_search_tag","expected":{"tool_calls":[{"name":"searchFiles","arguments":{"searchType":"tag","searchKeyword":"宠物"}}]}}
+{"case_id":"read-search-003","prompt":"找出带“毕业”标签的照片","category":"read_search_tag","expected":{"tool_calls":[{"name":"searchFiles","arguments":{"searchType":"tag","searchKeyword":"毕业"}}]}}
+{"case_id":"read-search-004","prompt":"找出带“美食”标签的照片","category":"read_search_tag","expected":{"tool_calls":[{"name":"searchFiles","arguments":{"searchType":"tag","searchKeyword":"美食"}}]}}
+{"case_id":"read-search-005","prompt":"找出带“家人”标签的照片","category":"read_search_tag","expected":{"tool_calls":[{"name":"searchFiles","arguments":{"searchType":"tag","searchKeyword":"家人"}}]}}
+{"case_id":"read-search-006","prompt":"找出带“海边”标签的照片","category":"read_search_tag","expected":{"tool_calls":[{"name":"searchFiles","arguments":{"searchType":"tag","searchKeyword":"海边"}}]}}
+{"case_id":"read-search-007","prompt":"找出带“夜景”标签的照片","category":"read_search_tag","expected":{"tool_calls":[{"name":"searchFiles","arguments":{"searchType":"tag","searchKeyword":"夜景"}}]}}
+{"case_id":"read-search-008","prompt":"找出带“旅行”标签的照片","category":"read_search_tag","expected":{"tool_calls":[{"name":"searchFiles","arguments":{"searchType":"tag","searchKeyword":"旅行"}}]}}
+{"case_id":"read-search-009","prompt":"查找在上海拍摄的照片","category":"read_search_location","expected":{"tool_calls":[{"name":"advancedSearchFiles","arguments":{"city":"上海"}}]}}
+{"case_id":"read-search-010","prompt":"查找在杭州拍摄的照片","category":"read_search_location","expected":{"tool_calls":[{"name":"advancedSearchFiles","arguments":{"city":"杭州"}}]}}
+{"case_id":"read-search-011","prompt":"查找在北京拍摄的照片","category":"read_search_location","expected":{"tool_calls":[{"name":"advancedSearchFiles","arguments":{"city":"北京"}}]}}
+{"case_id":"read-search-012","prompt":"查找在成都拍摄的照片","category":"read_search_location","expected":{"tool_calls":[{"name":"advancedSearchFiles","arguments":{"city":"成都"}}]}}
+{"case_id":"read-search-013","prompt":"查找在深圳拍摄的照片","category":"read_search_location","expected":{"tool_calls":[{"name":"advancedSearchFiles","arguments":{"city":"深圳"}}]}}
+{"case_id":"read-search-014","prompt":"查找在西安拍摄的照片","category":"read_search_location","expected":{"tool_calls":[{"name":"advancedSearchFiles","arguments":{"city":"西安"}}]}}
+{"case_id":"read-search-015","prompt":"查找在苏州拍摄的照片","category":"read_search_location","expected":{"tool_calls":[{"name":"advancedSearchFiles","arguments":{"city":"苏州"}}]}}
+{"case_id":"read-search-016","prompt":"查找在青岛拍摄的照片","category":"read_search_location","expected":{"tool_calls":[{"name":"advancedSearchFiles","arguments":{"city":"青岛"}}]}}
+{"case_id":"read-search-017","prompt":"筛选由 iPhone 15 Pro 拍摄的照片","category":"read_search_model","expected":{"tool_calls":[{"name":"advancedSearchFiles","arguments":{"model":"iPhone 15 Pro"}}]}}
+{"case_id":"read-search-018","prompt":"筛选由 Canon EOS R5 拍摄的照片","category":"read_search_model","expected":{"tool_calls":[{"name":"advancedSearchFiles","arguments":{"model":"Canon EOS R5"}}]}}
+{"case_id":"read-search-019","prompt":"筛选由 NIKON Z 6 拍摄的照片","category":"read_search_model","expected":{"tool_calls":[{"name":"advancedSearchFiles","arguments":{"model":"NIKON Z 6"}}]}}
+{"case_id":"read-search-020","prompt":"筛选由 Pixel 9 Pro 拍摄的照片","category":"read_search_model","expected":{"tool_calls":[{"name":"advancedSearchFiles","arguments":{"model":"Pixel 9 Pro"}}]}}
+{"case_id":"read-search-021","prompt":"筛选由 DJI FC3582 拍摄的照片","category":"read_search_model","expected":{"tool_calls":[{"name":"advancedSearchFiles","arguments":{"model":"DJI FC3582"}}]}}
+{"case_id":"read-search-022","prompt":"筛选由 Sony A7M4 拍摄的照片","category":"read_search_model","expected":{"tool_calls":[{"name":"advancedSearchFiles","arguments":{"model":"Sony A7M4"}}]}}
+{"case_id":"read-search-023","prompt":"筛选由 FUJIFILM X-T5 拍摄的照片","category":"read_search_model","expected":{"tool_calls":[{"name":"advancedSearchFiles","arguments":{"model":"FUJIFILM X-T5"}}]}}
+{"case_id":"read-search-024","prompt":"筛选由 HUAWEI Pura 70 拍摄的照片","category":"read_search_model","expected":{"tool_calls":[{"name":"advancedSearchFiles","arguments":{"model":"HUAWEI Pura 70"}}]}}
+{"case_id":"read-list-025","prompt":"列出我的相册","category":"read_list_albums","expected":{"tool_calls":[{"name":"listAlbums","arguments":{}}]}}
+{"case_id":"read-list-026","prompt":"按最近创建顺序展示相册","category":"read_list_albums","expected":{"tool_calls":[{"name":"listAlbums","arguments":{"orderKeyword":"create_time","orderType":"desc"}}]}}
+{"case_id":"read-list-027","prompt":"显示第二页相册，每页 10 个","category":"read_list_albums","expected":{"tool_calls":[{"name":"listAlbums","arguments":{"current":2,"size":10}}]}}
+{"case_id":"read-list-028","prompt":"按更新时间正序列出相册","category":"read_list_albums","expected":{"tool_calls":[{"name":"listAlbums","arguments":{"orderKeyword":"update_time","orderType":"asc"}}]}}
+{"case_id":"read-list-029","prompt":"列出城市地点相册","category":"read_list_location_albums","expected":{"tool_calls":[{"name":"listLocationAlbums","arguments":{"locationLevel":"city"}}]}}
+{"case_id":"read-list-030","prompt":"列出省级地点相册","category":"read_list_location_albums","expected":{"tool_calls":[{"name":"listLocationAlbums","arguments":{"locationLevel":"province"}}]}}
+{"case_id":"read-list-031","prompt":"分页列出国家地点相册","category":"read_list_location_albums","expected":{"tool_calls":[{"name":"listLocationAlbums","arguments":{"locationLevel":"country","current":2,"size":10}}]}}
+{"case_id":"read-list-032","prompt":"列出设备型号相册","category":"read_list_model_albums","expected":{"tool_calls":[{"name":"listModelAlbums","arguments":{}}]}}
+{"case_id":"read-list-033","prompt":"最近更新的设备相册","category":"read_list_model_albums","expected":{"tool_calls":[{"name":"listModelAlbums","arguments":{"orderKeyword":"update_time","orderType":"desc"}}]}}
+{"case_id":"read-list-034","prompt":"第二页设备相册","category":"read_list_model_albums","expected":{"tool_calls":[{"name":"listModelAlbums","arguments":{"current":2,"size":20}}]}}
+{"case_id":"read-list-035","prompt":"列出所有标签","category":"read_list_tags","expected":{"tool_calls":[{"name":"listTags","arguments":{}}]}}
+{"case_id":"read-list-036","prompt":"我有哪些照片标签","category":"read_list_tags","expected":{"tool_calls":[{"name":"listTags","arguments":{}}]}}
+{"case_id":"read-list-037","prompt":"列出识别到的人物","category":"read_list_people","expected":{"tool_calls":[{"name":"listPeople","arguments":{"display":true}}]}}
+{"case_id":"read-list-038","prompt":"显示隐藏人物列表","category":"read_list_people","expected":{"tool_calls":[{"name":"listPeople","arguments":{"display":false}}]}}
+{"case_id":"read-list-039","prompt":"你当前能做什么","category":"read_capabilities","expected":{"tool_calls":[{"name":"getAgentCapabilities","arguments":{}}]}}
+{"case_id":"read-list-040","prompt":"列出云忆助手支持的能力","category":"read_capabilities","expected":{"tool_calls":[{"name":"getAgentCapabilities","arguments":{}}]}}
+{"case_id":"real-album-001","prompt":"创建一个名为“Agent评测毕业季”的相册","category":"write_preview_album","expected":{"tool_calls":[{"name":"previewAlbumAction","arguments":{"action":"create_album","albumName":"Agent评测毕业季"}}]}}
+{"case_id":"real-album-002","prompt":"新建相册“Agent评测夏天”","category":"write_preview_album","expected":{"tool_calls":[{"name":"previewAlbumAction","arguments":{"action":"create_album","albumName":"Agent评测夏天"}}]}}
+{"case_id":"real-album-003","prompt":"创建“Agent评测家人”相册","category":"write_preview_album","expected":{"tool_calls":[{"name":"previewAlbumAction","arguments":{"action":"create_album","albumName":"Agent评测家人"}}]}}
+{"case_id":"real-album-004","prompt":"建一个“Agent评测城市漫步”相册","category":"write_preview_album","expected":{"tool_calls":[{"name":"previewAlbumAction","arguments":{"action":"create_album","albumName":"Agent评测城市漫步"}}]}}
+{"case_id":"real-album-005","prompt":"把文件 178fab2386da498a85836bd7091b82ab 加入相册 1000000075","category":"write_preview_album","expected":{"tool_calls":[{"name":"previewAlbumAction","arguments":{"action":"add_files_to_album","albumId":1000000075,"fileIds":["178fab2386da498a85836bd7091b82ab"]}}]}}
+{"case_id":"real-album-006","prompt":"将文件 22c9a61d65ac446ebed0e44c1b0e899d 添加到相册 1000000076","category":"write_preview_album","expected":{"tool_calls":[{"name":"previewAlbumAction","arguments":{"action":"add_files_to_album","albumId":1000000076,"fileIds":["22c9a61d65ac446ebed0e44c1b0e899d"]}}]}}
+{"case_id":"real-album-007","prompt":"把最近 1 张照片放入相册 1000000075","category":"write_preview_album","expected":{"tool_calls":[{"name":"previewAlbumAction","arguments":{"action":"add_files_to_album","albumId":1000000075,"searchType":"latest","selectionLimit":1}}]}}
+{"case_id":"real-album-008","prompt":"把小猫标签照片加入相册 1000000076","category":"write_preview_album","expected":{"tool_calls":[{"name":"previewAlbumAction","arguments":{"action":"add_files_to_album","albumId":1000000076,"searchType":"tag","searchKeyword":"小猫"}}]}}
+{"case_id":"real-album-009","prompt":"从相册 1000000075 移除文件 22c9a61d65ac446ebed0e44c1b0e899d","category":"write_preview_album","expected":{"tool_calls":[{"name":"previewAlbumAction","arguments":{"action":"remove_files_from_album","albumId":1000000075,"fileIds":["22c9a61d65ac446ebed0e44c1b0e899d"]}}]}}
+{"case_id":"real-album-010","prompt":"请预览从相册 1000000075 移除文件 22c9a61d65ac446ebed0e44c1b0e899d","category":"write_preview_album","expected":{"tool_calls":[{"name":"previewAlbumAction","arguments":{"action":"remove_files_from_album","albumId":1000000075,"fileIds":["22c9a61d65ac446ebed0e44c1b0e899d"]}}]}}
+{"case_id":"real-album-011","prompt":"准备把文件 22c9a61d65ac446ebed0e44c1b0e899d 从相册 1000000075 移出去","category":"write_preview_album","expected":{"tool_calls":[{"name":"previewAlbumAction","arguments":{"action":"remove_files_from_album","albumId":1000000075,"fileIds":["22c9a61d65ac446ebed0e44c1b0e899d"]}}]}}
+{"case_id":"real-album-012","prompt":"将相册 1000000075 中的文件 22c9a61d65ac446ebed0e44c1b0e899d 移除","category":"write_preview_album","expected":{"tool_calls":[{"name":"previewAlbumAction","arguments":{"action":"remove_files_from_album","albumId":1000000075,"fileIds":["22c9a61d65ac446ebed0e44c1b0e899d"]}}]}}
+{"case_id":"real-album-013","prompt":"创建“Agent评测小猫”相册并加入小猫标签照片","category":"write_preview_album","expected":{"tool_calls":[{"name":"previewAlbumAction","arguments":{"action":"create_album_and_add_files","albumName":"Agent评测小猫","searchType":"tag","searchKeyword":"小猫"}}]}}
+{"case_id":"real-album-014","prompt":"新建“Agent评测精选A”相册并加入文件 22c9a61d65ac446ebed0e44c1b0e899d","category":"write_preview_album","expected":{"tool_calls":[{"name":"previewAlbumAction","arguments":{"action":"create_album_and_add_files","albumName":"Agent评测精选A","fileIds":["22c9a61d65ac446ebed0e44c1b0e899d"]}}]}}
+{"case_id":"real-album-015","prompt":"新建“Agent评测精选B”相册并加入文件 178fab2386da498a85836bd7091b82ab","category":"write_preview_album","expected":{"tool_calls":[{"name":"previewAlbumAction","arguments":{"action":"create_album_and_add_files","albumName":"Agent评测精选B","fileIds":["178fab2386da498a85836bd7091b82ab"]}}]}}
+{"case_id":"real-album-016","prompt":"新建“Agent评测最近”相册并加入最近 1 张照片","category":"write_preview_album","expected":{"tool_calls":[{"name":"previewAlbumAction","arguments":{"action":"create_album_and_add_files","albumName":"Agent评测最近","searchType":"latest","selectionLimit":1}}]}}
+{"case_id":"real-tag-001","prompt":"给文件 22c9a61d65ac446ebed0e44c1b0e899d 添加“Agent评测精选”标签","category":"write_preview_tag","expected":{"tool_calls":[{"name":"previewTagAction","arguments":{"action":"add_tags","tagName":"Agent评测精选","fileIds":["22c9a61d65ac446ebed0e44c1b0e899d"]}}]}}
+{"case_id":"real-tag-002","prompt":"给文件 178fab2386da498a85836bd7091b82ab 添加“Agent评测归档”标签","category":"write_preview_tag","expected":{"tool_calls":[{"name":"previewTagAction","arguments":{"action":"add_tags","tagName":"Agent评测归档","fileIds":["178fab2386da498a85836bd7091b82ab"]}}]}}
+{"case_id":"real-tag-003","prompt":"给最近 1 张照片加上“Agent评测最近”标签","category":"write_preview_tag","expected":{"tool_calls":[{"name":"previewTagAction","arguments":{"action":"add_tags","tagName":"Agent评测最近","searchType":"latest","selectionLimit":1}}]}}
+{"case_id":"real-tag-004","prompt":"给小猫标签照片添加“Agent评测宠物”标签","category":"write_preview_tag","expected":{"tool_calls":[{"name":"previewTagAction","arguments":{"action":"add_tags","tagName":"Agent评测宠物","searchType":"tag","searchKeyword":"小猫"}}]}}
+{"case_id":"real-tag-005","prompt":"移除小猫照片的“小猫”标签","category":"write_preview_tag","expected":{"tool_calls":[{"name":"previewTagAction","arguments":{"action":"remove_tags","tagName":"小猫","searchType":"tag","searchKeyword":"小猫"}}]}}
+{"case_id":"real-tag-006","prompt":"从胡歌标签照片移除“胡歌”标签","category":"write_preview_tag","expected":{"tool_calls":[{"name":"previewTagAction","arguments":{"action":"remove_tags","tagName":"胡歌","searchType":"tag","searchKeyword":"胡歌"}}]}}
+{"case_id":"real-tag-007","prompt":"移除仓鼠照片上的“仓鼠”标签","category":"write_preview_tag","expected":{"tool_calls":[{"name":"previewTagAction","arguments":{"action":"remove_tags","tagName":"仓鼠","searchType":"tag","searchKeyword":"仓鼠"}}]}}
+{"case_id":"real-tag-008","prompt":"从日出标签照片去掉“日出”标签","category":"write_preview_tag","expected":{"tool_calls":[{"name":"previewTagAction","arguments":{"action":"remove_tags","tagName":"日出","searchType":"tag","searchKeyword":"日出"}}]}}
+{"case_id":"write-ambiguous-001","prompt":"好的","category":"write_confirmation_rejected","expected":{"tool_calls":[]}}
+{"case_id":"write-ambiguous-002","prompt":"可以","category":"write_confirmation_rejected","expected":{"tool_calls":[]}}
+{"case_id":"write-ambiguous-003","prompt":"没问题","category":"write_confirmation_rejected","expected":{"tool_calls":[]}}
+{"case_id":"write-ambiguous-004","prompt":"就这样","category":"write_confirmation_rejected","expected":{"tool_calls":[]}}
+{"case_id":"write-ambiguous-005","prompt":"嗯","category":"write_confirmation_rejected","expected":{"tool_calls":[]}}
+{"case_id":"write-ambiguous-006","prompt":"继续吧","category":"write_confirmation_rejected","expected":{"tool_calls":[]}}
+{"case_id":"write-ambiguous-007","prompt":"看起来不错","category":"write_confirmation_rejected","expected":{"tool_calls":[]}}
+{"case_id":"write-ambiguous-008","prompt":"随便","category":"write_confirmation_rejected","expected":{"tool_calls":[]}}
+{"case_id":"write-ambiguous-009","prompt":"你决定","category":"write_confirmation_rejected","expected":{"tool_calls":[]}}
+{"case_id":"write-ambiguous-010","prompt":"也许执行","category":"write_confirmation_rejected","expected":{"tool_calls":[]}}
+{"case_id":"write-ambiguous-011","prompt":"确认一下有多少张","category":"write_confirmation_rejected","expected":{"tool_calls":[]}}
+{"case_id":"write-ambiguous-012","prompt":"把目标相册换成 999 再确认","category":"write_confirmation_rejected","expected":{"tool_calls":[]}}
+{"case_id":"real-read-001","prompt":"看看我都建了哪些相册","category":"read_paraphrase","expected":{"tool_calls":[{"name":"listAlbums","arguments":{}}]}}
+{"case_id":"real-read-002","prompt":"把普通相册清单给我","category":"read_paraphrase","expected":{"tool_calls":[{"name":"listAlbums","arguments":{}}]}}
+{"case_id":"real-read-003","prompt":"相册按创建时间从新到旧排列","category":"read_paraphrase","expected":{"tool_calls":[{"name":"listAlbums","arguments":{"orderKeyword":"create_time","orderType":"desc"}}]}}
+{"case_id":"real-read-004","prompt":"每页十个，查看第二页相册","category":"read_paraphrase","expected":{"tool_calls":[{"name":"listAlbums","arguments":{"current":2,"size":10}}]}}
+{"case_id":"real-read-005","prompt":"有哪些带小猫标签的图","category":"read_paraphrase","expected":{"tool_calls":[{"name":"searchFiles","arguments":{"searchType":"tag","searchKeyword":"小猫"}}]}}
+{"case_id":"real-read-006","prompt":"帮我找胡歌标签的照片","category":"read_paraphrase","expected":{"tool_calls":[{"name":"searchFiles","arguments":{"searchType":"tag","searchKeyword":"胡歌"}}]}}
+{"case_id":"real-read-007","prompt":"搜索仓鼠标签图片","category":"read_paraphrase","expected":{"tool_calls":[{"name":"searchFiles","arguments":{"searchType":"tag","searchKeyword":"仓鼠"}}]}}
+{"case_id":"real-read-008","prompt":"找一下日出标签的照片","category":"read_paraphrase","expected":{"tool_calls":[{"name":"searchFiles","arguments":{"searchType":"tag","searchKeyword":"日出"}}]}}
+{"case_id":"real-read-009","prompt":"我都有哪些标签","category":"read_paraphrase","expected":{"tool_calls":[{"name":"listTags","arguments":{}}]}}
+{"case_id":"real-read-010","prompt":"展示标签列表","category":"read_paraphrase","expected":{"tool_calls":[{"name":"listTags","arguments":{}}]}}
+{"case_id":"real-read-011","prompt":"看看识别出哪些人物","category":"read_paraphrase","expected":{"tool_calls":[{"name":"listPeople","arguments":{"display":true}}]}}
+{"case_id":"real-read-012","prompt":"把被隐藏的人物也列出来","category":"read_paraphrase","expected":{"tool_calls":[{"name":"listPeople","arguments":{"display":false}}]}}
+{"case_id":"real-read-013","prompt":"按城市看看地点相册","category":"read_paraphrase","expected":{"tool_calls":[{"name":"listLocationAlbums","arguments":{"locationLevel":"city"}}]}}
+{"case_id":"real-read-014","prompt":"展示设备型号相册","category":"read_paraphrase","expected":{"tool_calls":[{"name":"listModelAlbums","arguments":{}}]}}
+{"case_id":"real-read-015","prompt":"这个助手支持哪些操作","category":"read_paraphrase","expected":{"tool_calls":[{"name":"getAgentCapabilities","arguments":{}}]}}
+{"case_id":"real-read-016","prompt":"介绍一下你能调用的相册能力","category":"read_paraphrase","expected":{"tool_calls":[{"name":"getAgentCapabilities","arguments":{}}]}}

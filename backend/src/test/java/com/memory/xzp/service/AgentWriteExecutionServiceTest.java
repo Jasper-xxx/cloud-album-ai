@@ -109,6 +109,7 @@ class AgentWriteExecutionServiceTest {
                 payload("album", "add_files_to_album", List.of("f1", "f2", "f3"));
         payload.setAlbumId(21L);
         payload.setAlbumName("Trip");
+        payload.setAlbumName("Trip");
         when(fileMapper.selectActiveOwnershipRowsForUpdate(List.of("f1", "f2", "f3")))
                 .thenReturn(ownership("f1", "f2", "f3"));
         AlbumVO album = new AlbumVO();
@@ -155,6 +156,7 @@ class AgentWriteExecutionServiceTest {
         AgentPendingActionPayload payload =
                 payload("album", "remove_files_from_album", List.of("f1", "f2", "f3"));
         payload.setAlbumId(21L);
+        payload.setAlbumName("Trip");
         when(fileMapper.selectActiveOwnershipRowsForUpdate(List.of("f1", "f2", "f3")))
                 .thenReturn(ownership("f1", "f2", "f3"));
         AlbumVO album = new AlbumVO();

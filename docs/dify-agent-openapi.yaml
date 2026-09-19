@@ -8,11 +8,19 @@ info:
 servers:
   - url: http://host.docker.internal:8088
 
-security: []
+security:
+  - AgentServiceKey: []
 
 paths:
   /agent/capabilities:
     get:
+      parameters:
+        - in: query
+          name: conversationId
+          required: true
+          schema:
+            type: string
+            pattern: "^[A-Za-z0-9_-]{1,128}$"
       operationId: getAgentCapabilities
       summary: 查询智能体能力边界
       description: 查询当前开放、需要确认和禁用的智能体能力。
@@ -29,6 +37,13 @@ paths:
 
   /agent/searchFiles:
     post:
+      parameters:
+        - in: query
+          name: conversationId
+          required: true
+          schema:
+            type: string
+            pattern: "^[A-Za-z0-9_-]{1,128}$"
       operationId: searchFiles
       summary: 检索照片
       description: 按标签、地点、设备、相册或媒体类型检索当前用户照片。
@@ -58,6 +73,13 @@ paths:
 
   /agent/advancedSearchFiles:
     post:
+      parameters:
+        - in: query
+          name: conversationId
+          required: true
+          schema:
+            type: string
+            pattern: "^[A-Za-z0-9_-]{1,128}$"
       operationId: advancedSearchFiles
       summary: 组合检索照片
       description: 按日期、多标签、地点层级、设备、相册、人物、媒体类型和数据完整性组合检索当前用户文件。
@@ -87,6 +109,13 @@ paths:
 
   /agent/analyzeLibrary:
     post:
+      parameters:
+        - in: query
+          name: conversationId
+          required: true
+          schema:
+            type: string
+            pattern: "^[A-Za-z0-9_-]{1,128}$"
       operationId: analyzeLibrary
       summary: 分析图库健康度
       description: 只读统计未标签、缺少元数据、相似文件和异常 AI 任务，并返回整理建议。
@@ -116,6 +145,13 @@ paths:
 
   /agent/previewImageTagTask:
     post:
+      parameters:
+        - in: query
+          name: conversationId
+          required: true
+          schema:
+            type: string
+            pattern: "^[A-Za-z0-9_-]{1,128}$"
       operationId: previewImageTagTask
       summary: 预览 AI 标签建议任务
       description: 冻结最多 50 张图片并签发一次性确认凭证，不提交任务、不写入标签。
@@ -145,6 +181,13 @@ paths:
 
   /agent/submitImageTagTask:
     post:
+      parameters:
+        - in: query
+          name: conversationId
+          required: true
+          schema:
+            type: string
+            pattern: "^[A-Za-z0-9_-]{1,128}$"
       operationId: submitImageTagTask
       summary: 提交 AI 标签建议任务
       description: 消费预览凭证，为服务端冻结图片提交 autoAdd=false 的持久化任务。
@@ -178,6 +221,13 @@ paths:
 
   /agent/getAgentTaskStatus:
     post:
+      parameters:
+        - in: query
+          name: conversationId
+          required: true
+          schema:
+            type: string
+            pattern: "^[A-Za-z0-9_-]{1,128}$"
       operationId: getAgentTaskStatus
       summary: 查询 AI 标签建议任务状态
       description: 聚合批次进度，并返回达到预览阈值的候选标签。
@@ -211,6 +261,13 @@ paths:
 
   /agent/previewApplySuggestedTags:
     post:
+      parameters:
+        - in: query
+          name: conversationId
+          required: true
+          schema:
+            type: string
+            pattern: "^[A-Za-z0-9_-]{1,128}$"
       operationId: previewApplySuggestedTags
       summary: 预览应用 AI 标签建议
       description: 校验选择来自当前用户任务结果，冻结建议并签发一次性确认凭证。
@@ -240,6 +297,13 @@ paths:
 
   /agent/executeApplySuggestedTags:
     post:
+      parameters:
+        - in: query
+          name: conversationId
+          required: true
+          schema:
+            type: string
+            pattern: "^[A-Za-z0-9_-]{1,128}$"
       operationId: executeApplySuggestedTags
       summary: 执行应用 AI 标签建议
       description: 消费一次性确认凭证，只写入服务端冻结且已校验的候选标签。
@@ -273,6 +337,13 @@ paths:
 
   /agent/listAlbums:
     post:
+      parameters:
+        - in: query
+          name: conversationId
+          required: true
+          schema:
+            type: string
+            pattern: "^[A-Za-z0-9_-]{1,128}$"
       operationId: listAlbums
       summary: 查询普通相册
       description: 分页查询当前用户的普通相册。
@@ -300,6 +371,13 @@ paths:
 
   /agent/listLocationAlbums:
     post:
+      parameters:
+        - in: query
+          name: conversationId
+          required: true
+          schema:
+            type: string
+            pattern: "^[A-Za-z0-9_-]{1,128}$"
       operationId: listLocationAlbums
       summary: 查询地点相册
       description: 分页查询当前用户的地点相册。
@@ -327,6 +405,13 @@ paths:
 
   /agent/listModelAlbums:
     post:
+      parameters:
+        - in: query
+          name: conversationId
+          required: true
+          schema:
+            type: string
+            pattern: "^[A-Za-z0-9_-]{1,128}$"
       operationId: listModelAlbums
       summary: 查询设备相册
       description: 分页查询当前用户的设备或型号相册。
@@ -354,6 +439,13 @@ paths:
 
   /agent/listTags:
     get:
+      parameters:
+        - in: query
+          name: conversationId
+          required: true
+          schema:
+            type: string
+            pattern: "^[A-Za-z0-9_-]{1,128}$"
       operationId: listTags
       summary: 查询标签
       description: 查询当前用户已有的标签及照片数量。
@@ -373,6 +465,13 @@ paths:
 
   /agent/listPeople:
     post:
+      parameters:
+        - in: query
+          name: conversationId
+          required: true
+          schema:
+            type: string
+            pattern: "^[A-Za-z0-9_-]{1,128}$"
       operationId: listPeople
       summary: 查询人物相册
       description: 分页查询当前用户的人物相册，不进行真实身份断言。
@@ -400,6 +499,13 @@ paths:
 
   /agent/previewAlbumAction:
     post:
+      parameters:
+        - in: query
+          name: conversationId
+          required: true
+          schema:
+            type: string
+            pattern: "^[A-Za-z0-9_-]{1,128}$"
       operationId: previewAlbumAction
       summary: 预览相册写操作
       description: |
@@ -431,6 +537,13 @@ paths:
 
   /agent/executeAlbumAction:
     post:
+      parameters:
+        - in: query
+          name: conversationId
+          required: true
+          schema:
+            type: string
+            pattern: "^[A-Za-z0-9_-]{1,128}$"
       operationId: executeAlbumAction
       summary: 执行相册写操作
       description: |
@@ -466,6 +579,13 @@ paths:
 
   /agent/previewTagAction:
     post:
+      parameters:
+        - in: query
+          name: conversationId
+          required: true
+          schema:
+            type: string
+            pattern: "^[A-Za-z0-9_-]{1,128}$"
       operationId: previewTagAction
       summary: 预览标签写操作
       description: |
@@ -497,6 +617,13 @@ paths:
 
   /agent/executeTagAction:
     post:
+      parameters:
+        - in: query
+          name: conversationId
+          required: true
+          schema:
+            type: string
+            pattern: "^[A-Za-z0-9_-]{1,128}$"
       operationId: executeTagAction
       summary: 执行标签写操作
       description: |
@@ -532,6 +659,13 @@ paths:
 
   /agent/getPendingActionStatus:
     post:
+      parameters:
+        - in: query
+          name: conversationId
+          required: true
+          schema:
+            type: string
+            pattern: "^[A-Za-z0-9_-]{1,128}$"
       operationId: getPendingActionStatus
       summary: 查询待确认操作状态
       description: 查询当前用户待确认操作的状态、摘要和时间信息。
@@ -561,6 +695,13 @@ paths:
 
   /agent/cancelPendingAction:
     post:
+      parameters:
+        - in: query
+          name: conversationId
+          required: true
+          schema:
+            type: string
+            pattern: "^[A-Za-z0-9_-]{1,128}$"
       operationId: cancelPendingAction
       summary: 取消待确认操作
       description: 使用预览凭证取消尚未执行的操作。
@@ -592,6 +733,13 @@ paths:
 
   /agent/discoverSimilarFiles:
     post:
+      parameters:
+        - in: query
+          name: conversationId
+          required: true
+          schema:
+            type: string
+            pattern: "^[A-Za-z0-9_-]{1,128}$"
       operationId: discoverSimilarFiles
       summary: 发现相似或重复照片候选组
       description: 只读实时计算，不返回原始特征向量。
@@ -615,6 +763,13 @@ paths:
 
   /agent/previewP3Action:
     post:
+      parameters:
+        - in: query
+          name: conversationId
+          required: true
+          schema:
+            type: string
+            pattern: "^[A-Za-z0-9_-]{1,128}$"
       operationId: previewP3Action
       summary: 预览P3整理操作
       requestBody:
@@ -637,6 +792,13 @@ paths:
 
   /agent/executeP3Action:
     post:
+      parameters:
+        - in: query
+          name: conversationId
+          required: true
+          schema:
+            type: string
+            pattern: "^[A-Za-z0-9_-]{1,128}$"
       operationId: executeP3Action
       summary: 执行P3整理操作
       requestBody:
@@ -659,6 +821,13 @@ paths:
 
   /agent/uploadAttachment:
     post:
+      parameters:
+        - in: query
+          name: conversationId
+          required: true
+          schema:
+            type: string
+            pattern: "^[A-Za-z0-9_-]{1,128}$"
       operationId: uploadAttachment
       summary: 上传聊天附件并返回真实fileId
       requestBody:
@@ -693,6 +862,13 @@ paths:
 
   /agent/searchByAttachment:
     post:
+      parameters:
+        - in: query
+          name: conversationId
+          required: true
+          schema:
+            type: string
+            pattern: "^[A-Za-z0-9_-]{1,128}$"
       operationId: searchByAttachment
       summary: 使用聊天附件以图搜图
       requestBody:
@@ -737,6 +913,13 @@ paths:
 
   /agent/previewP4Action:
     post:
+      parameters:
+        - in: query
+          name: conversationId
+          required: true
+          schema:
+            type: string
+            pattern: "^[A-Za-z0-9_-]{1,128}$"
       operationId: previewP4Action
       summary: 预览P4高风险操作
       description: 返回公开范围、有效期、不可逆影响及90秒确认凭证。
@@ -760,6 +943,13 @@ paths:
 
   /agent/executeP4Action:
     post:
+      parameters:
+        - in: query
+          name: conversationId
+          required: true
+          schema:
+            type: string
+            pattern: "^[A-Za-z0-9_-]{1,128}$"
       operationId: executeP4Action
       summary: 执行P4高风险操作
       requestBody:
@@ -781,6 +971,11 @@ paths:
           $ref: "#/components/responses/Gone"
 
 components:
+  securitySchemes:
+    AgentServiceKey:
+      type: apiKey
+      in: header
+      name: X-Agent-Service-Key
   responses:
     BadRequest:
       description: 请求字段缺失、类型错误、包含禁止的执行参数或业务参数无效
@@ -1304,6 +1499,14 @@ components:
       additionalProperties: false
       required: [action]
       properties:
+        allRecycleImages:
+          type: boolean
+          default: false
+          description: 仅 restore_files 可用；用户明确恢复回收站所有图片时为 true。服务端冻结本人回收站最多50张图片，不含视频；不可与 fileIds 或 albumIds 混用。空回收站返回无需确认的结果，超过上限不截断执行。
+        albumName:
+          type: string
+          maxLength: 100
+          description: 仅 move_files_to_recycle_bin 可用。精确匹配本人唯一普通相册，冻结其中最多20张未删除图片（不含视频）；与 fileIds、albumIds 互斥。超过上限或空相册不生成待确认操作。
         action:
           type: string
           enum:

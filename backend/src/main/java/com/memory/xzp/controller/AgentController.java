@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.memory.xzp.common.BaseResponse;
 import com.memory.xzp.common.ResultUtil;
+import com.memory.xzp.config.AgentAccessGuard;
 import com.memory.xzp.exception.BusinessException;
 import com.memory.xzp.exception.StatusCode;
 import com.memory.xzp.mapper.FileMapper;
@@ -89,6 +90,8 @@ import java.util.regex.Pattern;
 @Tag(name = "智能体接口", description = "Dify 智能体聚合接口")
 @Slf4j
 public class AgentController {
+    @Resource
+    private AgentAccessGuard agentAccessGuard;
 
     private static final int DEFAULT_CURRENT = 1;
     private static final int DEFAULT_SIZE = 20;
@@ -150,12 +153,9 @@ public class AgentController {
 
     @Resource
     private SimilarDetectService similarDetectService;
+    @Resource
+    private com.memory.xzp.service.AgentDiscoveryJobService discoveryJobService;
 
-    @Value("${agent.auth-enabled:false}")
-    private boolean agentAuthEnabled;
-
-    @Value("${agent.dev-user-id:1}")
-    private Long agentDevUserId;
 
     @GetMapping("/capabilities")
     @Operation(summary = "查询智能体能力边界", description = "返回当前开放、需确认和禁用的智能体工具")
@@ -212,6 +212,11 @@ public class AgentController {
                 "聊天附件必须先由上传接口返回真实fileId，不能用文件名或视觉描述伪造上传结果。"
         ));
         return ResultUtil.success(capabilities, "获取智能体能力成功");
+    }
+
+    @GetMapping("/activity")
+    public BaseResponse<?> activity() {
+        return ResultUtil.success(pendingActionService.recentActivity(currentUserId()),"操作记录查询成功");
     }
 
     @PostMapping("/searchFiles")
@@ -315,7 +320,7 @@ public class AgentController {
             summary = "发现相似或重复照片",
             description = "只读、实时返回当前用户的候选相似照片组，不写入特征向量或删除数据"
     )
-    public BaseResponse<List<SimilarFileInfoListVO>> discoverSimilarFiles(
+    public BaseResponse<?> discoverSimilarFiles(
             @RequestBody(required = false) AgentExtendedActionRequest request
     ) {
         if (request == null) {
@@ -329,9 +334,8 @@ public class AgentController {
         if (similarity < 0.50 || similarity > 1.0 || size < 1 || size > 50) {
             throw new BusinessException(StatusCode.PARAMS_ERROR, "similarity或size超出允许范围");
         }
-        List<SimilarFileInfoListVO> result =
-                similarDetectService.detectSimilarImages(similarity, size, currentUserId());
-        return ResultUtil.success(result, "相似照片候选发现完成");
+        return ResultUtil.success(discoveryJobService.submit(currentUserId(), similarity, size),
+                "相似发现任务已受理，请在操作记录查看进度；尚未确认完成");
     }
 
     @PostMapping("/previewP3Action")
@@ -374,7 +378,7 @@ public class AgentController {
                 attachment,
                 albumId,
                 lastModified,
-                currentUserId(),
+                agentAccessGuard.requireUserId(servletRequest),
                 servletRequest
         );
         return ResultUtil.success(result, "聊天附件已上传");
@@ -383,6 +387,7 @@ public class AgentController {
     @PostMapping(value = "/searchByAttachment", consumes = "multipart/form-data")
     @Operation(summary = "使用聊天附件以图搜图", description = "附件只作为查询图，不会自动写入Cloud-Album")
     public BaseResponse<List<ImageSearchResultVO>> searchByAttachment(
+            HttpServletRequest servletRequest,
             @RequestParam("attachment") MultipartFile attachment,
             @RequestParam(value = "mode", required = false) String mode,
             @RequestParam(value = "albumIds", required = false) List<Long> albumIds,
@@ -395,7 +400,7 @@ public class AgentController {
                 albumIds,
                 tagNames,
                 sizeRange,
-                currentUserId()
+                agentAccessGuard.requireUserId(servletRequest)
         );
         return ResultUtil.success(result, "附件以图搜图完成");
     }
@@ -1709,12 +1714,6 @@ public class AgentController {
     }
 
     private Long currentUserId() {
-        if (StpUtil.isLogin()) {
-            return StpUtil.getLoginIdAsLong();
-        }
-        if (!agentAuthEnabled) {
-            return agentDevUserId;
-        }
-        return StpUtil.getLoginIdAsLong();
+        return com.memory.xzp.config.AgentAccessGuard.currentUserId();
     }
 }
