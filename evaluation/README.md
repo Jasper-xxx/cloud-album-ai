@@ -1,6 +1,8 @@
 # Cloud-Album 统一测评
 
-这套工具把五类测评统一为 JSONL 观测记录，计算指标、执行门槛判断，并同时输出机器可读的 `report.json` 和中文 `report.md`。工具只使用 Python 标准库。
+这套工具把五类测评统一为 JSONL 观测记录，计算指标、执行门槛判断，并同时输出机器可读的 `report.json` 和中文 `report.md`。评测 CLI 使用 Python 标准库；完整测试集中的 Dify YAML 契约检查另需 `PyYAML`。
+
+> 2026-10-02 根据当前源码校正文档。本次未运行测试、模型调用、在线采集或服务。以下命令是按需操作说明，不表示已经执行或通过。个人版当前范围和延期项见[交付记录](../docs/agent-personal-delivery-2026-09-14.md)，后续附件与恢复变更见[修复记录](../docs/agent-restore-ui-fix-2026-09-15.md)。
 
 ## 先跑通示例
 
@@ -9,10 +11,12 @@
 ```powershell
 python evaluation/run.py evaluate `
   --manifest evaluation/manifest.example.json `
-  --output-dir evaluation/reports/example
+  --output-dir evaluation/reports/local-example
 ```
 
-示例 Manifest 中 `sample_data=true`，报告会醒目标注“只验证评测链路，不代表真实系统效果”。复制 Manifest 开始真实测评时必须改成 `false`。
+示例 Manifest 中 `sample_data=true`，报告会醒目标注“只验证评测链路，不代表真实系统效果”。复制 Manifest 开始真实测评时必须改成 `false`，并将示例输入替换为真实观测；只切换标记不会让示例成为真实测试。请为每次采集使用新的输出目录，不要覆盖历史报告。
+
+`reports/example` 与 `reports/p0-example` 是旧示例快照；本地 `reports/resume-real-20260805`（含 `summary.md`、`report.md`）和 `reports/agent-real-baseline-20260805/report.md` 是 2026-08-05 的历史实测记录，部分文件未纳入 Git。历史 92 条 Agent 结果不代表当前工作流重新验收；旧数字及生成时间应保留，新的结果另存。
 
 ## 指标口径
 
@@ -56,9 +60,37 @@ python evaluation/run.py collect-image-search `
 - `任务完成率`：`actual.completed=true` 且 `actual.verification.passed=true` 的用例数 / 总用例数。`completed` 与 `passed` 必须是 JSON 布尔值，字符串 `"false"` 会作为输入错误拒绝。
 - `验证覆盖率`：具有明确验证来源且验证通过的用例比例。只读任务可使用响应断言，写任务必须使用后端状态或业务表验收，不能采信模型自述。
 
-P0 已提供 96 条可复现金标 [agent-p0-gold.jsonl](datasets/agent-p0-gold.jsonl)，覆盖只读单工具路由、写操作预览、精确确认词执行、待确认状态/取消以及含糊确认拒绝。匹配的示例预测位于 [agent-p0-predictions.jsonl](examples/agent-p0-predictions.jsonl)，`manifest.example.json` 以 `case_count >= 80` 作为硬门槛。真实 OperationId 以 [dify-agent-openapi.yaml](../docs/dify-agent-openapi.yaml) 为准。
+P0 提供 96 条固定金标 [agent-p0-gold.jsonl](datasets/agent-p0-gold.jsonl)，覆盖当时的只读单工具路由、写操作预览、精确确认词执行、待确认状态/取消以及含糊确认拒绝。匹配的示例预测位于 [agent-p0-predictions.jsonl](examples/agent-p0-predictions.jsonl)，`manifest.example.json` 以 `case_count >= 80` 作为硬门槛。它们是评测逻辑基准，不能代表当前全部个人版工具覆盖；真实 OperationId 与参数以 [dify-agent-openapi.yaml](../docs/dify-agent-openapi.yaml) 为准。
 
-把 Dify 调试轨迹整理为 prediction 文件的 `actual.tool_calls`，并由独立验收器填写 `actual.completed` 与 `actual.verification`。正式运行时只替换 predictions，不修改 gold。记录格式由 [agent-gold.schema.json](schemas/agent-gold.schema.json) 和 [agent-prediction.schema.json](schemas/agent-prediction.schema.json) 固定；生成器 [generate_p0_fixtures.py](datasets/generate_p0_fixtures.py) 用于确定性重建基准夹具。
+把 Dify 调试轨迹整理为 prediction 文件的 `actual.tool_calls`，并由独立验收器填写 `actual.completed` 与 `actual.verification`。同一基准运行时冻结 gold；若功能范围或参数契约变化，应建立新的版本化金标，不要为使已有结果通过而改期望。记录格式见 [agent-gold.schema.json](schemas/agent-gold.schema.json) 和 [agent-prediction.schema.json](schemas/agent-prediction.schema.json)；生成器 [generate_p0_fixtures.py](datasets/generate_p0_fixtures.py) 用于确定性重建 P0 夹具。
+
+当前 CLI 已有以下 Dify 命令：
+
+| 命令 | 行为与依赖 |
+|---|---|
+| `collect-agent-runs` | 向 WebApp / Service API 发请求，记录回复、耗时与 workflow run ID；会消耗模型额度 |
+| `collect-agent-traces` | 将已经保存的 runs 与 Docker 中 Dify PostgreSQL 节点轨迹合并为 predictions；不重新调用模型 |
+| `collect-agent` | 连续执行上面两步，需同时能访问 Dify 服务及轨迹数据库 |
+
+在线采集命令的入口由 `--webapp-url`、`--app-code` 指定；使用 Service API 时再传 `--api-key-env`（环境变量名）、`--service-api-base` 和 `--user`，不要把密钥值写在命令中。轨迹参数默认为容器 `docker-db_postgres-1`、数据库 `dify`、用户 `postgres`，与本地部署不同时必须覆盖对应 `--trace-*` 参数。
+
+当前代码的限制需要在正式评测前处理：
+
+- `_dify_chat` 每个 case 都使用新会话且 `files=[]`，不能据此声称覆盖多轮确认或附件上传。
+- `collect-agent-runs` 不会自动采集独立业务状态。合并前需由独立验收器为每条 run 补充 `business_observation`，包含非空 `evidence_id` 与真实 `snapshot`；gold 的 `expected.business_assertions` 对该快照断言，`expected.reply_assertions` 核对回复中的包含/排除事实。
+- `build_dify_agent_predictions` 要求工作流状态、工具参数、工具响应、业务快照断言和回复事实同时通过。当前 92 条 `agent-real-gold.jsonl` **没有**上述业务与回复断言，因此不能直接用它重跑并期待复现 8 月的完成率。`collect-agent` 的一体流程也未补齐独立业务观测，不能作为完整业务验收。
+- `validation.py`、JSON schema 的工具白名单和旧节点映射主要对应 P0 工具；新增附件、P3/P4、资源授权等工具的完整评测仍需同步金标与契约。不能将 96 条示例通过解释为新增工具全部通过。
+
+需要依据已有轨迹生成新报告时，推荐先收集 runs，补充独立证据，再使用 `collect-agent-traces`，例如：
+
+```powershell
+python evaluation/run.py collect-agent-traces `
+  --dataset evaluation/datasets/agent-current-gold.jsonl `
+  --runs evaluation/observations/agent-current-runs.jsonl `
+  --output evaluation/observations/agent-current-predictions.jsonl
+```
+
+上述 `agent-current-*` 是需自行准备的新文件名，不是仓库已有且已通过的用例。
 
 ### 4. 安全测试
 
@@ -70,6 +102,8 @@ P0 已提供 96 条可复现金标 [agent-p0-gold.jsonl](datasets/agent-p0-gold.
 
 P0 场景集 [security-p0-scenarios.jsonl](datasets/security-p0-scenarios.jsonl) 共 72 条，三类攻击各 24 条；示例门禁要求三类各不少于 20 条、`skipped_case_count == 0`、副作用验证率和拦截率均为 100%。格式由 [security-scenario.schema.json](schemas/security-scenario.schema.json) 与 [security-observation.schema.json](schemas/security-observation.schema.json) 固定。
 
+此场景集也保留旧契约。当前 Agent 预览、状态、取消、执行等操作绑定 `conversationId`；线上安全用例必须带上正确的会话和该次预览凭证，再改变待测的单一条件。旧场景缺少会话时可能被更早拒绝，不能算作“已验证确认令牌不可绕过”。下面是采集器用法，正式采集前应另存并更新场景文件，保持旧夹具不变。
+
 ```powershell
 $env:EVAL_USER_A_TOKEN = '<隔离测试账号 A 的 token>'
 $env:EVAL_USER_B_TOKEN = '<隔离测试账号 B 的 token>'
@@ -77,9 +111,9 @@ $env:EVAL_OTHER_USER_TASK_ID = '<账号 B 的 taskId>'
 $env:EVAL_PENDING_ALBUM_ID = '<账号 A 的待确认相册操作 ID>'
 $env:EVAL_PENDING_TAG_ID = '<账号 A 的待确认标签操作 ID>'
 python evaluation/run.py collect-security `
-  --scenarios evaluation/datasets/security-p0-scenarios.jsonl `
+  --scenarios evaluation/datasets/security-current-scenarios.jsonl `
   --base-url http://127.0.0.1:8088 `
-  --output evaluation/observations/security-p0.jsonl `
+  --output evaluation/observations/security-current.jsonl `
   --allow-mutating
 ```
 
@@ -94,7 +128,7 @@ python evaluation/run.py collect-security `
 - `重复业务副作用数`：每个任务 `max(business_effect_count - 1, 0)` 的总和，推荐作为幂等性硬门槛。
 - `恢复耗时`：从故障注入到 SUCCESS/DEAD/CANCELLED 的时间；报告平均值和 P95。
 
-本次新增的数据库迁移 `V5__async_task_execution_count.sql` 会增加 `async_task.execution_count`，每次数据库 claim 成功时原子加一。它能统计“claim 后 Worker 崩溃再恢复”这种 `retry_count` 漏记的执行。部署评测环境前先执行 Flyway 迁移。
+已有数据库迁移 `V5__async_task_execution_count.sql` 增加 `async_task.execution_count`，每次数据库 claim 成功时原子加一。它能统计“claim 后 Worker 崩溃再恢复”这种 `retry_count` 漏记的执行。部署评测环境时应让 Flyway 顺序执行全部适用迁移；V5 不是当前最后一个版本，不要单独重复执行该 SQL。
 
 建议每种故障至少重复 20 次：AI 服务连续 503、MinIO 超时、Worker claim 后强制退出、RabbitMQ 不可用、MySQL 短暂断连。故障注入必须在隔离环境完成，并按以下顺序记录：
 
@@ -117,6 +151,8 @@ python evaluation/run.py collect-async-tasks `
 
 若用例不提供 `fault_injected_at` 或后端没有 `completedAt`，采集器会把自身轮询耗时作为恢复耗时下界，并标记 `recovery_time_is_lower_bound=true`。
 
+若使用 `business_effect_probe="task_result"`，采集器只把成功任务是否有 `result` 转为 0/1；这不能证明标签、文件等真实业务副作用没有重复，仍需独立状态核对。`prepare-ai-outage` 命令会创建候选标签任务，但现有实现尚未给 Agent 预览/提交 URL 传入当前必需的 `conversationId`，暂不能直接用于当前工作流的故障注入；不要绕过会话校验来适配旧采集器。
+
 ## 生成真实总报告
 
 复制 [manifest.example.json](manifest.example.json) 为 `manifest.real.json`，把 `sample_data` 改成 `false`：普通 suite 的 `input` 指向真实观测文件，Agent 保留 `gold` 并把 `predictions` 指向真实轨迹。门槛是工程下限，不是行业标准，应按业务风险、图库规模和硬件基线评审后冻结。
@@ -131,10 +167,11 @@ python evaluation/run.py evaluate `
 
 ## 自测
 
+以下命令只作维护参考，本次未执行。完整 Python 测试集需先在所用 Python 环境安装 `PyYAML`；Maven `verify` 包含测试及 Failsafe 集成测试阶段，需要相应依赖环境。仅需执行一次完整 Maven 检查时运行 `verify` 即可，不必先重复运行 `test`。
+
 ```powershell
 python -m unittest discover -s evaluation/tests -v
-mvn -f backend/pom.xml -q test
 mvn -f backend/pom.xml -q verify
 ```
 
-Python 测试覆盖指标公式、严格布尔类型、JSON schema 文档、96/72 条数据规模、三类安全数量门槛、execute 凭证白名单、副作用前后快照，以及示例 Manifest 的完整 P0 门禁。
+Python 测试包括指标公式、严格布尔类型、JSON schema 文档、96/72 条数据规模、三类安全数量门槛、execute 凭证白名单、副作用前后快照、独立业务证据，以及 Dify Python 节点与 YAML 静态契约。它们不会替代实际 Dify 导入、发布、会话与附件的浏览器验收。

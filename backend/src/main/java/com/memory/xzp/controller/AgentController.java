@@ -318,7 +318,7 @@ public class AgentController {
     @PostMapping("/discoverSimilarFiles")
     @Operation(
             summary = "发现相似或重复照片",
-            description = "只读、实时返回当前用户的候选相似照片组，不写入特征向量或删除数据"
+            description = "提交当前用户的后台相似发现任务，返回jobId、status和progress；通过/agent/discoveryJobs查询或取消，不修改照片或特征向量"
     )
     public BaseResponse<?> discoverSimilarFiles(
             @RequestBody(required = false) AgentExtendedActionRequest request

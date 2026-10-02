@@ -741,8 +741,8 @@ paths:
             type: string
             pattern: "^[A-Za-z0-9_-]{1,128}$"
       operationId: discoverSimilarFiles
-      summary: 发现相似或重复照片候选组
-      description: 只读实时计算，不返回原始特征向量。
+      summary: 提交后台相似照片发现任务
+      description: 返回当前用户任务的 jobId、status、progress 与 message，不同步返回完整候选组。通过 /agent/discoveryJobs 查询或取消；完成后的候选组不代表可安全删除的重复文件，不返回原始特征向量。
       requestBody:
         required: false
         content:
@@ -751,7 +751,7 @@ paths:
               $ref: "#/components/schemas/AgentSimilarDiscoveryRequest"
       responses:
         "200":
-          description: 查询成功
+          description: 任务已受理，data 为任务状态对象；当前进度和结果需后续查询。
           content:
             application/json:
               schema:

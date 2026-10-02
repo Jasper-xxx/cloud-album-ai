@@ -1,323 +1,135 @@
-# Cloud-Album Dify 写操作工作流配置
+# Cloud-Album Dify 写操作工作流指南
 
-这份指南用于把“云忆相册助手”从只读问答升级为“确认后可执行整理操作”的 Chatflow。
+最近对照代码更新：2026-10-02。本文描述当前个人版实现，不代表本次重新完成在线验收。环境与导入步骤见 [个人版导入说明](dify-personal-import-2026-09-14.md)，历史验证范围见 [交付记录](agent-personal-delivery-2026-09-14.md)。
 
-## DSL 版本与功能修订
+## 版本与鉴权
 
-`云忆相册助手-write.yml` 顶层的 `version` 是 Dify DSL 格式版本，不是应用功能版本。本机 Dify 支持 DSL `0.6.0`，因此该字段必须保持 `0.6.0`；Chatflow 功能修订号只记录在功能台账和拓展方案中，不能写入顶层 `version`。否则导入时会出现“当前应用 DSL 版本高于系统支持版本”的不兼容警告，并可能触发强制兼容转换。
+- Dify DSL 顶层 `version: 0.6.0` 是格式版本；OpenAPI 为 `5.0.7`，后端待执行契约为 `1.6.0`，不可混用。
+- 除公开能力清单，浏览器调用需要有效 Sa-Token；Dify 使用 `X-Agent-Service-Key`，绑定 `AGENT_OWNER_USER_ID`。旧的 `AGENT_AUTH_ENABLED=false` / `AGENT_DEV_USER_ID` 已失效，不存在匿名固定用户回退。
+- 后端与 AI 通过另一把 `AI_SERVICE_KEY` 鉴权，根目录 `.env` 为共同配置入口。凭据不能进入模型提示词、工具业务参数或前端变量。
+- 每个工具的 query 参数 `conversationId` 原生绑定 `sys.conversation_id`。服务端按“主人账号 + 会话 + 工作流版本”绑定确认记录；新预览仅替换同账号同会话的旧有效预览，不影响其他会话。
 
-Dify 自定义工具同时提供 `text` 和 `json` 输出。当前版本会把对象型 `json` 包装为单元素数组，因此写链路中的预览凭据保存、执行结果、取消结果和状态结果节点统一读取 `text`，再由代码节点解析其中的 JSON 对象；不要把这些节点改回工具的 `json` 输出。
+## 当前工作流结构
 
-提交或导入 Chatflow 前应至少使用标准 YAML 解析器读取一次完整文件。尤其要检查参数 Schema 列表项前不存在字面量补丁标记 `+` 或 `-`；这类字符可能不会在普通文本浏览中显眼，但会让 Dify 只显示无具体原因的“导入失败”。
-
-## 工具准备
-
-重新导入：
-
-```text
-docs/dify-agent-openapi.yaml
-```
-
-确认 Dify 工具列表里出现这些 operation：
-
-- `searchFiles`
-- `advancedSearchFiles`
-- `analyzeLibrary`
-- `previewImageTagTask`
-- `submitImageTagTask`
-- `getAgentTaskStatus`
-- `previewApplySuggestedTags`
-- `executeApplySuggestedTags`
-- `listAlbums`
-- `listTags`
-- `previewAlbumAction`
-- `executeAlbumAction`
-- `previewTagAction`
-- `executeTagAction`
-- `getPendingActionStatus`
-- `cancelPendingAction`
-
-执行类工具必须只放在“用户确认”分支之后。
-
-工具参数引用代码节点输出时应使用 Dify 原生 `variable` 绑定，不要使用 `mixed` 模板。`mixed` 会把数组和数字转成字符串。Dify 1.14.2 仍会把未设置的可选布尔参数转换为 `false`，所以组合检索使用 `normalAlbumState`、`locationState`、`featureState`、`aiAnalysisState` 三态字符串，不能直接绑定四个旧布尔字段。
-
-Dify 1.14.2 不能正确解析请求对象属性上指向数组 Schema 的 `$ref`：例如 `fileIds: {$ref: FileIds}` 会在工具参数中变成 `string`，再把空数组发送为 `"[]"`。因此写工具的 `fileIds` 必须在每个请求 Schema 中内联声明 `type: array` 和 `items: {type: string}`，不得改回属性级 `$ref`。
-
-工具节点需要独立失败处理时，节点必须设置 `error_strategy: fail-branch`，成功连线的 `sourceHandle` 使用 `source`，失败连线使用 `fail-branch`。`success-branch` 不是 Dify 1.14.2 工具节点的有效成功出口；未启用失败分支策略时也不得保留 `fail-branch` 连线，否则可能在成功调用后同时执行成功和失败回复。
-
-查询“在「测试相册A」中查找人物分组为「胡歌」的照片”这类交集时，`advancedSearchFiles` 必须同时传入 `albumName` 和 `personName`。两个名称都按当前用户精确匹配，人物分组不得转换为 `tags`、`tagName` 或 `searchKeyword`。结果整理节点只能声称 `conditionSummary` 中已生效的筛选条件。
-
-### 单用户本地模式
-
-当前项目按单用户、本地自托管模式使用，Dify 自定义工具不需要配置 Sa-Token。后端需使用固定用户 ID：
-
-```text
-AGENT_AUTH_ENABLED=false
-AGENT_DEV_USER_ID=<本地用户 ID>
-```
-
-关闭的只是 `/agent/*` 的登录校验；AgentController 会使用 `AGENT_DEV_USER_ID` 读取和修改该本地用户的数据。这个配置只适用于不对外开放的单用户环境。
-
-## 推荐节点
+普通查询由规划器选择一个必要工具；写请求由参数抽取和确定性校验生成真实服务端预览。确认、取消、状态、附件各有独立分支。不要把完整说明简单粘贴进单一 LLM 节点以替代这些保护。
 
 ```mermaid
 flowchart TD
-    A["开始"] --> B["意图识别"]
-    B --> C{"intent"}
-    C -->|simple_photo_search| D["调用 searchFiles"]
-    C -->|advanced_photo_search| DA["调用 advancedSearchFiles"]
-    C -->|library_health| DH["调用 analyzeLibrary"]
-    C -->|ai_tag_task| AT["预览并确认 AI 标签任务"]
-    C -->|ai_task_status| AS["调用 getAgentTaskStatus"]
-    C -->|apply_suggestions| AP["预览并确认候选标签写入"]
-    C -->|album_query| E["调用 listAlbums"]
-    C -->|tag_query| F["调用 listTags"]
-    C -->|album_write| G["参数抽取"]
-    C -->|tag_write| G
-    C -->|高风险| X["拒绝直接执行"]
-    D --> R["结果整理"]
-    DA --> R
-    DH --> R
-    E --> R
-    F --> R
-    G --> H{"writeAction"}
-    H -->|相册操作| I["previewAlbumAction"]
-    H -->|标签操作| J["previewTagAction"]
-    I --> K["展示确认话术"]
-    J --> K
-    K --> V["保存服务端待执行凭据到会话变量"]
-    V --> L{"确定性确认/取消门禁"}
-    L -->|精确确认| M{"pending family"}
-    L -->|精确取消| N["cancelPendingAction"]
-    L -->|精确查询状态| Q["getPendingActionStatus"]
-    L -->|修改条件| G
-    M -->|相册| O["executeAlbumAction 仅传凭据"]
-    M -->|标签| P["executeTagAction 仅传凭据"]
-    O --> R
-    P --> R
-    N --> R
-    Q --> R
-    X --> R
-    R --> S["回复用户"]
+    A["用户消息"] --> B{"是否带附件"}
+    B -->|是| C["确定附件用途"]
+    C -->|仅查询| D["searchByAttachment"]
+    C -->|明确保存| E["uploadAttachment"]
+    C -->|模糊、否定或同时两项| F["澄清"]
+    B -->|否| G{"确定性确认门禁"}
+    G -->|确认且有有效凭据| H["按会话操作族执行"]
+    G -->|取消或状态| I["取消或查询服务端状态"]
+    G -->|新需求| J["只读规划 / 写参数抽取"]
+    J -->|只读| K["一个必要查询工具"]
+    J -->|写操作| L["对应族 Preview"]
+    L --> M["确定性保存凭据并展示真实预览"]
+    H --> N{"执行结果是否确定"}
+    N -->|否| I
+    N -->|是| O["展示真实结果，清除终态凭据"]
 ```
 
-## 意图识别节点
+操作族与工具：
 
-建议让 LLM 输出 JSON，温度调低。
+| 操作族 | 预览 | 确认后执行 |
+| --- | --- | --- |
+| `album` | `previewAlbumAction` | `executeAlbumAction` |
+| `tag` | `previewTagAction` | `executeTagAction` |
+| `ai_task` | `previewImageTagTask` | `submitImageTagTask` |
+| `suggested_tag` | `previewApplySuggestedTags` | `executeApplySuggestedTags` |
+| `p3_action` | `previewP3Action` | `executeP3Action` |
+| `p4_action` | `previewP4Action` | `executeP4Action` |
 
-```text
-你需要判断用户意图，只输出 JSON，不要输出 Markdown。
+具体动作决定 P3/P4 操作族；不能依赖模型给出的错误族名将恢复操作送到删除接口。维护脚本 `scripts/dify/repair_workflow.py` 将确定性节点源码同步到 DSL；仓库文件变化仍需用户导入并发布到 Dify。
 
-intent 只能是：
-- photo_search
-- advanced_photo_search
-- library_health
-- ai_tag_task
-- ai_task_status
-- apply_suggestions
-- album_query
-- tag_query
-- album_write
-- tag_write
-- help_qa
-- unsupported
+## 参数与 Dify 兼容约束
 
-高风险请求包括：删除照片、删除相册、清空回收站、创建分享链接、下载 token、修改账号。高风险一律输出 unsupported。
+导入 [OpenAPI](dify-agent-openapi.yaml) 后保留以下规则，这些是本项目针对 Dify 1.14.2 的兼容处理：
 
-包含日期范围、多标签关系、人物相册、缺失数据或多个筛选维度时选择 advanced_photo_search；询问图库健康、整理优先级、缺失数据、相似照片或异常 AI 任务数量时选择 library_health。
+- 工具参数使用原生 `variable`，不用 `mixed` 模板传数组或数字。`fileIds` 在请求 Schema 中保留内联 `type: array` 与字符串 `items`，避免属性级 `$ref` 被误识别为字符串。
+- 组合查询使用 `normalAlbumState`、`locationState`、`featureState`、`aiAnalysisState` 字符串三态，避免未设置的可选布尔被转成 `false`。
+- 工具结果整理读取 `text`，由确定性代码解析 JSON；当前适配处理了工具 `json` 可能被包装为单元素数组的差异。
+- 工具失败策略为 `error_strategy: fail-branch`；成功边为 `source`，失败边为 `fail-branch`。`success-branch` 不是这里的工具成功出口。
+- `conversationId` 声明在各 operation 上并绑定系统会话 ID，不能只放 path 级参数或业务 JSON 中。
+- 预览/执行凭据不进入 LLM；用户可见结果显示真实文件名和影响，不能展示密钥、确认 Token 或幂等键。
 
-只读规划节点可开启最近 8 轮对话窗口，用于“继续/下一页”和只修改一个筛选条件；无法可靠恢复原查询时先澄清。写操作参数抽取节点必须继续关闭记忆窗口，不能从历史恢复写参数或凭据。
+## 照片选择与预览
 
-P2 使用独立会话变量 `agent_task_id` 保存最近一次 AI 标签建议批次。提交任务与写入建议分别使用 `ai_task`、`suggested_tag` 待确认操作族；两者都必须消费服务端一次性凭证。任务完成只代表候选结果可读，不能直接声称标签已写入。
+相册动作包括 `create_album`、`create_album_and_add_files`、`add_files_to_album`、`remove_files_from_album`；标签动作包括 `add_tags`、`remove_tags`。
 
-输出格式：
-{
-  "intent": "",
-  "riskLevel": "low|medium|high",
-  "needSearchFirst": false,
-  "writeAction": "",
-  "filters": {
-    "tagName": "",
-    "locationLevel": "",
-    "locationValue": "",
-    "albumName": "",
-    "albumId": null,
-    "imageTypeText": "all"
-  }
-}
-```
+- 只要求创建空相册时使用 `create_album`，允许照片数为 0，但仍需真实预览和确认。成功按 `data.success=true` 判断，不能要求 `affectedFileCount>0`。
+- “最近 N 张”使用 `searchType=latest` 与 `selectionLimit`，相册/标签最多 100 张，P2 标签任务最多 50 张。不能用准备新增的标签反向检索。
+- 精确标签条件使用 `searchKeyword`，多个标签用 `|` 表示并集，`mediaType` 不承载标签条件。候选标签必须符合用户语义类别。
+- 普通相册与人物分组交集查询使用 `albumName` 与 `personName`，不能把人物分组名改写成标签。只转述工具 `conditionSummary` 中实际生效的条件。
+- “这些照片”必须有工具返回的真实文件标识；没有可靠范围先检索或澄清。不能从附件名、视觉描述或旧写操作历史编造文件标识。
+- 查询规划可使用最近 8 轮只读上下文处理继续/下一页；写参数抽取不恢复历史参数。修改方案需完整重述新目标与范围，重新预览。
 
-## 写操作参数抽取节点
+预览返回的 `confirmationPrompt`、警告和照片范围由确定性节点展示。仅有效且有实际变化的预览签发并保存 `pendingActionId`、`confirmationToken`、`idempotencyKey`、操作族和有效期；无变化预览不应覆盖仍有效的既有确认。普通确认默认 300 秒，P4 为 90 秒。照片和操作载荷在服务端冻结。
 
-当用户说“把这些照片”“刚才那些”“搜索结果里的照片”时，优先使用上一轮 `searchFiles` 返回结果中的 `fileId`。如果没有可用 `fileId`，先调用 `searchFiles` 获取候选照片，不要直接执行。
+共享物理文件若仍有其他活跃用户持有，标签修改会安全跳过；必须展示实际跳过数，不能声称已写入。
 
-按标签选择照片时统一使用 `searchType=tag` 和 `searchKeyword`。多个标签用 `|` 分隔，后端按并集匹配并自动去重，例如 `小猫|仓鼠|橘猫|萨摩耶`。`mediaType` 留空，不能与 `searchKeyword` 重复。语义类别生成的标签必须同类，“动物相关”不得混入日落、风景、地点或活动标签。
+## 确认、取消和未知结果
 
-用户明确说“刚上传的照片”“最新上传的一张”或“最近 N 张图片”时使用 `searchType=latest`。显式数量通过 `selectionLimit=1～50` 传给后端，未给数量时默认为 1；后端按上传时间倒序冻结对应数量的当前用户未删除图片。不能把准备新增的标签当成检索条件，否则新标签尚不存在时永远无法定位照片。Dify 聊天附件与相册文件没有 `fileId` 关联，不能宣称已检查或修改聊天附件。
-
-相册操作输出：
-
-```json
-{
-  "action": "create_album_and_add_files",
-  "albumName": "上海猫猫",
-  "albumId": null,
-  "fileIds": []
-}
-```
-
-支持的相册 action：
-
-- `create_album`
-- `create_album_and_add_files`
-- `add_files_to_album`
-- `remove_files_from_album`
-
-只创建/新建一个相册且没有任何照片选择语义时必须使用 `create_album`，冻结空照片集合；不能退化为 `create_album_and_add_files` 后再因图片范围为空而失败。
-
-标签操作输出：
-
-```json
-{
-  "action": "add_tags",
-  "tagName": "猫",
-  "imageType": "动物",
-  "fileIds": []
-}
-```
-
-支持的标签 action：
-
-- `add_tags`
-- `remove_tags`
-
-## 预览节点
-
-相册写操作调用：
-
-```text
-previewAlbumAction
-```
-
-标签写操作调用：
-
-```text
-previewTagAction
-```
-
-把返回的 `data.confirmationPrompt` 原样展示给用户。若 `data.warnings` 非空，也一起展示。预览节点之后必须先经过脱敏代码节点：
-
-- 将 `pendingActionId`、`confirmationToken`、`idempotencyKey`、操作族和过期时间写入 Dify 会话变量。
-- 面向用户只输出摘要、警告和确认提示。
-- 不把待执行凭据、固定 `fileIds` 或原始工具 JSON 传给 LLM。
-- 新预览覆盖旧会话凭据；无需确认的预览必须清空旧凭据。
-
-## 确认判断节点
-
-建议判断用户最新回复。
-
-确认词：
+只有整条当前回复规范化后精确匹配以下之一，且当前会话持有有效服务端预览，才允许进入执行：
 
 ```text
 确认、执行、确认执行、开始执行、可以执行、同意执行、confirm、execute
 ```
 
-确认必须是用户整条回复的独立含义，不能只靠句子中出现“是”“好”“可以”等词判断。任何包含相册名、标签名、筛选范围或修改语义的回复都必须重新预览。例如上一轮目标是“宠物相册”，用户回复“是宠物这个相册”表示把相册名改成“宠物”，不能直接执行。
+“是”“好的”“可以”“没问题”“就这样”“ok”“yes”不能触发执行。带相册名、标签、范围或动作修改的回复必须重新预览，即使包含“确认”。
 
-取消词：
-
-```text
-取消、不要执行、不执行、cancel
-```
-
-如果用户改变范围或参数，例如“只要前三张”“相册名改成旅行”，回到参数抽取并重新调用预览。
-
-当前写参数抽取不读取历史记忆。用户修改方案时需要在新消息中完整说明目标、范围和新相册名/标签名，工作流不会把旧选择参数自动拼接到新请求。
-
-“是放到宠物相册里”“系统已经有宠物相册了”“改成叫宠物”都属于补充或纠正条件，不是对上一轮方案的纯确认。`是`、`好的`、`可以`、`没问题`、`就这样`、`ok`、`yes` 等宽泛肯定词都不进入执行节点，应提示用户明确回复“确认”。
-
-预览回复只展示用户关心的信息：匹配到多少张照片、要放到哪里、会做什么、是否需要确认。不要展示待执行 ID、确认 Token、幂等键、JSON、内部字段名、动作代码或文件 ID。普通照片整理若实际变化数量为 0，不进入确认；但 `create_album` 创建空相册时允许 `affectedFileCount=0`、`createdAlbumCount=1`，仍可进入确认。
-
-## 执行节点
-
-相册与标签执行都只传服务端凭据，不能重新提交 `action`、相册、标签、照片 ID 或筛选条件：
+执行的业务 JSON 仅包含：
 
 ```json
 {
-  "pendingActionId": "{{conversation.pending_action_id}}",
-  "confirmationToken": "{{conversation.pending_confirmation_token}}",
-  "idempotencyKey": "{{conversation.pending_idempotency_key}}",
+  "pendingActionId": "<来自当前会话的预览>",
+  "confirmationToken": "<来自当前会话的预览>",
+  "idempotencyKey": "<来自当前会话的预览>",
   "confirmed": true
 }
 ```
 
-`confirmed` 必须是 JSON 字面布尔值 `true`，不能是字符串。执行结果经过确定性脱敏节点直接输出；成功只看 `data.success=true`，不能用 `affectedFileCount>0` 判断，因为创建空相册可以成功且照片变化数为 0。执行、取消或确定不可继续的失败后清空所有待执行会话变量。
+`confirmed` 为 JSON 布尔值；另通过 query 传相同 `conversationId`。执行不能重新提交 `action`、`fileIds`、相册或标签等业务参数。
 
-如果执行或取消工具发生超时、连接中断或 5xx 等“结果未知”错误，不得立即清空凭据或自动重发写请求。工作流应先使用同一 `pendingActionId` 调用 `getPendingActionStatus`：
+独立回复“取消 / 不要执行 / 不执行 / cancel”走 `cancelPendingAction`；“状态 / 查询状态 / 执行状态 / 查询执行状态 / 查看状态 / status”走 `getPendingActionStatus`。
 
-- `SUCCEEDED / FAILED / CANCELLED / EXPIRED` 是终态，展示脱敏状态后清空凭据。
-- `PREVIEWED / EXECUTING` 不是终态，保留凭据，并提示用户稍后回复“查询执行状态”。
-- 状态查询本身失败时也保留凭据，避免重复副作用。
+执行或取消超时、断网、5xx 后不能自动重放写入，也不能直接清空凭据。先查询同一待执行记录：
 
-用户可用以下独立表达触发确定性状态查询：
+- `SUCCEEDED / FAILED / CANCELLED / EXPIRED`：展示真实终态并清除会话凭据。
+- `PREVIEWED / EXECUTING`：保留凭据，提示稍后查询状态。
+- 状态查询也失败：保留凭据，明确结果未知。
 
-```text
-状态、查询状态、执行状态、查询执行状态、查看状态、status
-```
+## 回收站与 P3/P4
 
-标签底层目前仍按物理文件保存。若同一物理文件被多个活跃用户共享，智能体标签预览和执行会跳过该文件，避免一个用户的标签修改影响其他用户。
+P3 动作：特征提取、地点修正、回收站恢复、人物重命名/隐藏/恢复显示/移动/合并。P4 动作：分享、下载授权、移入回收站、删除相册，以及已有的永久删除和清空回收站实现。后两项真实操作验收延期，不应作为日常冒烟步骤。
 
-## 验收用例
+普通“删除相册里的图片”先走 `move_files_to_recycle_bin`，由当前用户唯一相册名解析真实目标；模糊、多相册或带子集筛选条件时先澄清/检索，不能扩大为全部照片。
 
-1. `给刚才查到的照片加标签 测试`
-   - 应先预览。
-   - 用户确认后调用 `executeTagAction`。
+“把回收站的照片恢复”使用 `restore_files` 与显式 `allRecycleImages=true`，只冻结当前主人的回收站图片，最多 50 张。空 `fileIds` 本身不表示恢复全部；无可恢复图片不签发确认，超过上限要求缩小范围。软删除与恢复保留标签、相册成员/封面及相似关系。
 
-2. `把上海的照片建个相册叫 上海旅行`
-   - 先 `searchFiles` 查询上海照片。
-   - 再 `previewAlbumAction`。
-   - 确认后 `executeAlbumAction`。
+P4 的文件分享/下载/移入回收站最多 20 个目标；删除相册最多 5 个；相册分享、相册下载及连同照片删除最多冻结 100 个文件；永久删除/清空回收站最多 10 个。分享有效期 1～30 天。分享/下载使用持久化授权，执行前校验范围和所有权，不能把预览当作已经生成有效链接。
 
-3. `把所有照片删掉`
-   - 必须拒绝直接执行。
-   - 可以建议先筛选照片清单。
+## 附件与前端会话
 
-4. `创建一个相册叫 测试相册`
-   - 可直接预览 `create_album`。
-   - 确认后执行。
-
-## 当前本地调试注意
-
-如果 `backend/src/main/resources/application.yml` 中：
-
-```yaml
-agent:
-  auth-enabled: false
-  dev-user-id: 1000000012
-```
-
-那么 Dify 写操作会作用到 `dev-user-id` 对应用户。生产环境必须改回：
-
-```yaml
-agent:
-  auth-enabled: true
-```
-
-## P3/P4 扩展路由
-
-当前导出版本新增两个操作族：
-
-- `p3_action`：`build_image_features`、`update_location`、`restore_files`、`rename_person`、`hide_people`、`show_people`、`move_person_files`、`merge_people`。
-- `p4_action`：`create_file_share_link`、`create_album_share_link`、`create_file_download_token`、`create_album_download_token`、`move_files_to_recycle_bin`、`delete_albums`、`permanently_delete_files`、`empty_recycle_bin`。
-
-两类操作分别调用 `previewP3Action` / `executeP3Action` 和 `previewP4Action` / `executeP4Action`。执行节点仍然只传四个可信确认字段，不重新提交业务参数。P4 预览生成的确认凭证有效期为 90 秒；永久删除和清空回收站单次最多 10 个文件。相册分享、相册下载和连同照片删除相册单次最多冻结 100 个文件；分享与下载在执行前要求相册内容快照保持不变。
-
-Dify 文件上传已开启。附件链路必须是：
+当前 DSL 已包含上传、以图搜图两个二进制工具节点，无需从零创建：
 
 ```text
-Dify 附件 -> uploadAttachment -> 当前用户授权 -> 真实 fileId -> 后续工具
+sys.files → 提取本次附件.first_record → attachment multipart 参数
+           → 查询：searchByAttachment，不保存图库
+           → 明确保存：uploadAttachment，成功返回真实 fileId
 ```
 
-`searchByAttachment` 直接把附件作为查询图，默认不会写入 Cloud-Album。工作流不得用附件文件名、模型视觉描述或临时 URL 冒充 `fileId`。
+列表节点保留 `var_type: array[file]` 和 `item_var_type: file`。界面允许单张 JPG/JPEG/PNG/GIF/WEBP；“查找和这张图相似度最高的图片”等自然语言进入查询分支，“保存这张图片”进入明确授权的直接上传分支。附件上传是预览确认机制的明确例外；不要把单纯附图视为保存授权。否定、混合保存与查询或意图不明先澄清。
 
-当前固定 Chatflow 导出没有预设 `uploadAttachment` / `searchByAttachment` 的二进制工具节点，因为 Dify 导入后的文件变量类型与具体工具提供者绑定相关。导入 OpenAPI 后，需要在 Dify 中分别创建工具节点，把单个聊天文件变量绑定到 `attachment` 参数，再接入上传或只读搜索分支；完成该绑定前，附件能力只能通过 OpenAPI 工具单独调用。
+只有后端明确返回成功且含真实 `fileId`，才能保存附件标识供后续使用。失败或响应未知不能声称已保存；保存先检查图库，查询可以重试。附件标识不替代后续写操作所需的真实预览。
+
+前端 `AgentAssistant.vue` 使用完整 `/chat/` WebApp，提供历史会话菜单与单图上传入口；旧 `/chatbot/` 地址自动转换。关掉浮窗保留 iframe，“操作记录与照片”页读取后端活动及后台任务。地址可在浏览器设置或根目录 `.env` 的 `VITE_DIFY_AGENT_URL` 配置，不在 `frontend/.env` 配置服务密钥。
+
+## 当前边界
+
+相似发现已改为持久化后台任务，工具响应只证明受理，完成状态及候选组在操作记录中查看，候选不代表可自动删除。个人版保留现有实现，不继续扩展企业、多租户、角色和多人功能。
+
+2026-09-14 已有后端/AI/评测/构建、隔离迁移及有限业务冒烟证据；2026-09-15 另有对话和回收站修复记录。完整 Dify 导入与在线验收、完整 92 条业务评测、附件保存全流程及全部 P3/P4 真实操作仍不应宣称验收完成。此次文档更新未运行任何测试或启动服务。
