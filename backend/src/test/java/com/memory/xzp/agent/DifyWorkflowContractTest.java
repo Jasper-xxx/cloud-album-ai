@@ -117,6 +117,102 @@ class DifyWorkflowContractTest {
     }
 
     @Test
+    void nativeReadLoopHasBoundedVariablesAndNoWriteRoutes() throws IOException {
+        Map<String, Object> root = loadWorkflow();
+        List<Map<String, Object>> nodes = objects(graph(root).get("nodes"));
+        List<Map<String, Object>> edges = objects(graph(root).get("edges"));
+        Map<String, Object> loop = object(node(nodes, "read_loop").get("data"));
+        assertEquals("loop", loop.get("type"));
+        assertEquals(3, loop.get("loop_count"));
+        assertEquals("read_loop_start", loop.get("start_node_id"));
+        assertEquals(Set.of("state", "status", "planRaw"), objects(loop.get("loop_variables")).stream()
+                .map(v -> string(v.get("label"))).collect(Collectors.toSet()));
+        Set<String> allowed = Set.of("getAgentCapabilities", "searchFiles", "advancedSearchFiles",
+                "listAlbums", "listLocationAlbums", "listModelAlbums", "listTags", "listPeople", "analyzeLibrary");
+        Set<String> children = new HashSet<>();
+        Set<String> tools = new HashSet<>();
+        for (Map<String, Object> item : nodes) {
+            if (!"read_loop".equals(item.get("parentId"))) continue;
+            children.add(string(item.get("id")));
+            Map<String, Object> data = object(item.get("data"));
+            assertEquals(Boolean.TRUE, data.get("isInLoop"));
+            if ("tool".equals(data.get("type"))) {
+                String tool = string(data.get("tool_name"));
+                assertTrue(allowed.contains(tool));
+                tools.add(tool);
+                assertEquals(Boolean.FALSE, object(data.get("retry_config")).get("retry_enabled"));
+                assertEquals(List.of("sys", "conversation_id"), object(object(data.get("tool_parameters")).get("conversationId")).get("value"));
+            }
+            if ("assigner".equals(data.get("type"))) {
+                for (Map<String, Object> assignment : objects(data.get("items"))) {
+                    assertTrue(List.of(List.of("read_loop", "state"), List.of("read_loop", "status"), List.of("read_loop", "planRaw")).contains(assignment.get("variable_selector")));
+                }
+            }
+        }
+        assertEquals(allowed, tools);
+        for (String plannerId : List.of("read_loop_planner_first", "read_loop_planner_next")) {
+            Map<String, Object> planner = object(node(nodes, plannerId).get("data"));
+            assertFalse(planner.containsKey("memory"), "Loop planners must disable memory by omitting it, not by disabling its window");
+            assertTrue(objects(planner.get("prompt_template")).stream()
+                    .anyMatch(prompt -> "user".equals(prompt.get("role"))
+                            && string(prompt.get("text")).contains("{{#read_loop_prepare.plannerInput#}}")));
+        }
+        for (Map<String, Object> edge : edges) {
+            if (children.contains(string(edge.get("source")))) {
+                assertTrue(children.contains(string(edge.get("target"))), "Loop children must never reach write/pending/attachment paths");
+                assertEquals(Boolean.TRUE, object(edge.get("data")).get("isInLoop"));
+            }
+        }
+        assertTrue(edges.stream().anyMatch(e -> "read_loop_gate".equals(e.get("source")) && "false".equals(e.get("sourceHandle")) && "extract_keyword".equals(e.get("target"))));
+    }
+
+    @Test
+    void queryPreviewBridgeIsOutsideLoopAndReusesDeterministicPendingReceivers() throws IOException {
+        List<Map<String, Object>> nodes = objects(graph(loadWorkflow()).get("nodes"));
+        List<Map<String, Object>> edges = objects(graph(loadWorkflow()).get("edges"));
+        assertTrue(edges.stream().anyMatch(e -> "parse_write_action".equals(e.get("source"))
+                && "read_loop_scope_entry".equals(e.get("target"))));
+        assertTrue(edges.stream().anyMatch(e -> "read_loop_scope_route".equals(e.get("source"))
+                && "false".equals(e.get("sourceHandle")) && "route_preview".equals(e.get("target"))));
+        for (String family : List.of("album", "tag")) {
+            String id = "read_loop_preview_" + family;
+            Map<String, Object> preview = node(nodes, id);
+            assertFalse(preview.containsKey("parentId"));
+            Map<String, Object> data = object(preview.get("data"));
+            assertEquals("preview" + (family.equals("album") ? "Album" : "Tag") + "Action", data.get("tool_name"));
+            assertEquals(Boolean.FALSE, object(data.get("retry_config")).get("retry_enabled"));
+            Map<String, Object> parameters = object(data.get("tool_parameters"));
+            assertEquals(List.of("read_loop_preview_request", "fileIds"), object(parameters.get("fileIds")).get("value"));
+            assertEquals(List.of("sys", "conversation_id"), object(parameters.get("conversationId")).get("value"));
+            assertFalse(parameters.containsKey("confirmed"));
+            assertTrue(edges.stream().anyMatch(e -> id.equals(e.get("source"))
+                    && "fail-branch".equals(e.get("sourceHandle")) && "clear_pending_on_write_error".equals(e.get("target"))));
+            Map<String, Object> capture = object(node(nodes, "capture_pending_" + family).get("data"));
+            assertTrue(objects(capture.get("variables")).stream().anyMatch(v -> "expected_family".equals(v.get("variable"))
+                    && List.of(id + "_family", "family").equals(v.get("value_selector"))));
+            assertTrue(edges.stream().anyMatch(e -> ("capture_pending_" + family).equals(e.get("source"))
+                    && ("assign_pending_" + family).equals(e.get("target"))));
+        }
+        Set<String> reachable = new HashSet<>(Set.of("read_loop"));
+        boolean changed;
+        do {
+            changed = false;
+            for (Map<String, Object> edge : edges) {
+                if (reachable.contains(string(edge.get("source")))) {
+                    changed |= reachable.add(string(edge.get("target")));
+                }
+            }
+        } while (changed);
+        for (String id : reachable) {
+            Map<String, Object> data = object(node(nodes, id).get("data"));
+            if ("tool".equals(data.get("type"))) {
+                assertTrue(Set.of("previewAlbumAction", "previewTagAction").contains(data.get("tool_name")),
+                        "Post-loop path must not execute, cancel, upload or submit tasks");
+            }
+        }
+    }
+
+    @Test
     void assignersOverwriteConversationStateExplicitly() throws IOException {
         List<Map<String, Object>> nodes = objects(graph(loadWorkflow()).get("nodes"));
         for (Map<String, Object> node : nodes) {
@@ -188,6 +284,8 @@ class DifyWorkflowContractTest {
                 .map(node -> string(node.get("id")))
                 .collect(Collectors.toSet());
         Set<String> sensitiveToolIds = Set.of(
+                "read_loop_preview_album",
+                "read_loop_preview_tag",
                 "tool_preview_album_action",
                 "tool_preview_tag_action",
                 "tool_execute_album_action",

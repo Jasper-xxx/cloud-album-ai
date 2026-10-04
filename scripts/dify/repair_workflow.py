@@ -244,3 +244,7 @@ for path_item in yaml.safe_load(api)["paths"].values():
         if method in ("get", "post", "put", "delete", "patch"):
             assert any(p.get("name") == "conversationId" for p in operation.get("parameters", []))
 api_path.write_text(api, encoding="utf-8")
+
+# Rebuild the native read loop after legacy repairs; retain the switchable fallback.
+from repair_read_loop import rewrite as rewrite_read_loop
+path.write_text(rewrite_read_loop(path.read_text(encoding="utf-8")), encoding="utf-8")

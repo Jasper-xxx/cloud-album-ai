@@ -1,0 +1,79 @@
+{
+  "recordedAt": "2026-10-04T05:35:47.384739+00:00",
+  "staticInspection": {
+    "inspection": "file-only YAML/AST/references/diff/idempotence",
+    "nodes": 186,
+    "loopChildren": 59,
+    "embeddedCodeNodes": 28,
+    "changedOriginalNodes": [
+      "extract_keyword",
+      "validate_read_plan",
+      "capture_pending_album",
+      "capture_pending_tag",
+      "attachment_intent"
+    ],
+    "unexpectedOriginalNodes": [],
+    "changedOriginalEdges": [
+      "start-source-extract_write_action-target",
+      "parse_write_action-source-route_preview-target",
+      "route_write_message-false-extract_keyword",
+      "tool_preview_album-capture_pending_album",
+      "tool_preview_tag-capture_pending_tag"
+    ],
+    "unexpectedOriginalEdges": [],
+    "phase1SnapshotPreserved": true,
+    "postLoopReachable": [
+      "answer_preview_album_action",
+      "answer_preview_tag_action",
+      "answer_write_tool_failure",
+      "assign_pending_album",
+      "assign_pending_tag",
+      "capture_pending_album",
+      "capture_pending_tag",
+      "clear_pending_on_write_error",
+      "read_loop",
+      "read_loop_answer",
+      "read_loop_final",
+      "read_loop_preview_album",
+      "read_loop_preview_album_family",
+      "read_loop_preview_album_result",
+      "read_loop_preview_request",
+      "read_loop_preview_route",
+      "read_loop_preview_tag",
+      "read_loop_preview_tag_family",
+      "read_loop_preview_tag_result"
+    ],
+    "issues": [],
+    "testsExecuted": false,
+    "servicesStarted": false
+  },
+  "finalDsl": {
+    "path": "docs/releases/dify-read-write-phase2-2026-10-04-final.yml",
+    "bytes": 1010647,
+    "sha256": "4843f58823e8b06a9a3a4e68eb05bf66ce59165d6bad4993d789f0399691fd45"
+  },
+  "verification": {
+    "pythonTests": 62,
+    "pythonResult": "passed",
+    "javaTests": [
+      {
+        "class": "DifyWorkflowContractTest",
+        "tests": 10,
+        "failures": 0,
+        "errors": 0
+      },
+      {
+        "class": "AgentControllerSecurityTest",
+        "tests": 6,
+        "failures": 0,
+        "errors": 0
+      }
+    ],
+    "javaResult": "passed",
+    "liveEvidence": "docs/releases/dify-read-write-phase2-2026-10-04-live-evidence.json",
+    "localDifyPublished": true,
+    "publishedApiSmokePassed": true,
+    "testDataRestored": true
+  },
+  "staticInspectionScopeNote": "The static-only subreport does not execute tests; verification above records the separate actual test runs."
+}

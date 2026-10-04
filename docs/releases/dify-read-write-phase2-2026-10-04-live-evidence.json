@@ -1,0 +1,970 @@
+{
+  "evidenceSource": "actual Dify debugger streaming events and backend HTTP; browser automation unavailable",
+  "cases": [
+    {
+      "label": "read",
+      "query": "查找未标签的照片，最多3张",
+      "conversationId": "d02b774c-cf80-432f-90c6-827525fc3331",
+      "workflowRunIds": [
+        "50d13885-0161-4df3-a8c9-a1072ba4b6ed"
+      ],
+      "workflowStatus": [
+        "succeeded"
+      ],
+      "answer": "查询完成。\n组合照片检索：本页返回 3 条。\n分页：第 1 页；总数 11；还有下一页。\n后端生效条件：标签状态：untagged\n- [测试照片名称已省略]\n- [测试照片名称已省略]\n- [测试照片名称已省略]\n本次规划 1 轮，查询 1 次。",
+      "tools": [
+        {
+          "node": "read_loop_tool_advancedSearchFiles",
+          "nodeStatus": "succeeded",
+          "inputs": {
+            "current": 1,
+            "size": 3,
+            "dateField": "taken",
+            "dateFrom": "",
+            "dateTo": "",
+            "tags": [],
+            "tagOperator": "OR",
+            "country": "",
+            "province": "",
+            "city": "",
+            "district": "",
+            "make": "",
+            "model": "",
+            "albumId": -1,
+            "albumName": "",
+            "personId": -1,
+            "personName": "",
+            "normalAlbumState": "any",
+            "mediaTypes": [],
+            "tagState": "untagged",
+            "locationState": "any",
+            "featureState": "any",
+            "aiAnalysisState": "any",
+            "keyword": "",
+            "orderBy": "takenAt",
+            "orderType": "desc",
+            "conversationId": "d02b774c-cf80-432f-90c6-827525fc3331"
+          },
+          "businessCode": 200,
+          "result": {
+            "current": 1,
+            "size": 3,
+            "total": 11,
+            "pages": 4,
+            "hasNext": true,
+            "conditionSummary": "标签状态：untagged",
+            "fileIdsSha256": "9e94d8049be9c3c83fa3fb32c35f09de1997e53f3eed51f7029baece2273d292"
+          }
+        }
+      ],
+      "loopStates": [
+        {
+          "status": "COMPLETED",
+          "stopReason": "GOALS_SATISFIED",
+          "step": 1,
+          "toolCalls": 1,
+          "llmCalls": 2,
+          "completedGoals": [
+            "search_photos"
+          ],
+          "requiredGoals": [
+            "search_photos"
+          ],
+          "truncated": false
+        }
+      ],
+      "executeToolCalls": 0,
+      "previewToolCalls": 0,
+      "queryAndPreviewIdsMatch": null
+    },
+    {
+      "label": "album",
+      "query": "先查找未标签的照片，前3张，再整理到相册「二期验收_20261004」",
+      "conversationId": "5c6d6f0b-4a24-44f4-99de-9144de753d45",
+      "workflowRunIds": [
+        "21fc31ab-68a2-4477-9a00-e49bbc978d02"
+      ],
+      "workflowStatus": [
+        "succeeded"
+      ],
+      "answer": "将创建相册「二期验收_20261004」，并加入 3 张匹配照片。确认后我就开始处理。\n\n本次照片范围：\n- [测试照片名称已省略]\n- [测试照片名称已省略]\n- [测试照片名称已省略]",
+      "tools": [
+        {
+          "node": "read_loop_tool_listAlbums",
+          "nodeStatus": "succeeded",
+          "inputs": {
+            "current": 1,
+            "size": 20,
+            "orderKeyword": "create_time",
+            "orderType": "desc",
+            "locationLevel": "city",
+            "conversationId": "5c6d6f0b-4a24-44f4-99de-9144de753d45"
+          },
+          "businessCode": 200,
+          "result": {
+            "current": 1,
+            "size": 20,
+            "total": 2,
+            "pages": 1
+          }
+        },
+        {
+          "node": "read_loop_tool_advancedSearchFiles",
+          "nodeStatus": "succeeded",
+          "inputs": {
+            "current": 1,
+            "size": 3,
+            "dateField": "taken",
+            "dateFrom": "",
+            "dateTo": "",
+            "tags": [],
+            "tagOperator": "OR",
+            "country": "",
+            "province": "",
+            "city": "",
+            "district": "",
+            "make": "",
+            "model": "",
+            "albumId": -1,
+            "albumName": "",
+            "personId": -1,
+            "personName": "",
+            "normalAlbumState": "any",
+            "mediaTypes": [
+              "picture"
+            ],
+            "tagState": "untagged",
+            "locationState": "any",
+            "featureState": "any",
+            "aiAnalysisState": "any",
+            "keyword": "",
+            "orderBy": "takenAt",
+            "orderType": "desc",
+            "conversationId": "5c6d6f0b-4a24-44f4-99de-9144de753d45"
+          },
+          "businessCode": 200,
+          "result": {
+            "current": 1,
+            "size": 3,
+            "total": 11,
+            "pages": 4,
+            "hasNext": true,
+            "conditionSummary": "媒体：picture；标签状态：untagged",
+            "fileIdsSha256": "9e94d8049be9c3c83fa3fb32c35f09de1997e53f3eed51f7029baece2273d292"
+          }
+        },
+        {
+          "node": "read_loop_preview_album",
+          "nodeStatus": "succeeded",
+          "inputs": {
+            "action": "create_album_and_add_files",
+            "albumId": -1,
+            "albumName": "二期验收_20261004",
+            "fileIds": {
+              "nativeType": "list",
+              "count": 3,
+              "sha256": "9e94d8049be9c3c83fa3fb32c35f09de1997e53f3eed51f7029baece2273d292"
+            },
+            "searchType": "",
+            "searchKeyword": "",
+            "selectionLimit": 1,
+            "tagName": "",
+            "imageTypeText": "picture",
+            "locationLevel": "",
+            "locationValue": "",
+            "sourceAlbumId": -1,
+            "conversationId": "5c6d6f0b-4a24-44f4-99de-9144de753d45"
+          },
+          "businessCode": 200,
+          "result": {
+            "requiresConfirmation": true,
+            "affectedFileCount": 3,
+            "createdAlbumCount": 1,
+            "action": "create_album_and_add_files",
+            "albumName": "二期验收_20261004",
+            "tagName": null,
+            "affectedIdsSha256": "9e94d8049be9c3c83fa3fb32c35f09de1997e53f3eed51f7029baece2273d292"
+          }
+        }
+      ],
+      "loopStates": [
+        {
+          "status": "COMPLETED",
+          "stopReason": "GOALS_SATISFIED",
+          "step": 2,
+          "toolCalls": 2,
+          "llmCalls": 3,
+          "completedGoals": [
+            "resolve_destination",
+            "search_photos"
+          ],
+          "requiredGoals": [
+            "resolve_destination",
+            "search_photos"
+          ],
+          "truncated": false
+        }
+      ],
+      "executeToolCalls": 0,
+      "previewToolCalls": 1,
+      "queryAndPreviewIdsMatch": true
+    },
+    {
+      "label": "empty",
+      "query": "先查找标签「二期不存在_20261004」的照片，再添加标签「二期验收」",
+      "conversationId": "5c6d6f0b-4a24-44f4-99de-9144de753d45",
+      "workflowRunIds": [
+        "6a9e7f4c-1093-457f-9b94-97ea5455a037"
+      ],
+      "workflowStatus": [
+        "succeeded"
+      ],
+      "answer": "本次查询没有找到匹配结果。\n组合照片检索：本页返回 0 条。\n分页：第 1 页；总数 0；无下一页。\n后端生效条件：标签OR：二期不存在_20261004；媒体：picture\n后端提供了调整建议；本次未自动放宽条件。\n本次请求要求查询后生成预览；只有范围完整、未截断且在预算内时才会调用一次预览。未生成新预览时，原待确认操作仍保留。\n本次规划 1 轮，查询 1 次。\n查询范围未完整确认，本次没有创建新的预览。请缩小范围并重新发送完整请求。",
+      "tools": [
+        {
+          "node": "read_loop_tool_advancedSearchFiles",
+          "nodeStatus": "succeeded",
+          "inputs": {
+            "current": 1,
+            "size": 20,
+            "dateField": "taken",
+            "dateFrom": "",
+            "dateTo": "",
+            "tags": [
+              "二期不存在_20261004"
+            ],
+            "tagOperator": "OR",
+            "country": "",
+            "province": "",
+            "city": "",
+            "district": "",
+            "make": "",
+            "model": "",
+            "albumId": -1,
+            "albumName": "",
+            "personId": -1,
+            "personName": "",
+            "normalAlbumState": "any",
+            "mediaTypes": [
+              "picture"
+            ],
+            "tagState": "all",
+            "locationState": "any",
+            "featureState": "any",
+            "aiAnalysisState": "any",
+            "keyword": "",
+            "orderBy": "takenAt",
+            "orderType": "desc",
+            "conversationId": "5c6d6f0b-4a24-44f4-99de-9144de753d45"
+          },
+          "businessCode": 200,
+          "result": {
+            "current": 1,
+            "size": 20,
+            "total": 0,
+            "pages": 0,
+            "hasNext": false,
+            "conditionSummary": "标签OR：二期不存在_20261004；媒体：picture"
+          }
+        }
+      ],
+      "loopStates": [
+        {
+          "status": "NO_RESULTS",
+          "stopReason": "EMPTY_RESULT",
+          "step": 1,
+          "toolCalls": 1,
+          "llmCalls": 2,
+          "completedGoals": [
+            "search_photos"
+          ],
+          "requiredGoals": [
+            "search_photos"
+          ],
+          "truncated": false
+        }
+      ],
+      "executeToolCalls": 0,
+      "previewToolCalls": 0,
+      "queryAndPreviewIdsMatch": null
+    },
+    {
+      "label": "short-before-reply-fix",
+      "query": "好",
+      "conversationId": "5c6d6f0b-4a24-44f4-99de-9144de753d45",
+      "workflowRunIds": [
+        "71048636-0db6-4a78-8084-e1c927a4285c"
+      ],
+      "workflowStatus": [
+        "succeeded"
+      ],
+      "answer": "尚未创建新的待确认操作。写操作需要先取得实际预览；请明确要处理的照片范围。",
+      "tools": [],
+      "loopStates": [],
+      "executeToolCalls": 0,
+      "previewToolCalls": 0,
+      "queryAndPreviewIdsMatch": null,
+      "assessment": "No execution; misleading pending guidance was repaired and retested as short-fixed."
+    },
+    {
+      "label": "cancel",
+      "query": "取消",
+      "conversationId": "5c6d6f0b-4a24-44f4-99de-9144de753d45",
+      "workflowRunIds": [
+        "2fd5d4c1-4839-4dbf-9513-938deb4564b5"
+      ],
+      "workflowStatus": [
+        "succeeded"
+      ],
+      "answer": "待执行操作已取消。",
+      "tools": [
+        {
+          "node": "tool_cancel_pending_action",
+          "nodeStatus": "succeeded",
+          "inputs": {
+            "conversationId": "5c6d6f0b-4a24-44f4-99de-9144de753d45"
+          },
+          "businessCode": 200,
+          "result": {
+            "affectedFileCount": 0,
+            "createdAlbumCount": 0,
+            "action": "create_album_and_add_files",
+            "status": "CANCELLED"
+          }
+        }
+      ],
+      "loopStates": [],
+      "executeToolCalls": 0,
+      "previewToolCalls": 0,
+      "queryAndPreviewIdsMatch": null
+    },
+    {
+      "label": "tag",
+      "query": "先查找相册「测试旅行」里未标签的照片，前2张，再添加标签「二期验收_20261004」",
+      "conversationId": "2982961b-5995-45ea-a171-d55bcc784531",
+      "workflowRunIds": [
+        "d789a520-9c7e-4058-8edf-49b3541b702c"
+      ],
+      "workflowStatus": [
+        "succeeded"
+      ],
+      "answer": "将为 2 张照片添加标签「二期验收_20261004」。确认后我就开始处理。\n\n本次照片范围：\n- [测试照片名称已省略]\n- [测试照片名称已省略]",
+      "tools": [
+        {
+          "node": "read_loop_tool_listAlbums",
+          "nodeStatus": "succeeded",
+          "inputs": {
+            "current": 1,
+            "size": 20,
+            "orderKeyword": "create_time",
+            "orderType": "desc",
+            "locationLevel": "city",
+            "conversationId": "2982961b-5995-45ea-a171-d55bcc784531"
+          },
+          "businessCode": 200,
+          "result": {
+            "current": 1,
+            "size": 20,
+            "total": 2,
+            "pages": 1
+          }
+        },
+        {
+          "node": "read_loop_tool_advancedSearchFiles",
+          "nodeStatus": "succeeded",
+          "inputs": {
+            "current": 1,
+            "size": 2,
+            "dateField": "taken",
+            "dateFrom": "",
+            "dateTo": "",
+            "tags": [],
+            "tagOperator": "OR",
+            "country": "",
+            "province": "",
+            "city": "",
+            "district": "",
+            "make": "",
+            "model": "",
+            "albumId": 1000000079,
+            "albumName": "",
+            "personId": -1,
+            "personName": "",
+            "normalAlbumState": "any",
+            "mediaTypes": [
+              "picture"
+            ],
+            "tagState": "untagged",
+            "locationState": "any",
+            "featureState": "any",
+            "aiAnalysisState": "any",
+            "keyword": "",
+            "orderBy": "takenAt",
+            "orderType": "desc",
+            "conversationId": "2982961b-5995-45ea-a171-d55bcc784531"
+          },
+          "businessCode": 200,
+          "result": {
+            "current": 1,
+            "size": 2,
+            "total": 5,
+            "pages": 3,
+            "hasNext": true,
+            "conditionSummary": "普通相册#1000000079；媒体：picture；标签状态：untagged",
+            "fileIdsSha256": "5cc52eea7817683fd7b64111eef2a8cd41732f49d2db5357e8a4adb9f72afb2a"
+          }
+        },
+        {
+          "node": "read_loop_preview_tag",
+          "nodeStatus": "succeeded",
+          "inputs": {
+            "action": "add_tags",
+            "fileIds": {
+              "nativeType": "list",
+              "count": 2,
+              "sha256": "5cc52eea7817683fd7b64111eef2a8cd41732f49d2db5357e8a4adb9f72afb2a"
+            },
+            "imageType": "其他",
+            "tagName": "二期验收_20261004",
+            "searchType": "",
+            "searchKeyword": "",
+            "selectionLimit": 1,
+            "sourceTagName": "",
+            "imageTypeText": "picture",
+            "locationLevel": "",
+            "locationValue": "",
+            "sourceAlbumId": -1,
+            "conversationId": "2982961b-5995-45ea-a171-d55bcc784531"
+          },
+          "businessCode": 200,
+          "result": {
+            "requiresConfirmation": true,
+            "affectedFileCount": 2,
+            "createdAlbumCount": 0,
+            "action": "add_tags",
+            "albumName": null,
+            "tagName": "二期验收_20261004",
+            "affectedIdsSha256": "5cc52eea7817683fd7b64111eef2a8cd41732f49d2db5357e8a4adb9f72afb2a"
+          }
+        }
+      ],
+      "loopStates": [
+        {
+          "status": "COMPLETED",
+          "stopReason": "GOALS_SATISFIED",
+          "step": 2,
+          "toolCalls": 2,
+          "llmCalls": 3,
+          "completedGoals": [
+            "resolve_album",
+            "search_photos"
+          ],
+          "requiredGoals": [
+            "resolve_album",
+            "search_photos"
+          ],
+          "truncated": false
+        }
+      ],
+      "executeToolCalls": 0,
+      "previewToolCalls": 1,
+      "queryAndPreviewIdsMatch": true
+    },
+    {
+      "label": "short-fixed",
+      "query": "好",
+      "conversationId": "2982961b-5995-45ea-a171-d55bcc784531",
+      "workflowRunIds": [
+        "f23dde2d-ca2d-48e1-a754-ea6d940603d8"
+      ],
+      "workflowStatus": [
+        "succeeded"
+      ],
+      "answer": "这句话不会触发执行。若要执行刚才的预览，请明确回复「确认」；也可以回复「取消」。",
+      "tools": [],
+      "loopStates": [],
+      "executeToolCalls": 0,
+      "previewToolCalls": 0,
+      "queryAndPreviewIdsMatch": null
+    },
+    {
+      "label": "confirm",
+      "query": "确认",
+      "conversationId": "2982961b-5995-45ea-a171-d55bcc784531",
+      "workflowRunIds": [
+        "ef22ee93-1e8c-47a0-93b9-e9fe90203f2e"
+      ],
+      "workflowStatus": [
+        "succeeded"
+      ],
+      "answer": "标签添加成功 实际处理 2 个文件，跳过 0 个。\n\n实际处理的照片：\n- [测试照片名称已省略]\n- [测试照片名称已省略]",
+      "tools": [
+        {
+          "node": "tool_execute_tag_action",
+          "nodeStatus": "succeeded",
+          "inputs": {
+            "confirmed": "True",
+            "conversationId": "2982961b-5995-45ea-a171-d55bcc784531"
+          },
+          "businessCode": 200,
+          "result": {
+            "affectedFileCount": 2,
+            "createdAlbumCount": 0,
+            "action": "add_tags",
+            "albumName": null,
+            "tagName": "二期验收_20261004",
+            "success": true,
+            "affectedIdsSha256": "5cc52eea7817683fd7b64111eef2a8cd41732f49d2db5357e8a4adb9f72afb2a"
+          }
+        }
+      ],
+      "loopStates": [],
+      "executeToolCalls": 1,
+      "previewToolCalls": 0,
+      "queryAndPreviewIdsMatch": null
+    },
+    {
+      "label": "remove",
+      "query": "先查找标签「二期验收_20261004」的照片，再移除标签「二期验收_20261004」",
+      "conversationId": "2982961b-5995-45ea-a171-d55bcc784531",
+      "workflowRunIds": [
+        "2d1a9139-f517-4c63-a61c-9fcc8d16f2b6"
+      ],
+      "workflowStatus": [
+        "succeeded"
+      ],
+      "answer": "将从 2 张照片移除标签「二期验收_20261004」。确认后我就开始处理。\n\n本次照片范围：\n- [测试照片名称已省略]\n- [测试照片名称已省略]",
+      "tools": [
+        {
+          "node": "read_loop_tool_advancedSearchFiles",
+          "nodeStatus": "succeeded",
+          "inputs": {
+            "current": 1,
+            "size": 20,
+            "dateField": "taken",
+            "dateFrom": "",
+            "dateTo": "",
+            "tags": [
+              "二期验收_20261004"
+            ],
+            "tagOperator": "OR",
+            "country": "",
+            "province": "",
+            "city": "",
+            "district": "",
+            "make": "",
+            "model": "",
+            "albumId": -1,
+            "albumName": "",
+            "personId": -1,
+            "personName": "",
+            "normalAlbumState": "any",
+            "mediaTypes": [
+              "picture"
+            ],
+            "tagState": "all",
+            "locationState": "any",
+            "featureState": "any",
+            "aiAnalysisState": "any",
+            "keyword": "",
+            "orderBy": "takenAt",
+            "orderType": "desc",
+            "conversationId": "2982961b-5995-45ea-a171-d55bcc784531"
+          },
+          "businessCode": 200,
+          "result": {
+            "current": 1,
+            "size": 20,
+            "total": 2,
+            "pages": 1,
+            "hasNext": false,
+            "conditionSummary": "标签OR：二期验收_20261004；媒体：picture",
+            "fileIdsSha256": "5cc52eea7817683fd7b64111eef2a8cd41732f49d2db5357e8a4adb9f72afb2a"
+          }
+        },
+        {
+          "node": "read_loop_preview_tag",
+          "nodeStatus": "succeeded",
+          "inputs": {
+            "action": "remove_tags",
+            "fileIds": {
+              "nativeType": "list",
+              "count": 2,
+              "sha256": "5cc52eea7817683fd7b64111eef2a8cd41732f49d2db5357e8a4adb9f72afb2a"
+            },
+            "imageType": "其他",
+            "tagName": "二期验收_20261004",
+            "searchType": "",
+            "searchKeyword": "",
+            "selectionLimit": 1,
+            "sourceTagName": "",
+            "imageTypeText": "picture",
+            "locationLevel": "",
+            "locationValue": "",
+            "sourceAlbumId": -1,
+            "conversationId": "2982961b-5995-45ea-a171-d55bcc784531"
+          },
+          "businessCode": 200,
+          "result": {
+            "requiresConfirmation": true,
+            "affectedFileCount": 2,
+            "createdAlbumCount": 0,
+            "action": "remove_tags",
+            "albumName": null,
+            "tagName": "二期验收_20261004",
+            "affectedIdsSha256": "5cc52eea7817683fd7b64111eef2a8cd41732f49d2db5357e8a4adb9f72afb2a"
+          }
+        }
+      ],
+      "loopStates": [
+        {
+          "status": "COMPLETED",
+          "stopReason": "GOALS_SATISFIED",
+          "step": 1,
+          "toolCalls": 1,
+          "llmCalls": 2,
+          "completedGoals": [
+            "search_photos"
+          ],
+          "requiredGoals": [
+            "search_photos"
+          ],
+          "truncated": false
+        }
+      ],
+      "executeToolCalls": 0,
+      "previewToolCalls": 1,
+      "queryAndPreviewIdsMatch": true
+    },
+    {
+      "label": "cleanup",
+      "query": "确认",
+      "conversationId": "2982961b-5995-45ea-a171-d55bcc784531",
+      "workflowRunIds": [
+        "378b22ab-84f3-4e64-a640-6ac2687dbd26"
+      ],
+      "workflowStatus": [
+        "succeeded"
+      ],
+      "answer": "标签移除成功 实际处理 2 个文件，跳过 0 个。\n\n实际处理的照片：\n- [测试照片名称已省略]\n- [测试照片名称已省略]",
+      "tools": [
+        {
+          "node": "tool_execute_tag_action",
+          "nodeStatus": "succeeded",
+          "inputs": {
+            "confirmed": "True",
+            "conversationId": "2982961b-5995-45ea-a171-d55bcc784531"
+          },
+          "businessCode": 200,
+          "result": {
+            "affectedFileCount": 2,
+            "createdAlbumCount": 0,
+            "action": "remove_tags",
+            "albumName": null,
+            "tagName": "二期验收_20261004",
+            "success": true,
+            "affectedIdsSha256": "5cc52eea7817683fd7b64111eef2a8cd41732f49d2db5357e8a4adb9f72afb2a"
+          }
+        }
+      ],
+      "loopStates": [],
+      "executeToolCalls": 1,
+      "previewToolCalls": 0,
+      "queryAndPreviewIdsMatch": null
+    },
+    {
+      "label": "source-destination",
+      "query": "先查找相册「测试旅行」里未标签的照片，再整理到相册「动物」",
+      "conversationId": "0a26ab38-1773-4880-aaa4-246493b2a16e",
+      "workflowRunIds": [
+        "728e4a35-6a0e-476c-a58a-31acfef82024"
+      ],
+      "workflowStatus": [
+        "succeeded"
+      ],
+      "answer": "将 5 张匹配照片加入已有相册「动物」。确认后我就开始处理。\n\n本次照片范围：\n- [测试照片名称已省略]\n- [测试照片名称已省略]\n- [测试照片名称已省略]\n- [测试照片名称已省略]\n- [测试照片名称已省略]",
+      "tools": [
+        {
+          "node": "read_loop_tool_listAlbums",
+          "nodeStatus": "succeeded",
+          "inputs": {
+            "current": 1,
+            "size": 20,
+            "orderKeyword": "create_time",
+            "orderType": "desc",
+            "locationLevel": "city",
+            "conversationId": "0a26ab38-1773-4880-aaa4-246493b2a16e"
+          },
+          "businessCode": 200,
+          "result": {
+            "current": 1,
+            "size": 20,
+            "total": 2,
+            "pages": 1
+          }
+        },
+        {
+          "node": "read_loop_tool_advancedSearchFiles",
+          "nodeStatus": "succeeded",
+          "inputs": {
+            "current": 1,
+            "size": 20,
+            "dateField": "taken",
+            "dateFrom": "",
+            "dateTo": "",
+            "tags": [],
+            "tagOperator": "OR",
+            "country": "",
+            "province": "",
+            "city": "",
+            "district": "",
+            "make": "",
+            "model": "",
+            "albumId": 1000000079,
+            "albumName": "",
+            "personId": -1,
+            "personName": "",
+            "normalAlbumState": "any",
+            "mediaTypes": [
+              "picture"
+            ],
+            "tagState": "untagged",
+            "locationState": "any",
+            "featureState": "any",
+            "aiAnalysisState": "any",
+            "keyword": "",
+            "orderBy": "takenAt",
+            "orderType": "desc",
+            "conversationId": "0a26ab38-1773-4880-aaa4-246493b2a16e"
+          },
+          "businessCode": 200,
+          "result": {
+            "current": 1,
+            "size": 20,
+            "total": 5,
+            "pages": 1,
+            "hasNext": false,
+            "conditionSummary": "普通相册#1000000079；媒体：picture；标签状态：untagged",
+            "fileIdsSha256": "312b7725893192b2c298ba73715b944f8848937b711a082ba5326270a34567a3"
+          }
+        },
+        {
+          "node": "read_loop_preview_album",
+          "nodeStatus": "succeeded",
+          "inputs": {
+            "action": "add_files_to_album",
+            "albumId": 1000000080,
+            "albumName": "动物",
+            "fileIds": {
+              "nativeType": "list",
+              "count": 5,
+              "sha256": "312b7725893192b2c298ba73715b944f8848937b711a082ba5326270a34567a3"
+            },
+            "searchType": "",
+            "searchKeyword": "",
+            "selectionLimit": 1,
+            "tagName": "",
+            "imageTypeText": "picture",
+            "locationLevel": "",
+            "locationValue": "",
+            "sourceAlbumId": -1,
+            "conversationId": "0a26ab38-1773-4880-aaa4-246493b2a16e"
+          },
+          "businessCode": 200,
+          "result": {
+            "requiresConfirmation": true,
+            "affectedFileCount": 5,
+            "createdAlbumCount": 0,
+            "action": "add_files_to_album",
+            "albumName": "动物",
+            "tagName": null,
+            "affectedIdsSha256": "312b7725893192b2c298ba73715b944f8848937b711a082ba5326270a34567a3"
+          }
+        }
+      ],
+      "loopStates": [
+        {
+          "status": "COMPLETED",
+          "stopReason": "GOALS_SATISFIED",
+          "step": 2,
+          "toolCalls": 2,
+          "llmCalls": 3,
+          "completedGoals": [
+            "resolve_destination",
+            "resolve_album",
+            "search_photos"
+          ],
+          "requiredGoals": [
+            "resolve_destination",
+            "resolve_album",
+            "search_photos"
+          ],
+          "truncated": false
+        }
+      ],
+      "executeToolCalls": 0,
+      "previewToolCalls": 1,
+      "queryAndPreviewIdsMatch": true
+    },
+    {
+      "label": "source-cancel",
+      "query": "取消",
+      "conversationId": "0a26ab38-1773-4880-aaa4-246493b2a16e",
+      "workflowRunIds": [
+        "9998b022-8415-4a1e-a688-9828262426ea"
+      ],
+      "workflowStatus": [
+        "succeeded"
+      ],
+      "answer": "待执行操作已取消。",
+      "tools": [
+        {
+          "node": "tool_cancel_pending_action",
+          "nodeStatus": "succeeded",
+          "inputs": {
+            "conversationId": "0a26ab38-1773-4880-aaa4-246493b2a16e"
+          },
+          "businessCode": 200,
+          "result": {
+            "affectedFileCount": 0,
+            "createdAlbumCount": 0,
+            "action": "add_files_to_album",
+            "status": "CANCELLED"
+          }
+        }
+      ],
+      "loopStates": [],
+      "executeToolCalls": 0,
+      "previewToolCalls": 0,
+      "queryAndPreviewIdsMatch": null
+    }
+  ],
+  "recordedAt": "2026-10-04T05:35:47.384739+00:00",
+  "testAccount": "album_test_a",
+  "browserLimitation": "Chrome computer use was stopped because the current URL could not be determined reliably; no further UI automation attempted.",
+  "publication": {
+    "appId": "6d096f09-d847-4269-8e88-3479b8f66559",
+    "previousWorkflowId": "91f1d70d-9c10-46ce-bd51-45d53dbef06e",
+    "publishedWorkflowId": "ddd8ab6c-415b-4ad2-ab7f-fad02f49f023",
+    "nodes": 186,
+    "publishedGraphMatchesTestedDraft": true,
+    "existingApiTokenAvailable": true
+  },
+  "publishedApiSmoke": {
+    "httpStatus": 200,
+    "answer": "本次查询没有找到匹配结果。\n组合照片检索：本页返回 0 条。\n分页：第 1 页；总数 0；无下一页。\n后端生效条件：标签OR：二期不存在_20261004；媒体：picture\n后端提供了调整建议；本次未自动放宽条件。\n本次请求要求查询后生成预览；只有范围完整、未截断且在预算内时才会调用一次预览。未生成新预览时，原待确认操作仍保留。\n本次规划 1 轮，查询 1 次。\n查询范围未完整确认，本次没有创建新的预览。请缩小范围并重新发送完整请求。",
+    "conversationId": "dd64edea-6b18-4fe5-a771-890834bfc05a",
+    "messageId": "a0b39391-ed2e-4461-910f-68ec2fbff52d",
+    "workflowRunId": null,
+    "passed": true,
+    "runId": "3f062894-5ebb-4a3e-82d4-72c9e60e012c",
+    "status": "succeeded",
+    "workflowId": "ddd8ab6c-415b-4ad2-ab7f-fad02f49f023",
+    "totalTokens": 3328
+  },
+  "independentBackendEvidence": {
+    "testAccount": "album_test_a",
+    "activeRelations": 11,
+    "forgedHttpStatus": 403,
+    "searchTotal": 11,
+    "searchReturned": 2,
+    "searchPageKeys": [
+      "current",
+      "size",
+      "total",
+      "pages",
+      "hasNext",
+      "conditionSummary",
+      "records",
+      "relaxSuggestions"
+    ],
+    "explicitIdGuardPassed": true,
+    "previewDidNotMutate": true,
+    "tagExecutePassed": true,
+    "temporaryTagRemoved": true
+  },
+  "independentTagReadback": {
+    "executedFiles": 2,
+    "exactFrozenScopeMatchedDatabase": true,
+    "otherAccountTagCount": 0
+  },
+  "finalBusinessSnapshot": {
+    "album_test_a": {
+      "files": {
+        "count": 11,
+        "sha256": "39ceb357ec1d8737b35fab2a5efa29e2b658d605950b75b6dda6e765cbfd9fe6"
+      },
+      "albums": {
+        "count": 2,
+        "sha256": "4b61539736828281451a9599db6790a6084b3ee4d51d94a7dcca5db2a282d584"
+      },
+      "albumPictures": {
+        "count": 5,
+        "sha256": "bdaebc1fca86db742af0f949f4980e8e3b4b4512fb6704640e2b6aa7ab2f8445"
+      },
+      "tags": {
+        "count": 0,
+        "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    "album_test_b": {
+      "files": {
+        "count": 10,
+        "sha256": "f71fb8b6f0916b2c0a28884b85aab5a02ee88322588cb8b8d31f8eb0931776cf"
+      },
+      "albums": {
+        "count": 1,
+        "sha256": "9db00887c44acde6af209a91f7f5cd9c509e1e327b3ba7eab93e0189dd433d50"
+      },
+      "albumPictures": {
+        "count": 3,
+        "sha256": "ee19d5fab315c321092d6114584d40946a0465edb29cdd35b444abeeca70306e"
+      },
+      "tags": {
+        "count": 0,
+        "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    }
+  },
+  "finalBusinessSnapshotVerifiedUnchanged": true,
+  "pendingRetentionVerified": true,
+  "initialPlanningFailures": [
+    {
+      "validationCodes": [
+        "BRIDGE_FIRST_GOAL"
+      ],
+      "runIds": [
+        "8f1d1c74-2160-4659-acdf-3271a106656f"
+      ],
+      "createdPreview": false
+    },
+    {
+      "validationCodes": [
+        "RESOURCE_NOT_UNIQUE"
+      ],
+      "runIds": [
+        "30dda631-d264-4bf1-8483-cd1de9017c8e"
+      ],
+      "createdPreview": false
+    },
+    {
+      "validationCodes": [
+        "RESOURCE_NOT_UNIQUE"
+      ],
+      "runIds": [
+        "7ad367cc-1af9-45ee-b7a5-c776560ee2a7"
+      ],
+      "createdPreview": false
+    },
+    {
+      "validationCodes": [
+        "RESOURCE_NAME_SOURCE"
+      ],
+      "runIds": [
+        "e86df06f-95ff-4d90-af6f-7912105f0e5d"
+      ],
+      "createdPreview": false,
+      "provenance": "observed debugger output before the successful retest"
+    }
+  ]
+}

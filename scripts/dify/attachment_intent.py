@@ -19,7 +19,9 @@ def main(query=""):
 
     # One attachment turn performs one operation. Combined or negated requests need
     # clarification instead of silently saving or broadening the user's authority.
-    if negative or (save and search):
+    other_write = bool(re.search(r"删除|删掉|移除|清空|清除|回收|恢复|分享|下载|创建|新建|重命名|改名|移动|打标签|加标签", value))
+    question = bool(re.search(r"如何|怎么|怎样|是否|能否|可否|可以吗|能不能", value))
+    if negative or question or (save and (search or other_write)):
         return {"mode": "clarify"}
     if save:
         return {"mode": "save"}

@@ -58,6 +58,30 @@ class DifyPythonNodesTest(unittest.TestCase):
         self.assertIn("尚未创建", result["directReply"])
         self.assertNotIn("永久删除", result["directReply"])
 
+    def test_short_read_replies_cannot_execute_or_bypass_pending_ambiguity(self):
+        # These tests exercise deterministic gates, not LLM history recovery.
+        read_plan = json.dumps(dict(selectedTool="advancedSearchFiles", current=3,
+                                    size=3, tagState="untagged"))
+        pending = dict(pending_action_id="actual", pending_confirmation_token="token",
+                       pending_idempotency_key="key", pending_family="album")
+        for query in ("是", "是的", "好", "可以", "可以的", "嗯", "行", "同意", "ＯＫ。"):
+            with self.subTest(query=query):
+                write = execute("parse_write_action", raw='{"mode":"execute","family":"album"}',
+                                current_query=query, **pending)
+                self.assertNotEqual("execute", write["mode"])
+                self.assertFalse(write["confirmed"])
+                blocked = execute("validate_read_plan", raw=read_plan, current_query=query,
+                                  pending_action_id="actual")
+                self.assertEqual("none", blocked["selectedTool"])
+                self.assertIn("刚才的预览", blocked["directReply"])
+                self.assertNotIn("尚未创建", blocked["directReply"])
+                approved = execute("validate_read_plan", raw=read_plan, current_query=query)
+                self.assertEqual(("advancedSearchFiles", 3, 3, "untagged"),
+                                 tuple(approved[k] for k in ("selectedTool", "current", "size", "tagState")))
+        explicit_page = execute("validate_read_plan", raw=read_plan,
+                                current_query="继续下一页", pending_action_id="actual")
+        self.assertEqual("advancedSearchFiles", explicit_page["selectedTool"])
+
     def test_conversation_transport_is_visible_to_dify_operation_parser(self):
         api = yaml.safe_load((ROOT / "docs/dify-agent-openapi.yaml").read_text(encoding="utf-8"))
         for path, item in api["paths"].items():
@@ -109,7 +133,7 @@ class DifyPythonNodesTest(unittest.TestCase):
         self.assertTrue(execute("render_cancel",raw='{"code":200,"data":{"status":"CANCELLED"}}')["terminal"])
 
     def test_attachment_only_saves_on_explicit_instruction(self):
-        for query in ("不要保存附件", "保存附件然后删除全部", "这张照片是什么", "以图搜图"):
+        for query in ("不要保存附件", "保存附件然后删除全部", "保存附件再分享", "如何保存附件", "这张照片是什么", "以图搜图"):
             self.assertNotEqual("save",execute("attachment_intent",query=query)["mode"])
         self.assertEqual("save",execute("attachment_intent",query="保存附件")["mode"])
         self.assertEqual("search",execute("attachment_intent",query="以图搜图")["mode"])

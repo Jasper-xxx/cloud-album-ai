@@ -6,6 +6,8 @@ import com.memory.xzp.exception.StatusCode;
 import com.memory.xzp.mapper.FileMapper;
 import com.memory.xzp.mapper.PictureTagMapper;
 import com.memory.xzp.model.dto.agent.AgentExecuteActionRequest;
+import com.memory.xzp.model.dto.agent.AgentTagActionRequest;
+import com.memory.xzp.model.vo.agent.AgentActionPreviewVO;
 import com.memory.xzp.service.AlbumService;
 import com.memory.xzp.service.AgentPendingActionService;
 import com.memory.xzp.service.AgentWriteExecutionService;
@@ -17,11 +19,15 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 @ExtendWith(MockitoExtension.class)
 class AgentControllerSecurityTest {
@@ -49,6 +55,23 @@ class AgentControllerSecurityTest {
     @BeforeEach
     void setUp() {
         objectMapper = new ObjectMapper();
+    }
+
+    @Test
+    void staleExplicitTagRemovalSelectionNeverFallsBackToAllTaggedPhotos() {
+        AgentTagActionRequest request = new AgentTagActionRequest();
+        request.setAction("remove_tags");
+        request.setTagName("测试旅行");
+        request.setFileIds(List.of("no-longer-owned"));
+        when(fileMapper.selectFileByIds(List.of("no-longer-owned"), 12L)).thenReturn(List.of());
+
+        AgentActionPreviewVO preview = ReflectionTestUtils.invokeMethod(
+                controller, "buildTagActionPreview", request, 12L);
+
+        assertEquals(List.of(), preview.getFileIds());
+        assertEquals(0, preview.getAffectedFileCount());
+        assertFalse(preview.getRequiresConfirmation());
+        verifyNoInteractions(fileService, pictureTagMapper, pendingActionService, writeExecutionService);
     }
 
     @Test

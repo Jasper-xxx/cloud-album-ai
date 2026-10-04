@@ -1166,7 +1166,9 @@ public class AgentController {
 
     private List<String> resolveTagActionFileIds(AgentTagActionRequest request, Long userId) {
         List<String> explicitFileIds = normalizeOwnedFileIds(request.getFileIds(), userId);
-        if (!explicitFileIds.isEmpty()) {
+        // An explicitly frozen selection must never fall back to a tag-wide
+        // selector if ownership/deletion changed after the preceding query.
+        if (request.getFileIds() != null && !request.getFileIds().isEmpty()) {
             return explicitFileIds;
         }
         String sourceTagName = request.getSourceTagName();
