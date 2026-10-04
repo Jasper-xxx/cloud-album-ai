@@ -79,8 +79,8 @@ docs/智能体拓展方案_持续更新.md
 /evaluation/reports/agent-real-baseline-*/
 /evaluation/reports/resume-real-*/
 
-# Agent 循环新增的本地交付、验收、交接记录和发布快照
-# 仅影响尚未跟踪的文件；已有跟踪文件继续保留，不改变当前上传清单。
+# Agent 循环的本地实施方案、交付、验收、交接记录和发布快照
+/docs/dify-agent-loop-implementation-plan-*.md
 /docs/dify-read-*-delivery-*.md
 /docs/dify-read-*-acceptance-*.md
 /docs/dify-phase*-handoff-*.md

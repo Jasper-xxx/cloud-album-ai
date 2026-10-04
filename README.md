@@ -408,7 +408,7 @@ backend/src/main/java/com/memory/xzp/controller/AgentController.java
 
 相似发现结果是候选组，不是自动删除依据。回收站恢复已有预览/确认链路；自然语言删除相册图片先进入可恢复的回收站流程。完整 P3/P4 实际操作、永久删除和清空回收站验收仍属于延期范围。
 
-附件目前每条消息处理一张图片，可以发送「查找和这张图相似度最高的图片」；保存必须明确表达。附件按钮和历史菜单是否可见还取决于 Dify 已发布应用的文件上传配置与 WebApp 页面。具体导入步骤见[个人版 Dify 导入说明](docs/dify-personal-import-2026-09-14.md)。
+附件目前每条消息处理一张图片，可以发送「查找和这张图相似度最高的图片」；保存必须明确表达。附件按钮和历史菜单是否可见还取决于 Dify 已发布应用的文件上传配置与 WebApp 页面。具体导入步骤见[Dify 工作流指南](docs/dify-agent-write-workflow-guide.md#导入与发布)。
 
 ### 两期循环策略与当前交付
 
@@ -425,7 +425,7 @@ backend/src/main/java/com/memory/xzp/controller/AgentController.java
 先查找标签「旧标签」的照片，再移除标签「旧标签」
 ```
 
-桥接目前限图片和单个写目标，支持的筛选语法见[第二期交付](docs/dify-read-write-phase2-delivery-2026-10-04.md)。视频、GIF、人物范围、多源标签 AND/OR、多动作，以及删除、恢复、分享、下载、附件保存和 AI 任务不接入新桥接；其中既有能力仍由原流程提供。
+桥接目前限图片和单个写目标，支持的筛选语法见[工作流指南](docs/dify-agent-write-workflow-guide.md#受控查询与查询后写预览)。视频、GIF、人物范围、多源标签 AND/OR、多动作，以及删除、恢复、分享、下载、附件保存和 AI 任务不接入新桥接；其中既有能力仍由原流程提供。
 
 预算保持最多三轮规划、三次只读查询、五次显式模型调用，每页最多 20 条、证据最多 60 条、观察合计 6000 字符、状态 32768 字节；桥接额外允许 Loop 外一次 Preview。90 秒是步骤间软预算，不能中断已开始的模型或 HTTP 调用，也不是精确 token/费用上限。后端分页没有数据库快照协议，不能承诺并发修改下的全局一致快照。
 
@@ -433,10 +433,11 @@ backend/src/main/java/com/memory/xzp/controller/AgentController.java
 
 验收记录中，第一期按用户总体反馈通过归档；第二期 Python 相关契约 **62 项**、Java 工作流与控制器测试 **16 项**通过，并使用真实 Dify 调试/发布 API、业务 HTTP 和独立 MySQL 回读验证重点场景。已验证测试标签的确认添加/移除、预览取消和原 pending 保留，测试数据恢复；这不代表完整浏览器视觉验收或全部业务验收。相册实际确认写入、账号 B 独立登录鉴权、附件全流程、完整 92 条评测及原延期场景仍不在本次重点验收范围。
 
-- [第一期验收记录](docs/dify-read-loop-acceptance-2026-10-03.md)
-- [第二期验收收尾与证据](docs/dify-read-write-phase2-acceptance-2026-10-04.md)
-- [当前工作 DSL](docs/云忆相册助手-write.yml)及[第二期最终冻结副本](docs/releases/dify-read-write-phase2-2026-10-04-final.yml)
-- [实现方案](docs/dify-agent-loop-implementation-plan-2026-10-02.md)与[第二期交付及回退说明](docs/dify-read-write-phase2-delivery-2026-10-04.md)
+- [当前工作 DSL](docs/云忆相册助手-write.yml)
+- [工作流导入、范围语法及回退指南](docs/dify-agent-write-workflow-guide.md)
+- [功能与验证范围](docs/云忆助手功能.md)
+
+内部实施方案、逐项验收记录和历史发布快照保留在本地，不随仓库分发；以上验收数字是既有记录摘要，不是可复现的完整评测报告。
 
 相关文档位于：
 
@@ -532,7 +533,7 @@ Grafana 默认账号密码为 `admin` / `admin`。后端管理端口默认只监
 
 依次定位 Dify 工具、后端入口、后端调用 AI 三处日志。Dify → 后端使用 `X-Agent-Service-Key`；后端 → AI 使用另一个 `X-AI-Service-Key`。两段密钥用途不同。AI 返回 401 时应核对两端生效的 `AI_SERVICE_KEY`，尤其是终端环境变量或 `ai-service/.env` 的覆盖。修正后重启后端与 AI。
 
-Dify 的 SSRF/重试错误文字不能单独证明是网络拦截，应同时查看实际 HTTP 状态和后端日志。查询可重试；保存失败先查图库，避免重复保存。2026-09-15 的日志和修复过程保留在[附件修复记录](docs/agent-restore-ui-fix-2026-09-15.md)，该记录不表示当前环境已在线验收。
+Dify 的 SSRF/重试错误文字不能单独证明是网络拦截，应同时查看实际 HTTP 状态和后端日志。查询可重试；保存失败先查图库，避免重复保存。附件分支与结果判断见[工作流指南](docs/dify-agent-write-workflow-guide.md)。
 
 ### 登录时提示 Redis `NOAUTH Authentication required`
 

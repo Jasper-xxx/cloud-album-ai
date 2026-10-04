@@ -138,9 +138,15 @@ unexpected_edges = [key for key, edge in expected_edges.items() if edge != curre
 if unexpected_edges:
     issues.append("unexpected original edge content: " + repr(unexpected_edges))
 snapshot = ROOT / "docs/releases/dify-read-loop-phase1-2026-10-04.yml"
-if hashlib.sha256(snapshot.read_bytes()).hexdigest() != "269227f5a45cbbf06a0aab75a0998a11ae7444255cb289f5578c5452a205536c":
+# Release archives are local-only. Git normalized this Windows archive to LF;
+# reconstruct its frozen CRLF bytes to retain the original hash/contract checks.
+snapshot_bytes = snapshot.read_bytes() if snapshot.exists() else subprocess.run(
+    ["git", "show", "7bc3cc41f165b03342191cf887fa86c72b3fee69:docs/releases/dify-read-loop-phase1-2026-10-04.yml"],
+    cwd=ROOT, capture_output=True, check=True,
+).stdout.replace(b"\n", b"\r\n")
+if hashlib.sha256(snapshot_bytes).hexdigest() != "269227f5a45cbbf06a0aab75a0998a11ae7444255cb289f5578c5452a205536c":
     issues.append("phase1 frozen snapshot changed")
-phase1 = yaml.safe_load(snapshot.read_text(encoding="utf-8"))
+phase1 = yaml.safe_load(snapshot_bytes.decode("utf-8"))
 phase1_originals = {n["id"]: deepcopy(n) for n in phase1["workflow"]["graph"]["nodes"] if n["id"] in expected_originals}
 apply_read_continuation_policy(phase1_originals)
 expected_preview_selectors(phase1_originals)

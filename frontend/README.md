@@ -2,7 +2,7 @@
 
 Vue 3 + TypeScript + Vite 前端，使用 Element Plus。包含相册、照片管理、回收站、任务中心，以及嵌入 Dify WebApp 的个人版助手。
 
-本文于 2026-10-02 对照当前源码更新；开发环境与服务配置见[项目 README](../README.md)，Dify 配置见[个人版导入说明](../docs/dify-personal-import-2026-09-14.md)。
+本文于 2026-10-02 对照当前源码更新，2026-10-04 同步公开文档入口；开发环境与服务配置见[项目 README](../README.md)，Dify 配置见[工作流指南](../docs/dify-agent-write-workflow-guide.md#导入与发布)。
 
 ## 本地开发
 
@@ -33,7 +33,7 @@ VITE_DIFY_AGENT_URL=http://localhost/chat/应用标识
 
 右下角助手的设置按钮可以保存当前浏览器的 Dify 地址；浏览器保存值优先于 `VITE_DIFY_AGENT_URL`。请使用已发布应用的 `/chat/应用标识` 页面，组件会把 `/chatbot/应用标识` 规范化为 `/chat/应用标识`。
 
-历史会话和输入框附件按钮由 Dify WebApp 提供。当前工作流允许一次一张图片，Dify 中须启用附件并发布对应工作流。收起助手会保留已经加载的 iframe；“操作记录与照片”页签是前端自有活动面板。详情及尚未完成的在线验证见[恢复与助手界面修复记录](../docs/agent-restore-ui-fix-2026-09-15.md)。
+历史会话和输入框附件按钮由 Dify WebApp 提供。当前工作流允许一次一张图片，Dify 中须启用附件并发布对应工作流。收起助手会保留已经加载的 iframe；“操作记录与照片”页签是前端自有活动面板。操作说明见[工作流指南](../docs/dify-agent-write-workflow-guide.md)，未验收范围见[功能说明](../docs/云忆助手功能.md#六验证记录与延期)。
 
 浏览器登录身份不会自动替换 Dify 工具的服务端账号绑定；当前是个人版单一主人配置，不应把同一已发布 Dify 应用作为多个用户各自图库的入口。
 
