@@ -79,6 +79,27 @@ docs/智能体拓展方案_持续更新.md
 /evaluation/reports/agent-real-baseline-*/
 /evaluation/reports/resume-real-*/
 
+# Agent 循环新增的本地交付、验收、交接记录和发布快照
+# 仅影响尚未跟踪的文件；已有跟踪文件继续保留，不改变当前上传清单。
+/docs/dify-read-*-delivery-*.md
+/docs/dify-read-*-acceptance-*.md
+/docs/dify-phase*-handoff-*.md
+/docs/releases/
+
+# 本地检查输出、缓存和虚拟环境（代码与测试源码仍正常上传）
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.venv/
+venv/
+.coverage
+.coverage.*
+htmlcov/
+coverage/
+playwright-report/
+test-results/
+*.tsbuildinfo
+
 # 本地面试资料
 /*面试*.md
 
